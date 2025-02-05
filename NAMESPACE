@@ -2,4 +2,6 @@
 
 export(example_summary_control_file)
 export(generate_combinations_df)
+export(run_summary)
 export(validate_summary_control_file)
+importFrom(rlang,.data)

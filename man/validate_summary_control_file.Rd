@@ -2,10 +2,7 @@
 % Please edit documentation in R/summary_validate.R
 \name{validate_summary_control_file}
 \alias{validate_summary_control_file}
-\title{Notes
-\itemize{
-\item awaiting tests
-}}
+\title{Notes}
 \usage{
 validate_summary_control_file(control_file, tbl)
 }
@@ -29,6 +26,7 @@ The following checks are run and generate a failure if not passed:
 \item required columns exist in data frame
 \item dynamic formula can be executed
 \item Each row has at least one summary generated
+\item columns to sum are numeric
 }
 
 The following checks are run and only generate a warning if not passed:
@@ -36,6 +34,5 @@ The following checks are run and only generate a warning if not passed:
 \item acceptable column names ("enabled", "group", "label", "distinct", "count",
 "sum", "entity", "stddev", "notes")
 \item column is not empty
-\item columns to sum are numeric
 }
 }

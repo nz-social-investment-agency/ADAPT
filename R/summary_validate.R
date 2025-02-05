@@ -1,6 +1,5 @@
 ################################################################################
 #' Notes
-#' - awaiting tests
 #' 
 ################################################################################
 
@@ -19,21 +18,21 @@
 #' * required columns exist in data frame
 #' * dynamic formula can be executed
 #' * Each row has at least one summary generated
+#' * columns to sum are numeric
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
 #'   "sum", "entity", "stddev", "notes")
 #' * column is not empty
-#' * columns to sum are numeric
 #' @md
-#'
+#' 
+#' @importFrom  rlang .data
 #' @export
 validate_summary_control_file = function(control_file, tbl){
-  
-  ## initialize ----
-  
   stopifnot(is.data.frame(control_file))
   stopifnot(is.data.frame(tbl))
+  
+  ## initialize ----
   
   ctr_cols = trimws(tolower(colnames(control_file)))
   colnames(control_file) = ctr_cols
@@ -46,7 +45,7 @@ validate_summary_control_file = function(control_file, tbl){
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(enabled) %in% c("true", "1", "t"))
+    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t"))
   }
   
   ## setup for checks ----
@@ -57,10 +56,12 @@ validate_summary_control_file = function(control_file, tbl){
   entries = data.frame(
     row = indexes[,1],
     column = indexes[,2],
-    value = output_df[indexes]
+    value = control_file[indexes]
   )
   entries$duplicate = duplicated(entries$value)
   entries$is_function = substr(entries$value, 1, 1) == "{"
+  entries$column_name = ctr_cols[entries$column]
+  entries$is_non_calc = !entries$column_name %in% c("group", "distinct", "count", "sum", "entity", "stddev")
   
   # track passing of checks
   passes_all_critical_checks = TRUE
@@ -85,7 +86,7 @@ validate_summary_control_file = function(control_file, tbl){
   if(any(na_row)){
     na_row_nums = paste(which(na_row), collapse = ", ")
     
-    msg = glue::glue("Rows found with no summary: {na_row_nums}")
+    msg = glue::glue("Found row with no summary: {na_row_nums}")
     warning(msg)
     passes_all_critical_checks = FALSE
   }
@@ -94,14 +95,15 @@ validate_summary_control_file = function(control_file, tbl){
   
   # required columns exist in data frame
   for(ii in 1:nrow(entries)){
-    # pass if duplicate, function, or value in column names
+    # pass if duplicate, function, non-calculation, or value in column names
     if(entries$duplicate[ii]){ next }
     if(entries$is_function[ii]){ next }
+    if(entries$is_non_calc[ii]){ next }
     if(entries$value[ii] %in% tbl_cols){ next }
     
     num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
     msg = glue::glue(
-      "Column {entries$value[ii]} not found in input table:",
+      "Column '{entries$value[ii]}' not found in input table:",
       " (row {entries$row[ii]}, column {entries$column[ii]}).",
       ifelse(num_dupes > 0, " And {num_dupes} other cells.", "")
     )
@@ -127,7 +129,7 @@ validate_summary_control_file = function(control_file, tbl){
         passes_all_critical_checks = FALSE
         
         # test code
-        tmp = utils::head(tbl, 0)
+        tmp = utils::head(tbl, 5)
         tmp = dplyr::mutate(tmp, validating_column = !!rlang::parse_expr(formula))
         tmp = dplyr::collect(tmp)
         
@@ -138,7 +140,7 @@ validate_summary_control_file = function(control_file, tbl){
         
         num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
         msg = glue::glue(
-          "Column {entries$value[ii]} errored during testing:",
+          "Calculation {entries$value[ii]} errored during testing:",
           " (row {entries$row[ii]}, column {entries$column[ii]}).",
           ifelse(num_dupes > 0, " And {num_dupes} other cells.", ""),
           "\nOriginal error:\n {e}"
@@ -155,8 +157,9 @@ validate_summary_control_file = function(control_file, tbl){
   
   ## columns are not empty ----
   
-  tmp = dplyr::filter(entries, !.data$duplicate, !.data$is_function)
-  cols_to_check = unique(tmp$values)
+  tmp = dplyr::filter(entries, !.data$duplicate, !.data$is_function, !.data$is_non_calc)
+  cols_to_check = unique(tmp$value)
+  cols_to_check = cols_to_check[cols_to_check %in% tbl_cols]
   
   count_formula = glue::glue("sum(ifelse(!is.na({cols_to_check}), 1, 0))")
   names(count_formula) = cols_to_check
@@ -165,10 +168,10 @@ validate_summary_control_file = function(control_file, tbl){
   tmp = dplyr::ungroup(tbl)
   tmp = dplyr::summarise(tmp, num_rows = dplyr::n(), !!!rlang::parse_exprs(count_formula))
   tmp = dplyr::collect(tmp)
-  
+
   # check
   for(cc in cols_to_check){
-    if(tmp[[cc]][1] == tmp$num_rows[1]){
+    if(tmp[[cc]][1] == 0){
       msg = glue::glue("Column {cc} has only missing values")
       warning(msg)
     }
@@ -176,8 +179,8 @@ validate_summary_control_file = function(control_file, tbl){
   
   ## sum of non-numeric columns ----
   
-  entries$column_name = ctr_cols[entries$column]
-  cols_to_check = dplyr::filter(entries, !duplicate, !is_function, column_name == "sum")
+  cols_to_check = dplyr::filter(entries, !.data$is_function & .data$column_name == "sum")
+  cols_to_check = unique(cols_to_check$value)
   
   # get example data
   tmp = dplyr::collect(utils::head(tbl, 5))
@@ -185,8 +188,9 @@ validate_summary_control_file = function(control_file, tbl){
   # check
   for(cc in cols_to_check){
     if(!is.numeric(tmp[[cc]])){
-      msg = glue::glue("Summary attempts to sum non-numeric column {cc}")
+      msg = glue::glue("Attempt to sum non-numeric column '{cc}'")
       warning(msg)
+      passes_all_critical_checks = FALSE
     }
   }
   

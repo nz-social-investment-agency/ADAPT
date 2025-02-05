@@ -4,14 +4,24 @@
 \alias{load_control_file}
 \title{Auto-detecting which file read command is needed}
 \usage{
-load_control_file(path_and_file_name)
+load_control_file(path_and_file_name, sheet = NULL)
 }
 \arguments{
 \item{path_and_file_name}{location of the file to read into R}
+
+\item{sheet}{Sheet to read if Excel file as per \code{readxl::read_excel}:
+Either a string (name of a sheet), #' or an integer (the position of the
+sheet). Defaults to the first sheet otherwise.}
 }
 \value{
 the file contents as a data.frame
 }
 \description{
 Used to support csv, xls, and xlsx formatted control files.
+}
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+example_control_file = example_summary_control_file(".")
+control_file = load_control_file(example_control_file[1])
+\dontshow{\}) # examplesIf}
 }

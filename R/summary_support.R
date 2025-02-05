@@ -129,7 +129,7 @@ cross_product_column_names = function(
   return(output_list)
 }
 
-## generate summary commands ---------------------------------------------- ----
+## Generate summary commands ---------------------------------------------- ----
 #' Convert control file input to text string that can be used within
 #' dplyr::mutate via rlang::parse_exprs.
 #' 
@@ -138,18 +138,6 @@ cross_product_column_names = function(
 #' @param summary_row a data frame containing 1 row.
 #' 
 #' @return a named character array suitable for parse_exprs
-#' 
-#' @examples
-#' summary_row = data.frame(
-#'   DISTINCT1 = "col1",
-#'   COUNT1 = "col2",
-#'   COUNT2 = "col3",
-#'   SUM1 = "col4",
-#'   ENTITY1 = "col5",
-#'   STDDEV1 = "col6",
-#'   stringsAsFactors = FALSE
-#' )
-#' summary_commands = generate_summary_commands(summary_row)
 #' 
 generate_summary_commands = function(summary_row){
   stopifnot(nrow(summary_row) == 1)

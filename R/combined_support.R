@@ -1,5 +1,7 @@
 ################################################################################
 #' Notes
+#' - Need provide_worked_examples function, or merge with example_control_file
+#' for general provide_example function
 #' 
 ################################################################################
 
@@ -28,7 +30,7 @@ example_control_file = function(folder, tool){
   }
   
   # from location
-  example_folder = system.file("extdata", "example_control_files", tool, package = "IDIr")
+  example_folder = system.file("extdata", "worked_examples", tool, package = "IDIr")
   from_files = list.files(example_folder)
   
   # copy
@@ -84,4 +86,67 @@ load_control_file = function(path_and_file_name, sheet = NULL){
   file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]  
   
   return(file_contents)
+}
+
+## Save code to file ------------------------------------------------------ ----
+#' Save code to file for debugging
+#' 
+#' For transparency and ease of debugging, this function simplifies writing to
+#' disc key code components. It provides a standardized way to save SQL code
+#' or character strings using within dynamic dplyr code.
+#' 
+#' @param query the text of the query to save. This may be generated using
+#' `dplyr::show_query` where required.
+#' @param desc a description of the query. Use to name the file. If an
+#' extension is included this extension is used. Otherwise .txt is used.
+#' @param folder_path The path to save the query. If provided will attempt to
+#' save a copy of the query to the provided folder. Errors if directory does
+#' not exist.
+#' 
+#' @return The location and name of the saved file.
+#' 
+#' @examplesIf interactive()
+#' code = "SELECT * FROM mytable"
+#' written_file = save_code_to_script(code, "saved code", ".")
+#' 
+#' @export
+save_code_to_script = function(query, desc, folder_path) {
+  stopifnot(dbplyr::is.sql(query) | is.character(query))
+  stopifnot(is.character(desc))
+  stopifnot(is.character(folder_path))
+  stopifnot(dir.exists(folder_path))
+  
+  # tiny delay ensures no two files writes can have the same time-stamp
+  Sys.sleep(0.1)
+  
+  # add extension if missing
+  if(tools::file_ext(desc) == ""){
+    desc = glue::glue("{desc}.txt")
+  }
+  
+  # time stamp includes milliseconds
+  clean_time = gsub("[.:]", "-", format(Sys.time(), "%Y-%m-%d %H%M%OS3"))
+  clean_name = gsub("[. :]", "_", desc)
+  file_name = glue::glue("{clean_time} {clean_name}")
+  
+  tryCatch(
+    # try to write file
+    {
+      # create directory if required
+      writeLines(as.character(query), file.path(folder_path, file_name))
+      return(file.path(folder_path, file_name))
+    },
+    # if error > display as warning
+    error = function(e){
+      msg = glue::glue("Error while saving query text:\n{e}")
+      warning(msg)
+    },
+    # if warning > display
+    warning = function(w){
+      msg = glue::glue("Waring while saving query text:\n{w}")
+      warning(msg)
+    }
+  )
+  
+  return(invisible())
 }

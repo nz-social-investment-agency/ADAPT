@@ -4,9 +4,8 @@
 \alias{example_control_file}
 \title{Notes
 \itemize{
-\item load_control_file needs a more general solution to column names to handle
-different control file layouts
-\item load_control_file needs handling for XLSX sheets
+\item Need provide_worked_examples function, or merge with example_control_file
+for general provide_example function
 }}
 \usage{
 example_control_file(folder, tool)
@@ -21,7 +20,8 @@ extdata folder. Options: assembly, summary, confidential, combined.}
 The path of the newly created file(s)
 }
 \description{
-Provide an example of the control file for a tool
+Provide an example of the control file for a tool. General version for reuse
+across tools.
 }
 \examples{
 \dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}

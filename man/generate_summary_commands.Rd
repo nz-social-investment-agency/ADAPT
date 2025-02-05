@@ -8,7 +8,7 @@ dplyr::mutate via rlang::parse_exprs.}
 generate_summary_commands(summary_row)
 }
 \arguments{
-\item{df}{a data frame containing 1 row.}
+\item{summary_row}{a data frame containing 1 row.}
 }
 \value{
 a named character array suitable for parse_exprs
