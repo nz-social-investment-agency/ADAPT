@@ -135,9 +135,21 @@ cross_product_column_names = function(
 #' 
 #' Processes columns of types: "distinct", "count", "sum", "entity", "stddev"
 #' 
-#' @param df a data frame containing 1 row.
+#' @param summary_row a data frame containing 1 row.
 #' 
 #' @return a named character array suitable for parse_exprs
+#' 
+#' @examples
+#' summary_row = data.frame(
+#'   DISTINCT1 = "col1",
+#'   COUNT1 = "col2",
+#'   COUNT2 = "col3",
+#'   SUM1 = "col4",
+#'   ENTITY1 = "col5",
+#'   STDDEV1 = "col6",
+#'   stringsAsFactors = FALSE
+#' )
+#' summary_commands = generate_summary_commands(summary_row)
 #' 
 generate_summary_commands = function(summary_row){
   stopifnot(nrow(summary_row) == 1)

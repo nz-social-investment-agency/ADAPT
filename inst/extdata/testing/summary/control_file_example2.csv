@@ -1,0 +1,8 @@
+ENABLED,GROUP1,GROUP2,GROUP3,LABEL,DISTINCT,SUM,ENTITY
+TRUE,age,,,num,snz_uid,,
+TRUE,,region,,num,snz_uid,"{ IIF(col > 1, 1, 0) }",
+TRUE,age,region,,num,snz_uid,,
+FALSE,age,,enrolled,pupils,snz_uid,,school_id
+TRUE,age,,,income,snz_uid,income,
+TRUE,age,,enrolled,income,snz_uid,income,school_id
+TRUE,age,region,,ed_visits,snz_uid,ed_events,

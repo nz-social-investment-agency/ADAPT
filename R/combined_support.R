@@ -1,13 +1,11 @@
 ################################################################################
 #' Notes
-#' - load_control_file needs a more general solution to column names to handle
-#' different control file layouts
-#' - load_control_file needs handling for XLSX sheets
 #' 
 ################################################################################
 
-## Provide an example of control file ------------------------------------- ----
-#' Provide an example of the control file for a tool
+## Provide example control files ------------------------------------------ ----
+#' Provide an example of the control file for a tool. General version for reuse
+#' across tools.
 #'
 #' @param folder Folder to copy the example into.
 #' @param tool Tool to fetch control file example for. Matches internal package
@@ -47,10 +45,17 @@ example_control_file = function(folder, tool){
 #' Used to support csv, xls, and xlsx formatted control files.
 #'
 #' @param path_and_file_name location of the file to read into R
+#' @param sheet Sheet to read if Excel file as per `readxl::read_excel`:
+#' Either a string (name of a sheet), #' or an integer (the position of the
+#' sheet). Defaults to the first sheet otherwise.
 #'
 #' @return the file contents as a data.frame
 #'
-load_control_file = function(path_and_file_name){
+#' @examplesIf interactive()
+#' example_control_file = example_summary_control_file(".")
+#' control_file = load_control_file(example_control_file[1])
+#' 
+load_control_file = function(path_and_file_name, sheet = NULL){
   stopifnot(is.character(path_and_file_name))
   stopifnot(file.exists(path_and_file_name))
   
@@ -59,21 +64,15 @@ load_control_file = function(path_and_file_name){
   
   # load file
   if (extension == "xls") {
-    file_contents = readxl::read_xls(path_and_file_name, col_types = "character")
+    file_contents = readxl::read_xls(path_and_file_name, sheet = sheet, col_types = "text")
   }
   if (extension == "xlsx") {
-    file_contents = readxl::read_xlsx(path_and_file_name, col_types = "character")
+    file_contents = readxl::read_xlsx(path_and_file_name, sheet = sheet, col_types = "text")
   }
   if (extension == "csv") {
     file_contents = utils::read.csv(path_and_file_name, stringsAsFactors = FALSE, colClasses = "character")
   }
-  
-  # standardize column names ### requires a more general solution to work across all control files
-  cols = colnames(file_contents)
-  cols = gsub("[0-9\\.]", "", cols)
-  cols = sapply(1:length(cols), function(ii){paste0(cols[ii], sum(cols[ii] == cols[1:ii]))})
-  colnames(file_contents) = cols
-  
+
   # trim all white space
   file_contents = as.data.frame(file_contents, stringsAsFactors = FALSE)
   file_contents = data.frame(lapply(file_contents, trimws))

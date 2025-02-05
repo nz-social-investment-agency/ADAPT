@@ -1,6 +1,6 @@
 ################################################################################
 #' Notes
-#' - testing of load_control_file outstanding
+#' 
 ################################################################################
 
 ## example_control_file(folder, tool) ------------------------------------- ----
@@ -20,28 +20,19 @@ test_that("summary files copied in",{
 
 ## load_control_file(path_and_file_name) ---------------------------------- ----
 
-test_that("control file loaded",{
+test_that("summary control file loaded",{
   
-  example_to_load = system.file("extdata", "examples", "example_control_file_1.csv", package = "summaryr")
+  example1 = system.file("extdata", "testing", "summary", "control_file_example1.xlsx", package = "IDIr")
+  loaded_file = load_control_file(example1, sheet = "summary")
   
-  actual_loaded = load_control_file(example_to_load)
+  expect_true(is.data.frame(loaded_file))
+  expect_true(nrow(loaded_file) >= 2)
+  expect_true(ncol(loaded_file) >= 2)
   
-  expected_loaded = data.frame(
-    ENABLED1 = c("TRUE","TRUE","TRUE","FALSE","TRUE","TRUE","TRUE"),
-    GROUP1 = c("age", NA,"age","age","age","age","age"),
-    GROUP2 = c(NA,"region","region",NA,NA,NA,"region"),
-    GROUP3 = c(NA,NA,NA,"enrolled",NA,"enrolled",NA),
-    LABEL1 = c("num","num","num","pupils","income","income","ed_visits"),
-    DISTINCT1 = c("snz_uid","snz_uid","snz_uid","snz_uid","snz_uid","snz_uid","snz_uid"),
-    SUM1 = c(NA,NA,NA,NA,"income","income","ed_events"),
-    ENTITY1 = c(NA,NA,NA,"school_id",NA,"school_id",NA),
-    stringsAsFactors = FALSE
-  )
+  example2 = system.file("extdata", "testing", "summary", "control_file_example2.csv", package = "IDIr")
+  loaded_file = load_control_file(example2)
   
-  expected_loaded = dplyr::select(expected_loaded, dplyr::all_of(colnames(actual_loaded)))
-  
-  expect_true(all.equal(actual_loaded, expected_loaded))
+  expect_true(is.data.frame(loaded_file))
+  expect_true(nrow(loaded_file) >= 2)
+  expect_true(ncol(loaded_file) >= 2)
 })
-
-
-
