@@ -4,8 +4,8 @@
 ################################################################################
 
 # setup
-control_file = system.file("extdata", "worked_examples", "summary", "control_file.csv", package = "IDIr")
-tbl = system.file("extdata", "worked_examples", "summary", "tbl.csv", package = "IDIr")
+control_file = system.file("extdata", "testing", "summary_tool", "control_file.csv", package = "IDIr")
+tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "IDIr")
 
 # load
 control_file = load_control_file(control_file)

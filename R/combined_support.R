@@ -120,14 +120,15 @@ save_code_to_script = function(query, desc, folder_path) {
   Sys.sleep(0.1)
   
   # add extension if missing
-  if(tools::file_ext(desc) == ""){
-    desc = glue::glue("{desc}.txt")
-  }
+  extension = tools::file_ext(desc)
+  extension = ifelse(extension == "", "txt", extension)
+  # remove extension from file description
+  desc = gsub(glue::glue("\\.{extension}"), "", desc)
   
   # time stamp includes milliseconds
   clean_time = gsub("[.:]", "-", format(Sys.time(), "%Y-%m-%d %H%M%OS3"))
   clean_name = gsub("[. :]", "_", desc)
-  file_name = glue::glue("{clean_time} {clean_name}")
+  file_name = glue::glue("{clean_time} {clean_name}.{extension}")
   
   tryCatch(
     # try to write file

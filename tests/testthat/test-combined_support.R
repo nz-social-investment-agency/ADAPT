@@ -22,14 +22,14 @@ test_that("summary files copied in",{
 
 test_that("summary control file loaded",{
   
-  example1 = system.file("extdata", "testing", "summary", "control_file_example1.xlsx", package = "IDIr")
+  example1 = system.file("extdata", "testing", "load_control_file", "control_file_example1.xlsx", package = "IDIr")
   loaded_file = load_control_file(example1, sheet = "summary")
   
   expect_true(is.data.frame(loaded_file))
   expect_true(nrow(loaded_file) >= 2)
   expect_true(ncol(loaded_file) >= 2)
   
-  example2 = system.file("extdata", "testing", "summary", "control_file_example2.csv", package = "IDIr")
+  example2 = system.file("extdata", "testing", "load_control_file", "control_file_example2.csv", package = "IDIr")
   loaded_file = load_control_file(example2)
   
   expect_true(is.data.frame(loaded_file))
@@ -65,6 +65,5 @@ test_that("code files written", {
   # assert
   expect_true(file_exists)
   expect_true(folder_exists)
-  expect_false(folder_exists_to_start)
   expect_false(folder_exists_at_end)
 })

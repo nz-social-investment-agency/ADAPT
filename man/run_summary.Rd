@@ -2,19 +2,12 @@
 % Please edit documentation in R/summary_run.R
 \name{run_summary}
 \alias{run_summary}
-\title{Notes
-\itemize{
-\item awaiting helper documentation
-\item awaiting tests
-\item remote_na_from_groups parameter needs to be integrated
-\item debug reporting needed
-\item deliberate casting of outputs to required types (character or numeric)
-}}
+\title{Notes}
 \usage{
 run_summary(
   control_file,
   tbl,
-  remote_na_from_groups = TRUE,
+  remove_na_from_groups = TRUE,
   debug_folder = NA_character_
 )
 }
@@ -25,7 +18,7 @@ read into memory by \code{load_control_file}.}
 \item{tbl}{a data frame to summarise. Can be in-memory or remote accessed
 with dbplyr.}
 
-\item{remote_na_from_groups}{T/F whether missing values from grouping columns
+\item{remove_na_from_groups}{T/F whether missing values from grouping columns
 should be excluded from the results. Defaults to TRUE.}
 
 \item{debug_folder}{an existing folder where debug information should be
@@ -39,18 +32,13 @@ control file and appending all the summaries together.
 Execute summary tool.
 }
 \details{
-The following checks are run and generate a failure if not passed:
-\itemize{
-\item required columns exist in data frame
-\item dynamic formula can be executed
-\item Each row has at least one summary generated
-}
+For each row in the control file, the summary tool produces a summary of tbl
+according to the specified instructions. All these summaries are combined
+into a single table and returned.
 
-The following checks are run and only generate a warning if not passed:
-\itemize{
-\item acceptable column names ("enabled", "group", "label", "distinct", "count",
-"sum", "entity", "stddev", "notes")
-\item column is not empty
-\item columns to sum are numeric
-}
+Validates its control file prior to execution. To validate a control file
+without execution use \code{validate_summary_control_file}.
+
+The best way to understand the summary process is to review a worked example.
+Try \code{provide_example} for worked examples, or for example control files.
 }
