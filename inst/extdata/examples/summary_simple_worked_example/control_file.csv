@@ -1,0 +1,8 @@
+﻿ENABLED,LABEL,GROUP,GROUP,COUNT
+TRUE,ethnicity,,eth_european,person_uid
+TRUE,ethnicity,,eth_maori,person_uid
+TRUE,ethnicity,,eth_pacific,person_uid
+TRUE,ethnicity,,eth_asian,person_uid
+TRUE,ethnicity,,eth_melaa,person_uid
+TRUE,ethnicity,,eth_other,person_uid
+FALSE,area,region,,person_uid

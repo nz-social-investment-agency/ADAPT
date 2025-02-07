@@ -1,0 +1,6 @@
+﻿ENABLED,GROUP,COUNT
+TRUE,year,person_uid
+TRUE,month,person_uid
+TRUE,region,person_uid
+TRUE,license,person_uid
+TRUE,expired,person_uid

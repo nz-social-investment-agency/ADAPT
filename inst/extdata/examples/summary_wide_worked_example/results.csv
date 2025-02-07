@@ -1,0 +1,27 @@
+﻿label1,label2,grplabel1,group1,grplabel2,group2,grplabel3,group3,count1,distinct1,distinct2,count2,sum1
+1,employed (region),region,north,NA,NA,employed,yes,4,2,NA,4,10000
+1,employed (region),region,east,NA,NA,employed,yes,2,1,NA,2,3000
+1,employed (region),region,south,NA,NA,employed,yes,3,1,NA,3,4000
+1,employed (region),region,west,NA,NA,employed,yes,2,2,NA,2,5000
+2,employed (sex),NA,NA,sex,1,employed,yes,6,5,4,6,10000
+2,employed (sex),NA,NA,sex,2,employed,yes,5,5,4,5,12000
+3,employed (region x sex),region,east,sex,1,employed,yes,1,1,NA,1,1000
+3,employed (region x sex),region,north,sex,1,employed,yes,2,2,NA,2,4000
+3,employed (region x sex),region,south,sex,1,employed,yes,2,1,NA,2,3000
+3,employed (region x sex),region,west,sex,1,employed,yes,1,1,NA,1,2000
+3,employed (region x sex),region,east,sex,2,employed,yes,1,1,NA,1,2000
+3,employed (region x sex),region,north,sex,2,employed,yes,2,2,NA,2,6000
+3,employed (region x sex),region,south,sex,2,employed,yes,1,1,NA,1,1000
+3,employed (region x sex),region,west,sex,2,employed,yes,1,1,NA,1,3000
+4,unemployed (region),region,north,NA,NA,unemployed,yes,2,1,NA,1,200
+4,unemployed (region),region,east,NA,NA,unemployed,yes,2,2,NA,2,400
+4,unemployed (region),region,south,NA,NA,unemployed,yes,3,1,NA,2,300
+4,unemployed (region),region,west,NA,NA,unemployed,yes,1,1,NA,1,100
+5,unemployed (sex),NA,NA,sex,1,unemployed,yes,2,2,2,2,500
+5,unemployed (sex),NA,NA,sex,2,unemployed,yes,6,4,4,4,500
+6,unemployed (region x sex),region,east,sex,1,unemployed,yes,1,1,NA,1,300
+6,unemployed (region x sex),region,east,sex,2,unemployed,yes,1,1,NA,1,100
+6,unemployed (region x sex),region,north,sex,2,unemployed,yes,2,1,NA,1,200
+6,unemployed (region x sex),region,south,sex,1,unemployed,yes,1,1,NA,1,200
+6,unemployed (region x sex),region,south,sex,2,unemployed,yes,2,1,NA,1,100
+6,unemployed (region x sex),region,west,sex,2,unemployed,yes,1,1,NA,1,100
