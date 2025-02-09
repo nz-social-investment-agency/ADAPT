@@ -11,7 +11,7 @@ tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "ID
 control_file = load_control_file(control_file)
 tbl = read.csv(tbl)
 
-# tests
+## test functionality ----------------------------------------------------- ----
 
 test_that("worked example passes",{
   

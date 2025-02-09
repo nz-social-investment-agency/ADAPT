@@ -71,7 +71,7 @@ validate_summary_control_file = function(control_file, tbl){
   # acceptable column names in control file
   expected_columns_names = c("enabled", "group", "label", "distinct", "count", "sum", "entity", "stddev", "note", "notes")
   for(cc in ctr_cols){
-    if(gsub("[0-9]", "", cc) %in% expected_columns_names){ next }
+    if(gsub("[0-9\\.]", "", cc) %in% expected_columns_names){ next }
     
     msg = glue::glue("Control file column {cc} not an accepted name and will be ignored during summarisation.")
     warning(msg)
@@ -80,7 +80,7 @@ validate_summary_control_file = function(control_file, tbl){
   ## at least one summary per row ----
   
   summary_types = c("distinct", "count", "sum", "entity", "stddev")
-  tmp = control_file[,gsub("[0-9]", "", ctr_cols) %in% summary_types]
+  tmp = control_file[,gsub("[0-9]", "", ctr_cols) %in% summary_types, drop = FALSE]
   na_row = apply(is.na(tmp), 1, all)
   
   if(any(na_row)){
@@ -121,6 +121,20 @@ validate_summary_control_file = function(control_file, tbl){
     
     formula = entries$value[ii]
     formula = remove_delimiters(formula, "{}")
+    
+    # potential injection
+    possible_injection = !no_obvious_injection(formula)
+    if(possible_injection){
+      num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
+      msg = glue::glue(
+        "Formula {formula} not tested due to potential code injection:",
+        " (row {entries$row[ii]}, column {entries$column[ii]}).",
+        ifelse(num_dupes > 0, " And {num_dupes} other cells.", "")
+      )
+      warning(msg)
+      passes_all_critical_checks = FALSE
+      next
+    }
     
     tryCatch(
       {

@@ -36,9 +36,41 @@ For each row in the control file, the summary tool produces a summary of tbl
 according to the specified instructions. All these summaries are combined
 into a single table and returned.
 
-Validates its control file prior to execution. To validate a control file
+Control files are validated prior to execution. To validate a control file
 without execution use \code{validate_summary_control_file}.
 
 The best way to understand the summary process is to review a worked example.
 Try \code{provide_example} for worked examples, or for example control files.
+
+The accepted columns for the control file are:
+\itemize{
+\item ENABLED - TRUE/FALSE - If this column is included then rows set to FALSE
+will be omitted. Except for ENABLED, you can have any number of columns of
+each type.
+\item LABEL - free text - allows you to include arbitrary text in your output,
+this is intended to provide a description of the summary.
+\item GROUP - name of columns of \code{tbl} - When the summary for the row is
+produced, the output is grouped by the group columns.
+\item DISTINCT - name of columns of \code{tbl} - counts the number of distinct values
+in the column.
+\item COUNT - name of columns of \code{tbl} - counts the number of non-missing values
+in the column.
+\item SUM - name of columns of \code{tbl} - calculates the sum total of the column,
+during validation the tool will error is this column is not numeric.
+\item STDDEV - name of columns of \code{tbl} - calculates the standard deviation of the
+column.
+\item ENTITY  - name of columns of \code{tbl} -  works like DISTINCT, but labeled to
+reflect the intention of counting entities.
+\item NOTES - free text - column is ignored and does not effect output. Intended
+for adding notes to control file. Any other column names are also ignored,
+but generate a warning.
+}
+
+Anywhere you can give the name of a column of \code{tbl} in the control file,
+you can instead give input in \{curry brackets\}. This input is treated as R
+code. If \code{tbl} is a remote data frame, then this will be translated to SQL
+using dbplyr.
+
+The intended use of this feature is for making minor adjustments to
+variables. For example replacing missing values.
 }

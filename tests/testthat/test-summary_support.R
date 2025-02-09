@@ -271,18 +271,3 @@ test_that("additional columns ignored",{
   actual = generate_summary_commands(summary_row)
   expect_equal(actual, expected)
 })
-
-## example_summary_control_file(folder = ".") ----------------------------- ----
-
-test_that("files copied in",{
-  
-  expect_false(file.exists("./example_control_file_1.csv"))
-  
-  copied_files = example_summary_control_file(folder = ".")
-  
-  for(ff in copied_files){
-    expect_true(file.exists(ff))
-    unlink(ff)
-    expect_false(file.exists(ff))
-  }
-})

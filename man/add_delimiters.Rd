@@ -2,8 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{add_delimiters}
 \alias{add_delimiters}
-\title{Notes
-Add delimiters to text string}
+\title{Add delimiters to text string}
 \usage{
 add_delimiters(string, delimiter)
 }
@@ -16,6 +15,5 @@ add_delimiters(string, delimiter)
 the string with the specified delimiters added (if necessary).
 }
 \description{
-Notes
 Add delimiters to text string
 }

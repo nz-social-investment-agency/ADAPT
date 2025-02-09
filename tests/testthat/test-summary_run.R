@@ -17,7 +17,7 @@ results = read.csv(results)
 results = dplyr::tibble(results)
 results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
 
-# tests
+## test functionality ----------------------------------------------------- ----
 
 test_that("worked example passes",{
   
@@ -115,4 +115,127 @@ test_that("errors in control file prevent execution", {
   tmp$count1 = "non_existant_column"
   
   expect_error(suppressWarnings(run_summary(tmp, tbl)))
+})
+
+## test examples ---------------------------------------------------------- ----
+
+test_that("summary_dynamic_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_dynamic_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_dynamic_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_dynamic_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  control_file = load_control_file(control_file)
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  
+  actual = run_summary(control_file, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+})
+
+test_that("summary_long_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_long_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_long_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_long_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  control_file = load_control_file(control_file)
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  
+  actual = run_summary(control_file, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+})
+
+test_that("summary_simple_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_simple_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_simple_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_simple_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  control_file = load_control_file(control_file)
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  results$grplabel = as.character(results$grplabel)
+  results$group = as.character(results$group)
+  results$group.1 = as.character(results$group.1)
+  
+  actual = run_summary(control_file, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+})
+
+test_that("summary_wide_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_wide_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_wide_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_wide_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  control_file = load_control_file(control_file)
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  results$group.1 = as.character(results$group.1)
+  results$label = as.character(results$label)
+  
+  actual = run_summary(control_file, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
 })

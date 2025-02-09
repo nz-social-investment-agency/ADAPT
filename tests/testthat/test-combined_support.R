@@ -3,13 +3,23 @@
 #' 
 ################################################################################
 
-## example_control_file(folder, tool) ------------------------------------- ----
+## provide_example(example, folder) --------------------------------------- ----
+
+test_that("available exampels listed", {
+  
+  expect_message(provide_example())
+  
+  expect_message(provide_example("made up example"))
+})
 
 test_that("summary files copied in",{
   
-  expect_false(file.exists("./example_control_file_1.csv"))
+  tmp = file.path(tempdir(),"examples")
   
-  copied_files = example_control_file(folder = ".", tool = "summary")
+  unlink(tmp, TRUE)
+  expect_true(!dir.exists(tmp))
+  
+  copied_files = provide_example("summary_simple_worked_example", folder = tmp)
   
   for(ff in copied_files){
     expect_true(file.exists(ff))

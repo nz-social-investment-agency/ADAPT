@@ -142,7 +142,7 @@ cross_product_column_names = function(
 generate_summary_commands = function(summary_row){
   stopifnot(nrow(summary_row) == 1)
   
-  col_type = tolower(gsub("[0-9]", "", colnames(summary_row)))
+  col_type = tolower(gsub("[0-9\\.]", "", colnames(summary_row)))
   
   command_types = c("distinct", "count", "sum", "entity", "stddev")
   summary_cols = summary_row[,col_type %in% command_types, drop = FALSE]
@@ -160,7 +160,7 @@ generate_summary_commands = function(summary_row){
       
       # produce required command
       this_command = switch(
-        tolower(gsub("[0-9]", "", this_name)),
+        tolower(gsub("[0-9\\.]", "", this_name)),
         distinct = "dplyr::n_distinct({this_contents}, na.rm = TRUE)",
         count = "sum(ifelse(!is.na({this_contents}), 1, 0), na.rm = TRUE)",
         sum = "sum({this_contents}, na.rm = TRUE)",
@@ -178,20 +178,4 @@ generate_summary_commands = function(summary_row){
   )
   
   return(summary_command)
-}
-
-## Provide an example of control file ------------------------------------- ----
-#' Provide an example of the control file for a tool
-#'
-#' @param folder Folder to copy the example into. Defaults to current directory.
-#'
-#' @return The path of the newly created file(s) (invisibly)
-#'
-#' @examplesIf interactive()
-#' example_summary_control_file("./examples")
-#'
-#' @export
-example_summary_control_file = function(folder = "."){
-  new_files = example_control_file(folder = folder, tool = "summary")
-  return(invisible(new_files))
 }

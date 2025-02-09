@@ -22,11 +22,42 @@
 #' according to the specified instructions. All these summaries are combined
 #' into a single table and returned.
 #' 
-#' Validates its control file prior to execution. To validate a control file
+#' Control files are validated prior to execution. To validate a control file
 #' without execution use `validate_summary_control_file`.
 #' 
 #' The best way to understand the summary process is to review a worked example.
 #' Try `provide_example` for worked examples, or for example control files.
+#' 
+#' The accepted columns for the control file are:
+#' * ENABLED - TRUE/FALSE - If this column is included then rows set to FALSE
+#' will be omitted. Except for ENABLED, you can have any number of columns of
+#' each type.
+#' * LABEL - free text - allows you to include arbitrary text in your output,
+#' this is intended to provide a description of the summary.
+#' * GROUP - name of columns of `tbl` - When the summary for the row is
+#' produced, the output is grouped by the group columns.
+#' * DISTINCT - name of columns of `tbl` - counts the number of distinct values
+#' in the column.
+#' * COUNT - name of columns of `tbl` - counts the number of non-missing values
+#' in the column.
+#' * SUM - name of columns of `tbl` - calculates the sum total of the column,
+#' during validation the tool will error is this column is not numeric.
+#' * STDDEV - name of columns of `tbl` - calculates the standard deviation of the
+#' column.
+#' * ENTITY  - name of columns of `tbl` -  works like DISTINCT, but labeled to
+#' reflect the intention of counting entities.
+#' * NOTES - free text - column is ignored and does not effect output. Intended
+#' for adding notes to control file. Any other column names are also ignored,
+#' but generate a warning.
+#' 
+#' Anywhere you can give the name of a column of `tbl` in the control file,
+#' you can instead give input in \{curry brackets\}. This input is treated as R
+#' code. If `tbl` is a remote data frame, then this will be translated to SQL
+#' using dbplyr.
+#' 
+#' The intended use of this feature is for making minor adjustments to
+#' variables. For example replacing missing values.
+#' @md
 #' 
 #' @importFrom  rlang .data
 #' @export
@@ -68,7 +99,7 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
   select_command = lapply(
     select_command,
     function(x){
-      if(gsub("[0-9]", "", x) != "group"){ return(x) }
+      if(gsub("[0-9\\.]", "", x) != "group"){ return(x) }
       return(c(gsub("group", "grplabel", x), x))
     }
   )
@@ -84,28 +115,28 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
     this_row = control_file[ii,]
     
     # group commands
-    group_command = this_row[,col_type == "group"]
-    group_command = group_command[,!is.na(group_command)]
+    group_command = this_row[,col_type == "group", drop = FALSE]
+    group_command = group_command[,!is.na(group_command), drop = FALSE]
     group_command = unlist(group_command, use.names = FALSE)
     
     # summary commands
     summary_command = generate_summary_commands(this_row)
     
     # mutate commands - labels
-    mutate_inputs = this_row[,col_type %in% c("group", "label")]
+    mutate_inputs = this_row[,col_type %in% c("group", "label"), drop = FALSE]
     mutate_delim = ifelse(is.na(mutate_inputs), "", "'")
     mutate_command = unlist(mutate_inputs, use.names = FALSE)
     mutate_command = as.character(glue::glue("{mutate_delim}{mutate_command}{mutate_delim}"))
     names(mutate_command) = gsub("group", "grplabel", tolower(colnames(mutate_inputs)))
     
     # mutate commands - empty columns
-    mutate_inputs = this_row[,is.na(this_row[1,])]
+    mutate_inputs = this_row[,is.na(this_row[1,]), drop = FALSE]
     mutate_command2 = rep("NA", length(mutate_inputs))
     names(mutate_command2) = names(mutate_inputs)
     mutate_command = c(mutate_command, mutate_command2)
     
     # rename commands
-    rename_inputs = this_row[,col_type == "group"]
+    rename_inputs = this_row[,col_type == "group", drop = FALSE]
     rename_inputs = rename_inputs[,!is.na(rename_inputs), drop = FALSE]
     rename_command = unlist(rename_inputs)
     
