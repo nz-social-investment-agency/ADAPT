@@ -4,6 +4,7 @@ all,support_type,periodic,7,4,4494
 all,support_type,relief,8,3,6757
 long stay,support_type,emergency,10,24,7944
 long stay,support_type,periodic,1,2,0
+long stay,support_type,relief,0,0,0
 high_cost,support_type,emergency,1,0,1990
 high_cost,support_type,periodic,1,0,1610
 high_cost,support_type,relief,2,0,3060

@@ -1,40 +1,54 @@
 ################################################################################
 #' Notes
-#' - Need provide_worked_examples function, or merge with example_control_file
-#' for general provide_example function
 #' 
 ################################################################################
 
-## Provide example control files ------------------------------------------ ----
-#' Provide an example of the control file for a tool. General version for reuse
-#' across tools.
+## Provide files ---------------------------------------------------------- ----
+#' Provide an examples of the tools - copying example files from the package
+#' data into a local folder. Includes example control files and worked examples
+#' of the tool in use.
+#' 
+#' @param example The example to copy. If does not match an available example,
+#' then prints out a list of the available examples.
+#' @param folder Folder to copy the example into. Creates the folder if it does
+#' not already exist.
 #'
-#' @param folder Folder to copy the example into.
-#' @param tool Tool to fetch control file example for. Matches internal package
-#' extdata folder. Options: assembly, summary, confidential, combined.
-#'
-#' @return The path of the newly created file(s)
-#'
+#' @return The path of any newly created file(s).
+#' 
 #' @examplesIf interactive()
-#' example_control_file("./examples", "summary")
-#'
-example_control_file = function(folder, tool){
+#' # list all the available examples
+#' provide_example()
+#' 
+#' # load a specific example
+#' provide_example("summary_control_file", "./example")
+#' 
+#' @export
+provide_example = function(example = NA_character_, folder = "."){
   stopifnot(is.character(folder))
-  stopifnot(is.character(tool))
-  stopifnot(tool %in% c("assembly", "summary", "confidential", "combined"))
+  stopifnot(is.character(example))
   
-  # to location
-  to_dir = file.path(normalizePath(folder))
+  example_folder = system.file("extdata", "examples", package = "IDIr")
+  available_examples = list.dirs(example_folder, full.names = FALSE, recursive = FALSE)
+  
+  # list available examples is one is not selected
+  if(!example %in% available_examples){
+    msg = paste0(available_examples, collapse = '\n')
+    msg = glue::glue("Available examples:\n{msg}")
+    message(msg)
+    return(invisible(available_examples))
+  }
+  
+  # locations
+  from_dir = file.path(example_folder, example)
+  to_dir = file.path(folder)
+  
   if(!dir.exists(to_dir)){
     dir.create(to_dir)
   }
   
-  # from location
-  example_folder = system.file("extdata", "worked_examples", tool, package = "IDIr")
-  from_files = list.files(example_folder)
-  
   # copy
-  file.copy(file.path(example_folder, from_files), to_dir)
+  from_files = list.files(from_dir)
+  file.copy(file.path(from_dir, from_files), to_dir)
   
   # conclude
   new_files = file.path(to_dir, from_files)
@@ -83,7 +97,7 @@ load_control_file = function(path_and_file_name, sheet = NULL){
   file_contents = data.frame(lapply(file_contents, function(x){ifelse(nchar(x) == 0, NA_character_, x)}))
   
   # drop rows that are all NA
-  file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]  
+  file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]
   
   return(file_contents)
 }

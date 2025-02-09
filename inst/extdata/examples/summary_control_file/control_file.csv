@@ -1,0 +1,12 @@
+﻿ENABLED,LABEL,GROUP,GROUP,DISTINCT,COUNT,COUNT,SUM,STDDEV,ENTITY,NOTES
+TRUE,area size,region,,household_uid,person_uid,,,,,"Except for ENABLED, you can have any number of columns of each type."
+TRUE,age distribution by area,region,age,household_uid,person_uid,,,,,"If the column ENABLED is included, rows set to FALSE will be omitted."
+TRUE,income by age,,age,,person_uid,has_income,income,income,,"LABEL allows you to include arbitrary text in your output, this is intended to provide a description of the summary."
+TRUE,education status,region,enrollment,,person_uid,,"{ ifelse(edu_level > 5, 1, 0) }",,school_id,"When the summary for the row is produced, the output is grouped by the group columns."
+TRUE,retired,region,,,"{ ifelse(age > 65, 1, NA) }",,,,,DISTINCT counts the number of distinct values in the column.
+TRUE,working age,region,,,"{ ifelse(16 < age & age < 65, 1, NA) }",,,,,COUNT counts the number of non-missing values in the column.
+TRUE,children,region,,,"{ ifelse(age < 16, 1, NA) }",,,,,"SUM calculates the sum total of the column, during validation the tool will error is this column is not numeric."
+FALSE,,,,,,,,,,STDDEV calculates the standard deviation of the column.
+FALSE,,,,,,,,,,"ENTITY works like DISTINCT, but with different labelling to reflect the intention."
+FALSE,,,,,,,,,,"NOTES columns are ignored. Any other column names are ignored, but generate a warning."
+FALSE,,,,,,,,,,"Input in {curry brackets} is treated as R code, this is intended for making minor adjustments to variables."

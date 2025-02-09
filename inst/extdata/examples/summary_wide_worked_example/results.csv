@@ -1,4 +1,4 @@
-﻿label1,label2,grplabel1,group1,grplabel2,group2,grplabel3,group3,count1,distinct1,distinct2,count2,sum1
+﻿label,label.1,grplabel,group,grplabel.1,group.1,grplabel.2,group.2,count,distinct,distinct.1,count.1,sum
 1,employed (region),region,north,NA,NA,employed,yes,4,2,NA,4,10000
 1,employed (region),region,east,NA,NA,employed,yes,2,1,NA,2,3000
 1,employed (region),region,south,NA,NA,employed,yes,3,1,NA,3,4000
