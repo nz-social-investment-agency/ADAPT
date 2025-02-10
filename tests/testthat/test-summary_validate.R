@@ -11,7 +11,7 @@ tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "ID
 control_file = load_control_file(control_file)
 tbl = read.csv(tbl)
 
-## test functionality ----------------------------------------------------- ----
+## test passing functionality --------------------------------------------- ----
 
 test_that("worked example passes",{
   
@@ -19,6 +19,8 @@ test_that("worked example passes",{
   expect_silent(validate_summary_control_file(control_file, tbl))
   
 })
+
+## test failing functionality --------------------------------------------- ----
 
 test_that("unaccepted columns warn",{
   
