@@ -5,8 +5,8 @@
 
 #' Confirm that control file instructions can be executed.
 #'
-#' @param control_file a data frame containing summary instructions. Most likely
-#' read into memory by `load_control_file`.
+#' @param control_file a data frame containing confidentialisation instructions.
+#' Most likely read into memory by `load_control_file`.
 #' @param tbl a data frame to confidentialise. Should be in local R memory.
 #'
 #' @return T/F whether or not all validation checks are passed. Generating
