@@ -28,10 +28,11 @@ suppression_format_extract = function(string){
   stopifnot(is.character(string))
   
   # remove spaces
+  input = string
   string = gsub(" ", "", string)
   
   # sign = string with all non-<=> characters removed
-  sign = gsub("[^<=>]", "", string)
+  sign = gsub("[^<>]", "", string)
   
   # column and threshold are on either size of sign
   split = strsplit(string, sign)[[1]]
@@ -48,12 +49,12 @@ suppression_format_extract = function(string){
   threshold = suppressWarnings(as.numeric(threshold))
   
   # check validity
-  valid = sign %in% c("<", ">", "<=", ">=") &
+  valid = sign %in% c("<", ">") &
     !is.na(threshold) &
     nchar(column) >= 1 
   
   # return
-  return(list(input = string, column = column, sign = sign, threshold = threshold, valid = valid))
+  return(list(input = input, column = column, sign = sign, threshold = threshold, valid = valid))
 }
 
 ## Random rounding -------------------------------------------------------- ----
@@ -198,6 +199,32 @@ apply_graduated_random_rounding = function(input_array, seeds = NULL, threshold 
   return(output)
 }
 
+## Conventional rounding -------------------------------------------------- ----
+#' Apply conventional rounding to an array
+#' 
+#' @param input_array a numeric array to randomly round.
+#' @param base the base to round to.
+#' 
+#' @return the input vector with all values rounded so they are
+#' divisible by `base`.
+#' 
+#' @details
+#' Consistent with `round` in base R (which implements the IEC 60559 standard)
+#' values of 0.5 are 'rounded to the even digit'. This is different from
+#' simple rounding where values of 0.5 are rounded up.
+#' 
+#' @export
+apply_conventional_rounding = function(input_array, base){
+  # check vector is numeric
+  stopifnot(is.numeric(input_array))
+  stopifnot(is.numeric(base))
+  stopifnot(base > 0)
+  
+  output_array = round(input_array / base) * base
+
+  return(output_array)
+}
+
 ## Suppress small counts -------------------------------------------------- ----
 #' Apply small count suppression to an array
 #' 
@@ -243,6 +270,41 @@ apply_small_count_suppression = function(input_array, with, threshold, treat_na_
   output = rep(NA_integer_, input_length)
   passes = with >= threshold
   output[passes] = input_array[passes]
+  
+  return(output)
+}
+
+## Create consistent seeds ------------------------------------------------ ----
+#' Create seeds for stable random rounding
+#' 
+#' @param source_values Numeric vector of values to round for which stable
+#' random rounding is required.
+#' @param stable_above Minimum source value for which consistent seeds are
+#' required. Defaults to 30, because in practice smaller values come from
+#' different sources.
+#'  
+#' @return Numeric vector of the same length as `source_values` suitable for
+#' in `apply_random_rounding` or `apply_graduated_random_rounding` as `seeds`.
+#' Output values will be identical where `source_values` and identical and
+#' greater than `stable_above`.
+#' 
+create_stable_seeds = function(source_values, stable_above = 30){
+  stopifnot(is.numeric(source_values))
+  stopifnot(is.numeric(stable_above))
+  stopifnot(length(stable_above) == 1)
+  
+  # missing values get 0
+  source_values = dplyr::coalesce(source_values, 0)
+  
+  # unique high values
+  high_values = unique(source_values[source_values >= stable_above])
+  possible_seeds = round(1000 * stats::runif(length(high_values)))
+  
+  output = sapply(
+    source_values,
+    function(x){
+      ifelse(x < stable_above, round(1000 * stats::runif(1)), possible_seeds[x == high_values])
+  })
   
   return(output)
 }

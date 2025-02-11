@@ -16,7 +16,7 @@
 #' The following checks are run and generate a failure if not passed:
 #' * First column of `control_file` contains confidentiality commands
 #' * Remaining columns listed in `control_file` match the column names of `tbl`.
-#' * At most one row of DROP, RENAME, ROUND, and TREAT_NA_AS instructions.
+#' * At most one row of DROP, RENAME, ROUND, and MISSING_TO instructions.
 #' * Rounding instructions are of the accepted types (RR3, GRR, CONV10, CONV100,
 #' CONV1000).
 #' * Missing NA value options are numeric.
@@ -57,7 +57,7 @@ validate_confidential_control_file = function(control_file, tbl){
   
   first_column = control_file[,1]
   
-  accepted_commands = c("drop", "rename", "treat_na_as", "round", "suppress", "notes", "note")
+  accepted_commands = c("drop", "rename", "missing_to", "round", "suppress", "notes", "note")
   unaccepted_entries = first_column[tolower(first_column) %not_in% accepted_commands]
   unaccepted_entries = unique(unaccepted_entries)
   
@@ -77,7 +77,7 @@ validate_confidential_control_file = function(control_file, tbl){
   ## command limits ----
   
   first_column = tolower(control_file[,1])
-  single_row_commands = c("drop", "rename", "round", "treat_na_as")
+  single_row_commands = c("drop", "rename", "round", "missing_to")
   
   for(ss in single_row_commands){
     if(sum(first_column == ss, na.rm = TRUE) <= 1){ next }
@@ -100,11 +100,11 @@ validate_confidential_control_file = function(control_file, tbl){
   
   ## numeric alternatives to NAs ----
   
-  treat_na_as_row = control_file[conf_cmds == "treat_na_as",2:ncols]
-  treat_na_as_row = treat_na_as_row[!is.na(treat_na_as_row)]
+  missing_to_row = control_file[conf_cmds == "missing_to",2:ncols]
+  missing_to_row = missing_to_row[!is.na(missing_to_row)]
   
-  non_numeric = is.na(suppressWarnings(as.numeric(treat_na_as_row)))
-  unaccepted_entries = treat_na_as_row[non_numeric]
+  non_numeric = is.na(suppressWarnings(as.numeric(missing_to_row)))
+  unaccepted_entries = missing_to_row[non_numeric]
   unaccepted_entries = unique(unaccepted_entries)
   
   msg = "Non-numeric values used to replace NA during confidentialisation: {unaccepted_entries}"
@@ -115,6 +115,7 @@ validate_confidential_control_file = function(control_file, tbl){
   # setup
   suppress_entries = control_file[conf_cmds == "suppress",2:ncols]
   suppress_entries = suppress_entries[!is.na(suppress_entries)]
+  suppress_entries = unique(suppress_entries)
   
   suppress_entries_df = lapply(suppress_entries, suppression_format_extract)
   suppress_entries_df = dplyr::bind_rows(c(

@@ -83,7 +83,7 @@ test_that("accepted rounding instructions", {
 
 test_that("missing NA options are numeric", {
   tmp = control_file
-  is_na_handle = tmp[,1] == "TREAT_NA_AS"
+  is_na_handle = tmp[,1] == "MISSING_TO"
   tmp[is_na_handle,2:7] = c("one", "two", "three", "four", "five", "six")
   
   expect_false(suppressWarnings(validate_confidential_control_file(tmp, tbl)))

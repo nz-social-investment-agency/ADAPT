@@ -7,20 +7,22 @@
 
 test_that("valid text works as expected", {
   
-  actual = suppression_format_extract("col<1")
-  expected = list(input = "col<1", column = "col", sign = "<", threshold = 1, valid = TRUE)
+  actual = suppression_format_extract("col < 1")
+  expected = list(input = "col < 1", column = "col", sign = "<", threshold = 1, valid = TRUE)
   expect_equal(actual, expected)
   
-  actual = suppression_format_extract("text_name<=10")
-  expected = list(input = "text_name<=10", column = "text_name", sign = "<=", threshold = 10, valid = TRUE)
+  # was originally "text_name <= 10" but equality removed
+  actual = suppression_format_extract("text_name < 10")
+  expected = list(input = "text_name < 10", column = "text_name", sign = "<", threshold = 10, valid = TRUE)
   expect_equal(actual, expected)
   
-  actual = suppression_format_extract("002>.name.")
-  expected = list(input = "002>.name.", column = ".name.", sign = ">", threshold = 2, valid = TRUE)
+  actual = suppression_format_extract("002 > .name.")
+  expected = list(input = "002 > .name.", column = ".name.", sign = ">", threshold = 2, valid = TRUE)
   expect_equal(actual, expected)
   
-  actual = suppression_format_extract(" 6 >= text ")
-  expected = list(input = "6>=text", column = "text", sign = ">=", threshold = 6, valid = TRUE)
+  # was originally " 6 >= text " but equality removed
+  actual = suppression_format_extract(" 6 > text ")
+  expected = list(input = " 6 > text ", column = "text", sign = ">", threshold = 6, valid = TRUE)
   expect_equal(actual, expected)
   
 })
@@ -28,15 +30,15 @@ test_that("valid text works as expected", {
 test_that("invalid text fails", {
   
   actual = suppression_format_extract("col < one")
-  expected = list(input = "col<one", column = "col", sign = "<", threshold = NA_integer_, valid = FALSE)
+  expected = list(input = "col < one", column = "col", sign = "<", threshold = NA_integer_, valid = FALSE)
   expect_equal(actual, expected)
   
-  actual = suppression_format_extract("text_name=10")
-  expected = list(input = "text_name=10", column = NA_character_, sign = "=", threshold = NA_integer_, valid = FALSE)
+  actual = suppression_format_extract("text_name <> 10")
+  expected = list(input = "text_name <> 10", column = "text_name", sign = "<>", threshold = 10, valid = FALSE)
   expect_equal(actual, expected)
   
   actual = suppression_format_extract("rubbish text")
-  expected = list(input = "rubbishtext", column = NA_character_, sign = "", threshold = NA_integer_, valid = FALSE)
+  expected = list(input = "rubbish text", column = NA_character_, sign = "", threshold = NA_integer_, valid = FALSE)
   expect_equal(actual, expected)
 
 })
@@ -230,6 +232,36 @@ test_that("graduate rounding respects thresholds", {
   
 })
 
+## apply_conventional_rounding(input_array, base) ------------------------- ----
+
+test_that("rounding matches base", {
+  
+  input = 0:10
+  expected = c(0,0,2,4,4,4,6,8,8,8,10)
+  
+  actual = apply_conventional_rounding(input, 2)
+  expect_equal(actual, expected)
+  
+})
+
+test_that("various bases work", {
+  
+  input = 0:20
+  
+  actual = apply_conventional_rounding(input, 3)
+  expected = c(0,0,3,3,3,6,6,6,9,9,9,12,12,12,15,15,15,18,18,18,21)
+  expect_equal(actual, expected)
+  
+  actual = apply_conventional_rounding(input, 5)
+  expected = c(0,0,0,5,5,5,5,5,10,10,10,10,10,15,15,15,15,15,20,20,20)
+  expect_equal(actual, expected)
+  
+  actual = apply_conventional_rounding(input, 10)
+  expected = c(0,0,0,0,0,0,10,10,10,10,10,10,10,10,10,20,20,20,20,20,20)
+  expect_equal(actual, expected)
+  
+})
+
 ## apply_small_count_suppression(input_array, with, threshold, treat_na_as) ----
 
 test_that("suppression occurs", {
@@ -348,4 +380,34 @@ test_that("missing values cause suppression", {
   expected = input
   expected[is.na(count) | count == 10] = NA
   expect_equal(actual, expected)
+})
+
+## create_stable_seeds(source_values, stable_above) ----------------------- ----
+
+test_that("table values generated", {
+  input = rep(sample(31:1000, 100, replace = TRUE), 20)
+  actual = create_stable_seeds(input)
+  expect_true(length(unique(actual)) < 100)
+})
+
+test_that("low values are not stable", {
+  input = sample(0:29, 1000, replace = TRUE)
+  actual = create_stable_seeds(input)
+  expect_true(length(unique(actual)) > 500)
+})
+
+test_that("stable_above control changes output", {
+  input= rep(10, 100)
+  
+  actual = create_stable_seeds(input, stable_above = 11)
+  expect_true(length(unique(actual)) > 50)
+  
+  actual = create_stable_seeds(input, stable_above = 9)
+  expect_true(length(unique(actual)) == 1)
+})
+
+test_that("NA values get seeds", {
+  input = c(NA,1,10,100,NA,1000)
+  actual = create_stable_seeds(input)
+  expect_false(any(is.na(actual)))
 })

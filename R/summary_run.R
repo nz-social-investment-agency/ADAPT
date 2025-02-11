@@ -18,15 +18,15 @@
 #' control file and appending all the summaries together.
 #' 
 #' @details
+#' The best way to understand the summary process is to review a worked example.
+#' Try `provide_example` for worked examples, or for example control files.
+#' 
 #' For each row in the control file, the summary tool produces a summary of tbl
 #' according to the specified instructions. All these summaries are combined
 #' into a single table and returned.
 #' 
 #' Control files are validated prior to execution. To validate a control file
 #' without execution use `validate_summary_control_file`.
-#' 
-#' The best way to understand the summary process is to review a worked example.
-#' Try `provide_example` for worked examples, or for example control files.
 #' 
 #' The accepted columns for the control file are:
 #' * ENABLED - TRUE/FALSE - If this column is included then rows set to FALSE
