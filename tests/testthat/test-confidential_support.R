@@ -34,7 +34,7 @@ test_that("invalid text fails", {
   expect_equal(actual, expected)
   
   actual = suppression_format_extract("text_name <> 10")
-  expected = list(input = "text_name <> 10", column = "text_name", sign = "<>", threshold = 10, valid = FALSE)
+  expected = list(input = "text_name <> 10", column = NA_character_, sign = "<>", threshold = NA_integer_, valid = FALSE)
   expect_equal(actual, expected)
   
   actual = suppression_format_extract("rubbish text")

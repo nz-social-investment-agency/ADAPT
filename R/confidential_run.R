@@ -44,10 +44,11 @@
 #' Multiple SUPPRESS rows are accepted, where there are multiple suppression
 #' conditions add one per row.
 #' * NOTES - this row is ignored and does not effect output. It is
-#' intended for adding notes to the control file.
+#' intended for adding notes to the control file. You can have as many note rows
+#' as you want.
 #' 
-#' Column that have had rounding or suppression applied will appear twice in the
-#' output: once with their original values and a second time with rounded / 
+#' Columns that have had rounding or suppression applied will appear twice in
+#' the output: once with their original values and a second time with rounded / 
 #' suppressed values. This second column is named with the prefix "conf_".
 #'  
 #' Random rounding and Graduated random rounding via `run_confidential` include
@@ -93,11 +94,9 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   ## convert NAs ----
   
   treat_na_row = control_file[conf_cmds == "missing_to",2:ncols, drop = FALSE]
-  treat_na_row = suppressWarnings(as.numeric(treat_na_row))
-  treat_na_row = treat_na_row[!is.na(treat_na_row), drop = FALSE]
-  treat_na_row = as.list(treat_na_row)
+  treat_na_row = treat_na_row[1,!is.na(treat_na_row), drop = FALSE]
   
-  mutate_command = glue::glue("dplyr::coalesce({names(treat_na_row)}, {treat_na_row})")
+  mutate_command = glue::glue("dplyr::coalesce({names(treat_na_row)}, {as.numeric(treat_na_row)})")
   names(mutate_command) = names(treat_na_row)
   
   tbl = dplyr::mutate(tbl, !!!rlang::parse_exprs(mutate_command))
@@ -125,6 +124,7 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   ## round and suppression ----
   
   round_and_suppress = control_file[conf_cmds %in% c("round", "suppress"), 2:ncols, drop = FALSE]
+  round_and_suppress = dplyr::rename(round_and_suppress, !!!rlang::parse_exprs(rename_command))
   
   # iterate through columns
   for(cc in colnames(round_and_suppress)){
@@ -186,11 +186,11 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   ## drop unwanted columns ----
   
   drop_row = control_file[conf_cmds == "drop",2:ncols, drop = FALSE]
-  drop_row = drop_row[!is.na(drop_row), drop = FALSE]
-  drop_row = drop_row[tolower(drop_row) %in% c("true", "1", "t", "yes", "drop"), drop = FALSE]
+  drop_row = drop_row[1,!is.na(drop_row), drop = FALSE]
+  drop_row = drop_row[1,tolower(drop_row) %in% c("true", "1", "t", "yes", "drop"), drop = FALSE]
   
-  output_df = dplyr::select(output_df, -dplyr::all_of(colnames(drop_row)))
+  tbl = dplyr::select(tbl, -dplyr::all_of(colnames(drop_row)))
   
   ## conclude ----
-  return(output_df)
+  return(tbl)
 }

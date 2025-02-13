@@ -27,20 +27,21 @@
 suppression_format_extract = function(string){
   stopifnot(is.character(string))
   
-  # remove spaces
+  # keep original
   input = string
-  string = gsub(" ", "", string)
   
-  # sign = string with all non-<=> characters removed
+  # sign = string with all non-<> characters removed
   sign = gsub("[^<>]", "", string)
   
   # column and threshold are on either size of sign
   split = strsplit(string, sign)[[1]]
-  if(grepl("<", sign)){
-    column = split[1]
+  split = trimws(split)
+  
+  if(sign == "<"){
+    column = make.names(split[1])
     threshold = split[2]
-  } else if(grepl(">", sign)) {
-    column = split[2]
+  } else if(sign == ">") {
+    column = make.names(split[2])
     threshold = split[1]
   } else {
     column = NA_character_

@@ -1,0 +1,6 @@
+﻿COMMAND,age group,survey_respondents,wgt_count,measure,median score,entity count
+MISSING_TO,,,,,,9999
+ROUND,,RR3,CONV100,,,
+SUPPRESS,,survey_respondents < 6,survey_respondents < 6,,survey_respondents < 10,
+SUPPRESS,,wgt_count < 1000,wgt_count < 1000,,wgt_count < 1000,
+SUPPRESS,,entity count < 2,entity count < 2,,entity count < 2,

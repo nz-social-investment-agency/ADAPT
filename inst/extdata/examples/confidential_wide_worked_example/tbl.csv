@@ -1,0 +1,8 @@
+﻿grplabel,group,number of businesses,industry=A,industry=B,industry=C,industry=D,industry=E,industry=F,industry=G,industry=H,employee count,employee count p%,total exports (000's),exports p%,total imports (000's),imports p%
+region,north,470,42,117,8,86,51,85,35,46,23030,0.93,183.3,0.43,68.62,0.27
+region,south,560,63,57,37,94,40,120,96,53,6160,0.03,129.92,0.49,220.64,0.13
+region,east,583,118,100,60,111,5,62,37,90,9328,0.93,176.066,0.39,259.435,0.23
+region,west,250,65,22,43,9,5,12,62,32,3500,0.84,102,0.16,32.5,0.82
+size,small,581,70,108,45,71,23,74,115,75,13944,0.72,213.808,0.3,232.4,0.06
+size,medium,762,135,117,63,147,39,126,60,75,16764,0.08,57.15,0.27,101.346,0.66
+size,large,520,84,70,40,81,40,79,55,71,8320,0.4,221.52,0.72,158.08,1

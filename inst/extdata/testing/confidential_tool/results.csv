@@ -1,0 +1,19 @@
+﻿summary_id,age,region,col03,val03,num_hhlds,num_people,num_w_event,total_events,industry_ent,edu_ent,conf_num_hhlds,conf_num_people,conf_num_w_event,conf_total_events
+age x type,younger,,type,A,1,2,19,107500,2,2,NA,NA,20,NA
+age x type,younger,,type,B,2,5,20,122000,2,2,NA,NA,20,NA
+age x group,younger,,group,X,3,7,37,163900,2,2,NA,9,40,NA
+age x group,younger,,group,Y,4,12,49,166800,1,2,NA,NA,NA,NA
+age x type,older,,type,A,5,19,60,117000,2,2,NA,18,60,NA
+age x type,older,,type,B,6,20,74,172400,2,2,6,20,70,172400
+age x group,older,,group,X,7,33,89,198900,1,2,NA,NA,NA,NA
+age x group,older,,group,Y,8,44,103,144900,2,2,9,45,100,144900
+region x type,,north,type,B,9,55,629,119000,2,2,9,55,630,119000
+region x group,,north,group,X,19,66,817,199500,0,1,NA,NA,NA,NA
+region x group,,north,group,Y,20,77,991,184100,1,2,NA,NA,NA,NA
+region x type,,south,type,A,19,88,1002,131100,2,2,18,85,1000,131100
+region x group,,south,group,X,20,99,1200,125300,2,2,21,100,1200,125300
+region x group,,south,group,Y,25,111,2468,112400,2,2,24,110,2470,112400
+age x region,younger,north,,,30,333,3579,118700,9999,2,30,330,3580,118700
+age x region,younger,south,,,58,555,5791,101800,9999,2,60,560,5790,101800
+age x region,older,north,,,103,777,3782,177500,9999,2,102,780,3780,177500
+age x region,older,south,,,712,999,9090,141500,9999,0,NA,NA,NA,NA

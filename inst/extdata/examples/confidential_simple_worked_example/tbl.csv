@@ -1,0 +1,145 @@
+﻿col01,val01,col02,val02,col03,val03,label1,count1,count2,sum1
+age,younger,,,type,A,hospital events,53,10,700
+age,younger,,,type,B,hospital events,100,62,3100
+age,younger,,,group,X,hospital events,19,1,10
+age,younger,,,group,Y,hospital events,60,37,3330
+age,older,,,type,A,hospital events,47,37,1480
+age,older,,,type,B,hospital events,85,45,450
+age,older,,,group,X,hospital events,57,47,4700
+age,older,,,group,Y,hospital events,70,24,960
+,,region,north,type,B,hospital events,96,42,3360
+,,region,north,group,X,hospital events,10,2,140
+,,region,north,group,Y,hospital events,51,15,900
+,,region,south,type,A,hospital events,25,4,120
+,,region,south,group,X,hospital events,5,1,70
+,,region,south,group,Y,hospital events,88,27,1620
+age,younger,region,north,,,hospital events,29,21,1260
+age,younger,region,south,,,hospital events,59,57,3990
+age,older,region,north,,,hospital events,95,36,1800
+age,older,region,south,,,hospital events,41,21,2100
+age,younger,,,type,A,driver licenses,47,4,400
+age,younger,,,type,B,driver licenses,23,9,450
+age,younger,,,group,X,driver licenses,31,2,180
+age,younger,,,group,Y,driver licenses,55,54,3240
+age,older,,,type,A,driver licenses,67,20,600
+age,older,,,type,B,driver licenses,53,36,3240
+age,older,,,group,X,driver licenses,6,4,320
+age,older,,,group,Y,driver licenses,82,37,2220
+,,region,north,type,B,driver licenses,22,6,60
+,,region,north,group,X,driver licenses,98,23,1610
+,,region,north,group,Y,driver licenses,87,87,3480
+,,region,south,type,A,driver licenses,4,4,120
+,,region,south,group,X,driver licenses,96,29,580
+,,region,south,group,Y,driver licenses,73,12,240
+age,younger,region,north,,,driver licenses,48,43,2580
+age,younger,region,south,,,driver licenses,52,19,570
+age,older,region,north,,,driver licenses,98,29,2610
+age,older,region,south,,,driver licenses,32,8,720
+age,younger,,,type,A,court charges,94,34,2720
+age,younger,,,type,B,court charges,15,5,250
+age,younger,,,group,X,court charges,48,1,40
+age,younger,,,group,Y,court charges,29,16,480
+age,older,,,type,A,court charges,44,5,450
+age,older,,,type,B,court charges,15,11,770
+age,older,,,group,X,court charges,20,14,840
+age,older,,,group,Y,court charges,54,23,2300
+,,region,north,type,B,court charges,42,37,2960
+,,region,north,group,X,court charges,44,39,1560
+,,region,north,group,Y,court charges,10,8,320
+,,region,south,type,A,court charges,8,8,160
+,,region,south,group,X,court charges,2,2,140
+,,region,south,group,Y,court charges,83,12,480
+age,younger,region,north,,,court charges,25,17,1700
+age,younger,region,south,,,court charges,77,27,2160
+age,older,region,north,,,court charges,21,15,150
+age,older,region,south,,,court charges,61,8,720
+age,younger,,,type,A,employed,8,3,90
+age,younger,,,type,B,employed,12,8,480
+age,younger,,,group,X,employed,11,1,20
+age,younger,,,group,Y,employed,23,4,120
+age,older,,,type,A,employed,26,17,680
+age,older,,,type,B,employed,81,40,3600
+age,older,,,group,X,employed,26,12,480
+age,older,,,group,Y,employed,19,18,1260
+,,region,north,type,B,employed,30,1,10
+,,region,north,group,X,employed,58,9,180
+,,region,north,group,Y,employed,18,18,900
+,,region,south,type,A,employed,58,24,1200
+,,region,south,group,X,employed,87,43,3870
+,,region,south,group,Y,employed,56,41,1640
+age,younger,region,north,,,employed,32,32,1280
+age,younger,region,south,,,employed,100,5,100
+age,older,region,north,,,employed,22,3,180
+age,older,region,south,,,employed,50,38,760
+age,younger,,,type,A,police interactions,93,5,150
+age,younger,,,type,B,police interactions,32,27,2160
+age,younger,,,group,X,police interactions,18,11,440
+age,younger,,,group,Y,police interactions,66,39,3900
+age,older,,,type,A,police interactions,48,44,440
+age,older,,,type,B,police interactions,25,19,1330
+age,older,,,group,X,police interactions,23,17,1020
+age,older,,,group,Y,police interactions,39,21,1890
+,,region,north,type,B,police interactions,47,9,450
+,,region,north,group,X,police interactions,27,9,630
+,,region,north,group,Y,police interactions,39,8,160
+,,region,south,type,A,police interactions,61,58,4060
+,,region,south,group,X,police interactions,57,4,280
+,,region,south,group,Y,police interactions,26,5,150
+age,younger,region,north,,,police interactions,89,54,4320
+age,younger,region,south,,,police interactions,57,38,3800
+age,older,region,north,,,police interactions,97,71,4970
+age,older,region,south,,,police interactions,92,48,4320
+age,younger,,,type,A,live births,64,26,260
+age,younger,,,type,B,live births,92,42,420
+age,younger,,,group,X,live births,25,25,750
+age,younger,,,group,Y,live births,19,19,1520
+age,older,,,type,A,live births,60,4,320
+age,older,,,type,B,live births,8,2,100
+age,older,,,group,X,live births,71,33,330
+age,older,,,group,Y,live births,19,4,240
+,,region,north,type,B,live births,43,21,1050
+,,region,north,group,X,live births,88,39,2730
+,,region,north,group,Y,live births,38,21,1680
+,,region,south,type,A,live births,3,1,80
+,,region,south,group,X,live births,31,24,960
+,,region,south,group,Y,live births,22,3,300
+age,younger,region,north,,,live births,95,88,7040
+age,younger,region,south,,,live births,56,21,1890
+age,older,region,north,,,live births,41,4,200
+age,older,region,south,,,live births,29,24,1440
+age,younger,,,type,A,benefit receipt,8,8,800
+age,younger,,,type,B,benefit receipt,35,27,2700
+age,younger,,,group,X,benefit receipt,68,63,1260
+age,younger,,,group,Y,benefit receipt,46,31,930
+age,older,,,type,A,benefit receipt,58,3,180
+age,older,,,type,B,benefit receipt,79,42,420
+age,older,,,group,X,benefit receipt,69,68,680
+age,older,,,group,Y,benefit receipt,84,8,480
+,,region,north,type,B,benefit receipt,14,5,450
+,,region,north,group,X,benefit receipt,84,3,150
+,,region,north,group,Y,benefit receipt,72,49,2450
+,,region,south,type,A,benefit receipt,28,18,1800
+,,region,south,group,X,benefit receipt,23,7,70
+,,region,south,group,Y,benefit receipt,46,11,770
+age,younger,region,north,,,benefit receipt,100,22,1540
+age,younger,region,south,,,benefit receipt,47,46,3220
+age,older,region,north,,,benefit receipt,86,57,3420
+age,older,region,south,,,benefit receipt,85,81,7290
+age,younger,,,type,A,emergency housing,48,10,200
+age,younger,,,type,B,emergency housing,43,1,50
+age,younger,,,group,X,emergency housing,37,3,60
+age,younger,,,group,Y,emergency housing,10,9,720
+age,older,,,type,A,emergency housing,41,38,3040
+age,older,,,type,B,emergency housing,31,11,660
+age,older,,,group,X,emergency housing,74,52,4680
+age,older,,,group,Y,emergency housing,60,52,3640
+,,region,north,type,B,emergency housing,89,33,1320
+,,region,north,group,X,emergency housing,81,1,100
+,,region,north,group,Y,emergency housing,48,34,1700
+,,region,south,type,A,emergency housing,94,51,510
+,,region,south,group,X,emergency housing,58,45,2700
+,,region,south,group,Y,emergency housing,12,3,60
+age,younger,region,north,,,emergency housing,85,65,5200
+age,younger,region,south,,,emergency housing,98,79,2370
+age,older,region,north,,,emergency housing,75,29,1160
+age,older,region,south,,,emergency housing,21,8,640

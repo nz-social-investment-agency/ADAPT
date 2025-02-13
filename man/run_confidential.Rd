@@ -2,10 +2,7 @@
 % Please edit documentation in R/confidential_run.R
 \name{run_confidential}
 \alias{run_confidential}
-\title{Notes
-\itemize{
-\item awaiting completion of documentation
-}}
+\title{Notes}
 \usage{
 run_confidential(control_file, tbl, stable_above = 30)
 }
@@ -56,11 +53,12 @@ CONV1000 (for conventional rounding to base 10, 100, or 1000).
 Multiple SUPPRESS rows are accepted, where there are multiple suppression
 conditions add one per row.
 \item NOTES - this row is ignored and does not effect output. It is
-intended for adding notes to the control file.
+intended for adding notes to the control file. You can have as many note rows
+as you want.
 }
 
-Column that have had rounding or suppression applied will appear twice in the
-output: once with their original values and a second time with rounded /
+Columns that have had rounding or suppression applied will appear twice in
+the output: once with their original values and a second time with rounded /
 suppressed values. This second column is named with the prefix "conf_".
 
 Random rounding and Graduated random rounding via \code{run_confidential} include

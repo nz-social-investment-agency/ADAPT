@@ -1,0 +1,6 @@
+﻿COMMAND,grplabel,group,number of businesses,industry=A,industry=B,industry=C,industry=D,industry=E,industry=F,industry=G,industry=H,employee count,employee count p%,total exports (000's),exports p%,total imports (000's),imports p%
+ROUND,,,GRR,GRR,GRR,GRR,GRR,GRR,GRR,GRR,GRR,GRR,,,,,
+SUPPRESS,,,number of businesses < 6,,,,,,,,,number of businesses < 20,,number of businesses < 20,,number of businesses < 20,
+SUPPRESS,,,,industry=A < 6,industry=B < 6,industry=C < 6,industry=D < 6,industry=E < 6,industry=F < 6,industry=G < 6,industry=H < 6,,,,,,
+SUPPRESS,,,,,,,,,,,,employee count p% < 0.2,,exports p% < 0.2,,imports p% < 0.2,
+NOTES,,,,,,,,,,,,"We have picked 0.2 arbitrarily to demonstrate the p% rule, consult Stats NZ's guidance as to the exact p% threshold",,,,,

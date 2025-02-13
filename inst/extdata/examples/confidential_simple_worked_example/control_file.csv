@@ -1,0 +1,6 @@
+﻿COMMAND,col01,val01,col02,val02,col03,val03,label1,count1,count2,sum1
+DROP,TRUE,,TRUE,,,,,,,
+RENAME,,age,,region,,,experience,num_people,num_w_experience,num_experiences
+ROUND,,,,,,,,RR3,RR3,
+SUPPRESS,,,,,,,,num_people < 6,num_w_experience < 6,num_people < 20
+SUPPRESS,,,,,,,,,,num_w_experience < 20

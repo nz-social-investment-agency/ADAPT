@@ -1,8 +1,8 @@
 ﻿COMMAND,label1,col01,val01,col02,val02,col03,val03,distinct1,count1,count2,sum1,entity1,entity2
 DROP,,TRUE,,TRUE,,,,,,,,,
-RENAME,summery_id,,age,,region,,,num_hhlds,num_people,num_w_event,total_events,industry_ent,edu_ent
+RENAME,summary_id,,age,,region,,,num_hhlds,num_people,num_w_event,total_events,industry_ent,edu_ent
 MISSING_TO,,,,,,,,,,,,9999,0
-ROUND,,,,,,,,RR3,GRR,CONV100,,,
+ROUND,,,,,,,,RR3,GRR,CONV10,,,
 SUPPRESS,,,,,,,,distinct1 < 6,count1 < 6,count2 < 6,distinct1 < 20,,
 SUPPRESS,,,,,,,,,,,count1 < 20,,
 SUPPRESS,,,,,,,,,,,count2 < 20,,

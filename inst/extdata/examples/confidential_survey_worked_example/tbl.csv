@@ -1,0 +1,73 @@
+﻿age group,survey_respondents,wgt_count,measure,median score,entity count
+age 16-20,30,3379,self-rated wellbeing,260.1,NA
+age 21-25,26,2997,self-rated wellbeing,468.3,NA
+age 26-30,24,2688,self-rated wellbeing,423.2,NA
+age 31-35,9,954,self-rated wellbeing,454.2,NA
+age 36-40,33,3536,self-rated wellbeing,895.8,NA
+age 41-45,50,5650,self-rated wellbeing,808.9,NA
+age 46-50,8,1008,self-rated wellbeing,614.8,NA
+age 51-55,43,4902,self-rated wellbeing,301.5,NA
+age 56-60,47,5452,self-rated wellbeing,158.4,NA
+age 61-65,9,1170,self-rated wellbeing,496.2,NA
+age 66-70,11,1133,self-rated wellbeing,193.8,NA
+age 71-75,8,864,self-rated wellbeing,330.2,NA
+age 16-20,30,3379,housing quality score,194.5,NA
+age 21-25,26,2997,housing quality score,502.4,NA
+age 26-30,24,2688,housing quality score,194.2,NA
+age 31-35,9,954,housing quality score,682.5,NA
+age 36-40,33,3536,housing quality score,286,NA
+age 41-45,50,5650,housing quality score,411.4,NA
+age 46-50,8,1008,housing quality score,602.7,NA
+age 51-55,43,4902,housing quality score,675.7,NA
+age 56-60,47,5452,housing quality score,870.4,NA
+age 61-65,9,1170,housing quality score,238.8,NA
+age 66-70,11,1133,housing quality score,852.5,NA
+age 71-75,8,864,housing quality score,573.9,NA
+age 16-20,30,3379,household income,607.7,NA
+age 21-25,26,2997,household income,603.3,NA
+age 26-30,24,2688,household income,164,NA
+age 31-35,9,954,household income,561.8,NA
+age 36-40,33,3536,household income,265.4,NA
+age 41-45,50,5650,household income,207.2,NA
+age 46-50,8,1008,household income,569.5,NA
+age 51-55,43,4902,household income,413.5,NA
+age 56-60,47,5452,household income,466.5,NA
+age 61-65,9,1170,household income,202.9,NA
+age 66-70,11,1133,household income,677.1,NA
+age 71-75,8,864,household income,663.4,NA
+age 16-20,30,3379,standardised health score,718.8,7
+age 21-25,26,2997,standardised health score,124.8,3
+age 26-30,24,2688,standardised health score,334.6,3
+age 31-35,9,954,standardised health score,438.6,10
+age 36-40,33,3536,standardised health score,833,4
+age 41-45,50,5650,standardised health score,570.7,5
+age 46-50,8,1008,standardised health score,129,8
+age 51-55,43,4902,standardised health score,604.5,15
+age 56-60,47,5452,standardised health score,804.6,5
+age 61-65,9,1170,standardised health score,372.6,9
+age 66-70,11,1133,standardised health score,174.5,4
+age 71-75,8,864,standardised health score,730.8,10
+age 16-20,30,3379,self-rated sense of safety,328.2,NA
+age 21-25,26,2997,self-rated sense of safety,750.8,NA
+age 26-30,24,2688,self-rated sense of safety,303.5,NA
+age 31-35,9,954,self-rated sense of safety,738.3,NA
+age 36-40,33,3536,self-rated sense of safety,876.2,NA
+age 41-45,50,5650,self-rated sense of safety,191.1,NA
+age 46-50,8,1008,self-rated sense of safety,540.7,NA
+age 51-55,43,4902,self-rated sense of safety,422.2,NA
+age 56-60,47,5452,self-rated sense of safety,867.8,NA
+age 61-65,9,1170,self-rated sense of safety,253.6,NA
+age 66-70,11,1133,self-rated sense of safety,807.5,NA
+age 71-75,8,864,self-rated sense of safety,468.5,NA
+age 16-20,30,3379,monthly housing cost,838.7,NA
+age 21-25,26,2997,monthly housing cost,751.5,NA
+age 26-30,24,2688,monthly housing cost,468.4,NA
+age 31-35,9,954,monthly housing cost,773.6,NA
+age 36-40,33,3536,monthly housing cost,629.9,NA
+age 41-45,50,5650,monthly housing cost,372.7,NA
+age 46-50,8,1008,monthly housing cost,482.2,NA
+age 51-55,43,4902,monthly housing cost,581.9,NA
+age 56-60,47,5452,monthly housing cost,880.1,NA
+age 61-65,9,1170,monthly housing cost,231.2,NA
+age 66-70,11,1133,monthly housing cost,824.5,NA
+age 71-75,8,864,monthly housing cost,114.1,NA
