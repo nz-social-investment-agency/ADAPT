@@ -10,16 +10,16 @@ older,,group,Y,hospital events,70,24,960,72,24,960
 ,north,type,B,hospital events,96,42,3360,96,42,3360
 ,north,group,X,hospital events,10,2,140,9,NA,NA
 ,north,group,Y,hospital events,51,15,900,51,15,NA
-,south,type,A,hospital events,25,4,120,24,NA,120
+,south,type,A,hospital events,25,4,120,24,NA,NA
 ,south,group,X,hospital events,5,1,70,NA,NA,NA
 ,south,group,Y,hospital events,88,27,1620,87,27,1620
 younger,north,,,hospital events,29,21,1260,30,21,1260
 younger,south,,,hospital events,59,57,3990,57,57,3990
 older,north,,,hospital events,95,36,1800,96,36,1800
 older,south,,,hospital events,41,21,2100,39,21,2100
-younger,,type,A,driver licenses,47,4,400,48,NA,400
+younger,,type,A,driver licenses,47,4,400,48,NA,NA
 younger,,type,B,driver licenses,23,9,450,24,9,NA
-younger,,group,X,driver licenses,31,2,180,30,NA,180
+younger,,group,X,driver licenses,31,2,180,30,NA,NA
 younger,,group,Y,driver licenses,55,54,3240,54,54,3240
 older,,type,A,driver licenses,67,20,600,66,21,600
 older,,type,B,driver licenses,53,36,3240,54,36,3240
@@ -37,9 +37,9 @@ older,north,,,driver licenses,98,29,2610,99,27,2610
 older,south,,,driver licenses,32,8,720,33,6,NA
 younger,,type,A,court charges,94,34,2720,93,33,2720
 younger,,type,B,court charges,15,5,250,15,NA,NA
-younger,,group,X,court charges,48,1,40,48,NA,40
+younger,,group,X,court charges,48,1,40,48,NA,NA
 younger,,group,Y,court charges,29,16,480,30,18,NA
-older,,type,A,court charges,44,5,450,42,NA,450
+older,,type,A,court charges,44,5,450,42,NA,NA
 older,,type,B,court charges,15,11,770,15,9,NA
 older,,group,X,court charges,20,14,840,21,12,NA
 older,,group,Y,court charges,54,23,2300,54,24,2300
@@ -56,22 +56,22 @@ older,south,,,court charges,61,8,720,60,6,NA
 younger,,type,A,employed,8,3,90,9,NA,NA
 younger,,type,B,employed,12,8,480,12,6,NA
 younger,,group,X,employed,11,1,20,12,NA,NA
-younger,,group,Y,employed,23,4,120,24,NA,120
+younger,,group,Y,employed,23,4,120,24,NA,NA
 older,,type,A,employed,26,17,680,27,18,NA
 older,,type,B,employed,81,40,3600,81,39,3600
 older,,group,X,employed,26,12,480,27,12,NA
 older,,group,Y,employed,19,18,1260,18,18,NA
-,north,type,B,employed,30,1,10,30,NA,10
+,north,type,B,employed,30,1,10,30,NA,NA
 ,north,group,X,employed,58,9,180,60,9,NA
 ,north,group,Y,employed,18,18,900,18,18,NA
 ,south,type,A,employed,58,24,1200,60,24,1200
 ,south,group,X,employed,87,43,3870,87,42,3870
 ,south,group,Y,employed,56,41,1640,57,39,1640
 younger,north,,,employed,32,32,1280,33,30,1280
-younger,south,,,employed,100,5,100,99,NA,100
-older,north,,,employed,22,3,180,21,NA,180
+younger,south,,,employed,100,5,100,99,NA,NA
+older,north,,,employed,22,3,180,21,NA,NA
 older,south,,,employed,50,38,760,51,36,760
-younger,,type,A,police interactions,93,5,150,93,NA,150
+younger,,type,A,police interactions,93,5,150,93,NA,NA
 younger,,type,B,police interactions,32,27,2160,33,27,2160
 younger,,group,X,police interactions,18,11,440,18,9,NA
 younger,,group,Y,police interactions,66,39,3900,66,39,3900
@@ -83,8 +83,8 @@ older,,group,Y,police interactions,39,21,1890,39,21,1890
 ,north,group,X,police interactions,27,9,630,27,9,NA
 ,north,group,Y,police interactions,39,8,160,39,6,NA
 ,south,type,A,police interactions,61,58,4060,60,57,4060
-,south,group,X,police interactions,57,4,280,57,NA,280
-,south,group,Y,police interactions,26,5,150,27,NA,150
+,south,group,X,police interactions,57,4,280,57,NA,NA
+,south,group,Y,police interactions,26,5,150,27,NA,NA
 younger,north,,,police interactions,89,54,4320,90,54,4320
 younger,south,,,police interactions,57,38,3800,57,36,3800
 older,north,,,police interactions,97,71,4970,96,69,4970
@@ -93,7 +93,7 @@ younger,,type,A,live births,64,26,260,63,27,260
 younger,,type,B,live births,92,42,420,93,42,420
 younger,,group,X,live births,25,25,750,27,27,750
 younger,,group,Y,live births,19,19,1520,18,18,NA
-older,,type,A,live births,60,4,320,60,NA,320
+older,,type,A,live births,60,4,320,60,NA,NA
 older,,type,B,live births,8,2,100,9,NA,NA
 older,,group,X,live births,71,33,330,72,33,330
 older,,group,Y,live births,19,4,240,18,NA,NA
@@ -102,21 +102,21 @@ older,,group,Y,live births,19,4,240,18,NA,NA
 ,north,group,Y,live births,38,21,1680,39,21,1680
 ,south,type,A,live births,3,1,80,NA,NA,NA
 ,south,group,X,live births,31,24,960,30,24,960
-,south,group,Y,live births,22,3,300,24,NA,300
+,south,group,Y,live births,22,3,300,24,NA,NA
 younger,north,,,live births,95,88,7040,96,87,7040
 younger,south,,,live births,56,21,1890,57,21,1890
-older,north,,,live births,41,4,200,39,NA,200
+older,north,,,live births,41,4,200,39,NA,NA
 older,south,,,live births,29,24,1440,30,24,1440
 younger,,type,A,benefit receipt,8,8,800,9,6,NA
 younger,,type,B,benefit receipt,35,27,2700,36,27,2700
 younger,,group,X,benefit receipt,68,63,1260,69,63,1260
 younger,,group,Y,benefit receipt,46,31,930,45,30,930
-older,,type,A,benefit receipt,58,3,180,60,NA,180
+older,,type,A,benefit receipt,58,3,180,60,NA,NA
 older,,type,B,benefit receipt,79,42,420,78,42,420
 older,,group,X,benefit receipt,69,68,680,69,66,680
 older,,group,Y,benefit receipt,84,8,480,84,6,NA
 ,north,type,B,benefit receipt,14,5,450,15,NA,NA
-,north,group,X,benefit receipt,84,3,150,84,NA,150
+,north,group,X,benefit receipt,84,3,150,84,NA,NA
 ,north,group,Y,benefit receipt,72,49,2450,72,48,2450
 ,south,type,A,benefit receipt,28,18,1800,27,18,NA
 ,south,group,X,benefit receipt,23,7,70,24,6,NA
@@ -126,15 +126,15 @@ younger,south,,,benefit receipt,47,46,3220,48,45,3220
 older,north,,,benefit receipt,86,57,3420,87,57,3420
 older,south,,,benefit receipt,85,81,7290,84,81,7290
 younger,,type,A,emergency housing,48,10,200,48,9,NA
-younger,,type,B,emergency housing,43,1,50,42,NA,50
-younger,,group,X,emergency housing,37,3,60,39,NA,60
+younger,,type,B,emergency housing,43,1,50,42,NA,NA
+younger,,group,X,emergency housing,37,3,60,39,NA,NA
 younger,,group,Y,emergency housing,10,9,720,12,9,NA
 older,,type,A,emergency housing,41,38,3040,39,36,3040
 older,,type,B,emergency housing,31,11,660,30,12,NA
 older,,group,X,emergency housing,74,52,4680,75,51,4680
 older,,group,Y,emergency housing,60,52,3640,60,51,3640
 ,north,type,B,emergency housing,89,33,1320,90,33,1320
-,north,group,X,emergency housing,81,1,100,81,NA,100
+,north,group,X,emergency housing,81,1,100,81,NA,NA
 ,north,group,Y,emergency housing,48,34,1700,48,33,1700
 ,south,type,A,emergency housing,94,51,510,93,51,510
 ,south,group,X,emergency housing,58,45,2700,60,45,2700

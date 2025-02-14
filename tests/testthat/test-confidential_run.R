@@ -78,7 +78,11 @@ test_that("worked example passes",{
       next
     }
     
+    # rounding
     help_check_rounding(cc, control_file, actual, results)
+    
+    # suppression
+    expect_true(all(is.na(actual[[cc]]) == is.na(results[[cc]])))
   }
 })
 
@@ -241,7 +245,11 @@ test_that("confidential_simple_worked_example passes", {
       next
     }
     
+    # rounding
     help_check_rounding(cc, control_file, actual, results)
+    
+    # suppression
+    expect_true(all(is.na(actual[[cc]]) == is.na(results[[cc]])))
   }
 })
 
@@ -278,7 +286,11 @@ test_that("confidential_survey_worked_example passes", {
       next
     }
     
+    # rounding
     help_check_rounding(cc, control_file, actual, results)
+    
+    # suppression
+    expect_true(all(is.na(actual[[cc]]) == is.na(results[[cc]])))
   }
 })
 
@@ -315,6 +327,10 @@ test_that("confidential_wide_worked_example passes", {
       next
     }
     
+    # rounding
     help_check_rounding(cc, control_file, actual, results)
+    
+    # suppression
+    expect_true(all(is.na(actual[[cc]]) == is.na(results[[cc]])))
   }
 })
