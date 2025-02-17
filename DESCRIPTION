@@ -12,9 +12,11 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
+    DBI,
     dbplyr,
     dplyr,
     glue,
+    odbc,
     readxl,
     rlang,
     stats,

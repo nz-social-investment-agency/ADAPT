@@ -55,6 +55,34 @@ test_that("delimiters removed", {
   expect_equal(remove_delimiters("{ text }", "{}"), "text")
 })
 
+## is_delimited(string, delimiter) ---------------------------------------- ----
+
+
+test_that("delimiters are checked", {
+  expect_true(is_delimited("[string]", "[]"))
+  expect_true(is_delimited('"string"', "\""))
+  expect_true(is_delimited('"[string]"', "\""))
+  expect_true(is_delimited('"string"', "\""))
+  expect_true(is_delimited("\"string\"", "\""))
+})
+
+test_that("delimiters are not muddled", {
+  expect_false(is_delimited("[string]", "\""))
+  expect_false(is_delimited('"string"', "[]"))
+  expect_false(is_delimited('"[string]"', "[]"))
+  expect_false(is_delimited('"string"', "[]"))
+  expect_false(is_delimited("\"string\"", "[]"))
+})
+
+test_that("non-sql delimiters work", {
+  expect_true(is_delimited("astringa", "a"))
+  expect_true(is_delimited("astringb", "ab"))
+  expect_true(is_delimited("astringb", "ab"))
+  expect_false(is_delimited(" string ", "ab"))
+  expect_false(is_delimited("astring ", "ab"))
+  expect_false(is_delimited(" stringb", "ab"))
+})
+
 ## no_obvious_injection(string) ------------------------------------------- ----
 
 test_that("innocent text accepted", {

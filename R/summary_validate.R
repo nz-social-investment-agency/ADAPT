@@ -45,7 +45,7 @@ validate_summary_control_file = function(control_file, tbl){
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t"))
+    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
   }
   
   ## setup for checks ----

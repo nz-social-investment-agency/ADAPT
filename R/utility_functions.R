@@ -66,6 +66,35 @@ remove_delimiters = function(string, delimiter) {
   return(trimws(substr(string, first_char, last_char)))
 }
 
+## Check if delimited ----------------------------------------------------- ----
+#' Check string for delimiter
+#' 
+#' The entries in the input control tables should be delimited as either
+#' [] for sql columns or "" for strings
+#' This lets us run a check for the right delimiter, e.g.
+#' is_delimited(string, "[]")
+#' is_delimited(string, "\"")
+#' 
+#' @param string the string to check for delimiter
+#' @param delimiter a 1 or 2 character string containing the delimiter
+#' 
+#' @return T/F if the string is delimited
+#' 
+is_delimited = function(string, delimiter) {
+  stopifnot(is.character(string))
+  stopifnot(is.character(delimiter))
+  stopifnot(nchar(delimiter) %in% 1:2)
+  
+  n_str = nchar(string)
+  n_delim = nchar(delimiter)
+  
+  string_longer_than_delimiters = n_str >= n_delim
+  first_char_delimited = substr(string, 1, 1) == substr(delimiter, 1, 1)
+  last_char_delimited = substr(string, n_str, n_str) == substr(delimiter, n_delim, n_delim)
+  
+  return(string_longer_than_delimiters & first_char_delimited & last_char_delimited)
+}
+
 ## No obvious code injection risk ----------------------------------------- ----
 #' Check input string for obvious markers of code injection.
 #' 

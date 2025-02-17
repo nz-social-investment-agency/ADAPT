@@ -79,7 +79,7 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t"))
+    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
   }
   
   if(nrow(control_file) == 0){
