@@ -1,11 +1,5 @@
 ################################################################################
 #' Notes
-#' - need conversion to receive db_connection instead of connection string
-#' - need testing in lab whether dbConnect can reconnect a closed connection
-#' and that created temporary tables are discarded during the disconnection.
-#' - Can not disconnect & reconnect SQL Server connection easily - instead make
-#' method to delete temp tables, which is the main reason we want to disconnect
-#' and reconnect
 #' 
 ################################################################################
 
@@ -13,8 +7,7 @@
 #'
 #' @param control_file a data frame containing assembly instructions. Most
 #' likely read into memory by `load_control_file`.
-#' @param connection_string A connection string for the database containing
-#' the data, where assembly should take place.
+#' @param db_connection A connection to the database where assembly is to occur.
 #' @param master_table The name of the table onto which columns should be
 #' assembled. It is recommended using the full table name: database.schema.table
 #' @param sql_folder The folder location containing SQL scripts. Will only be
@@ -41,18 +34,12 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-validate_assembly_control_file = function(control_file, connection_string, master_table, sql_folder = "."){
+validate_assembly_control_file = function(control_file, db_connection, master_table, sql_folder = "."){
   stopifnot(is.data.frame(control_file))
-  stopifnot(is.character(connection_string))
+  stopifnot(DBI::dbIsValid(db_connection))
   stopifnot(is.character(master_table))
   stopifnot(is.character(sql_folder))
   stopifnot(dir.exists(sql_folder))
-  
-  ## connect to database, ensuring connection string works ----
-  
-  db_conn = DBI::dbConnect(odbc::odbc(), .connection_string = connection_string)
-  stopifnot(DBI::dbIsValid(db_conn))
-  on.exit(DBI::dbDisconnect(db_conn))
   
   ## initialize ----
   
@@ -149,7 +136,7 @@ validate_assembly_control_file = function(control_file, connection_string, maste
   
   ## Master table exists ----
   
-  master_table_exists = DBI::dbExistsTable(db_conn, dplyr::sql(master_table))
+  master_table_exists = DBI::dbExistsTable(db_connection, dplyr::sql(master_table))
   
   if(!master_table_exists){
     msg = glue::glue("Master table '{master_table}' not found in database.")
@@ -167,7 +154,7 @@ validate_assembly_control_file = function(control_file, connection_string, maste
     cols_to_check = unique(cols_to_check)
     
     # connect to db table & get colnames
-    remote_master_table = dplyr::tbl(db_conn, I(master_table))
+    remote_master_table = dplyr::tbl(db_connection, I(master_table))
     mt_colnames = colnames(remote_master_table)
     
     # missing cols
@@ -192,7 +179,7 @@ validate_assembly_control_file = function(control_file, connection_string, maste
     this_file = distinct_file_and_tables$measure_file[row]
     this_table = distinct_file_and_tables$measure_table[row]
     
-    measure_table_exists = DBI::dbExistsTable(db_conn, dplyr::sql(this_table))
+    measure_table_exists = DBI::dbExistsTable(db_connection, dplyr::sql(this_table))
     file_contents_exist = sql_file_exists_and_contains(this_file, this_table)
     
     # warnings
@@ -213,7 +200,7 @@ validate_assembly_control_file = function(control_file, connection_string, maste
     
     if(measure_table_exists){
       # connect to db table & get colnames
-      remote_measure_table = dplyr::tbl(db_conn, I(this_table))
+      remote_measure_table = dplyr::tbl(db_connection, I(this_table))
       measure_colnames = colnames(remote_measure_table)
       
       # missing cols

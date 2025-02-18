@@ -1,0 +1,7 @@
+snz_uid,accident_date,accident_cause,days_recovery_time,rehab_uid
+1,2012-05-01,"fall",3,11111
+1,2012-06-01,"vehicle",2,11111
+2,2016-04-01,"April fools trick",3,22222
+2,2017-04-01,"April fools trick",1,33333
+2,2018-04-01,"April fools trick",0,33333
+2,2019-04-01,"April fools trick",8,22222

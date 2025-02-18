@@ -142,4 +142,3 @@ sql_file_exists_and_contains = function(file, text){
   # return text in file
   return(sapply(text, grepl, x = contents, USE.NAMES = FALSE))
 }
-

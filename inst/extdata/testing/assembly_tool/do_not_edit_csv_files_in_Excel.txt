@@ -1,0 +1,2 @@
+Because Excel converts csv dates from YYYY-MM-DD format into DD/MM/YYYY format.
+Then when these files are saved, they are saved with the wrong formatting.

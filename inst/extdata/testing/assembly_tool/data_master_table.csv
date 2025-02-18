@@ -1,0 +1,5 @@
+snz_uid,type,period,start_date,end_date
+1,fast,before,2012-04-01,2012-07-01
+1,fast,after,2012-07-01,2013-07-01
+2,delayed,before,2017-12-25,2018-03-25
+2,delayed,after,2018-03-25,2019-03-25
