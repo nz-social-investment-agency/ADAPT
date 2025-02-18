@@ -1,5 +1,11 @@
 ################################################################################
 #' Notes
+#' - need conversion to receive db_connection instead of connection string
+#' - need testing in lab whether dbConnect can reconnect a closed connection
+#' and that created temporary tables are discarded during the disconnection.
+#' - Can not disconnect & reconnect SQL Server connection easily - instead make
+#' method to delete temp tables, which is the main reason we want to disconnect
+#' and reconnect
 #' 
 ################################################################################
 
@@ -234,7 +240,7 @@ validate_assembly_control_file = function(control_file, connection_string, maste
   
   ## Output methods are accepted types ----
   
-  accepted_output_methods = c("MIN", "MAX", "SUM", "COUNT", "DISTINCT", "ENTITY", "DURATION", "SUM_WITHIN")
+  accepted_output_methods = c("MIN", "MAX", "SUM", "MEAN", "EXISTS", "COUNT", "DISTINCT", "ENTITY", "DURATION", "SUM_WITHIN")
   actual_output_methods = unique(control_file$output_method)
   invalid_methods = setdiff(tolower(actual_output_methods), tolower(accepted_output_methods))
   

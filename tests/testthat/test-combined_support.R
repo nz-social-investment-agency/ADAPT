@@ -77,3 +77,9 @@ test_that("code files written", {
   expect_true(folder_exists)
   expect_false(folder_exists_at_end)
 })
+
+## fetch_all_sql_server_temp_tables(db_connection, global_temp_tables = FALSE) ----
+# not unit tested as requires SQL Server data base
+
+## drop_sql_server_tables(db_connection, tables, if_exists = TRUE) -------- ----
+# not unit tested as requires SQL Server data base
