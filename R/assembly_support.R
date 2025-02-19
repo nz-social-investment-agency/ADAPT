@@ -123,7 +123,7 @@ sql_file_exists_and_contains = function(file, text){
   contents = paste0(contents, collapse = "\n")
   
   # remove comments
-  single_line_comment_pattern = "--.*\\n"
+  single_line_comment_pattern = "--.*?\\n"
   multi_line_comment_pattern = "(?s)/\\*.*?\\*/"
   
   contents = gsub(single_line_comment_pattern, "", contents)
@@ -137,7 +137,6 @@ sql_file_exists_and_contains = function(file, text){
   }
   text = gsub("\\[", "\\\\\\[?", text)
   text = gsub("\\]", "\\\\\\]?", text)
-  text = paste0(" ", text, " ")
   
   # return text in file
   return(sapply(text, grepl, x = contents, USE.NAMES = FALSE))

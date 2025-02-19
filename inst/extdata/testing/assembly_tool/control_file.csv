@@ -1,4 +1,4 @@
-ENABLED,description,populaiton_uid,period_start,period_end,measure_file,measure_table,measure_uid,measure_start,measure_end,measure_value,output_name,output_method,output_type
+ENABLED,description,population_uid,period_start,period_end,measure_file,measure_table,measure_uid,measure_start,measure_end,measure_value,output_name,output_method,output_type
 TRUE,accidents during period,[snz_uid],[start_date],[end_date],demo_script_accidents.sql,[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],"""1""","""num_accidents""",COUNT,INT
 TRUE,average recovery time from accidents,[snz_uid],[start_date],[end_date],demo_script_accidents.sql,[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],"{ IIF([days_recovery_time] = 0, NULL, [days_recovery_time]) }","""avg_recovery_time""",MEAN,FLOAT
 TRUE,total number of different types of accidents ever experienced,[snz_uid],"""1950-01-01""","""2050-01-01""",demo_script_accidents.sql,[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],[accident_cause],"""different_types_accidents""",DISTINCT,INT

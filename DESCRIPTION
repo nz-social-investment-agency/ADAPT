@@ -17,7 +17,6 @@ Imports:
     dbplyr,
     dplyr,
     glue,
-    odbc,
     readxl,
     rlang,
     stats,

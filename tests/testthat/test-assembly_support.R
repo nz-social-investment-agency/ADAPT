@@ -136,3 +136,23 @@ test_that("multiple text strings found at once", {
   expected = c(TRUE, TRUE, TRUE, TRUE, FALSE)
   expect_equal(actual, expected)
 })
+
+test_that("comments don't interfere with non-connets", {
+  tmp_file = file.path(tempdir(), "testing8.sql")
+  writeLines("a--b\nc/*d*/e\nf\n/*\ng\n*/h", tmp_file)
+  
+  actual = sql_file_exists_and_contains(tmp_file, c("a", "b", "c", "d", "e","f", "g", "h"))
+  expected = c(TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE)
+  expect_equal(actual, expected)
+})
+
+test_that("test files found", {
+  
+  # testing folder
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  
+  expect_true(sql_file_exists_and_contains(file.path(test_folder, "demo_script_accidents.sql"), "tmp_accidents"))
+  
+  expect_true(sql_file_exists_and_contains(file.path(test_folder, "demo_script_benefits.sql"), "tmp_benefit_payment"))
+})
+

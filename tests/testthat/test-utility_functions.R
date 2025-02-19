@@ -109,3 +109,17 @@ test_that("unmatched brackets rejected", {
   expect_false(no_obvious_injection("not [innocent text"))
   expect_false(no_obvious_injection("not innocent text]"))
 })
+
+## sql2id(sql_string) ----------------------------------------------------- ----
+
+test_that("single sql string to Id", {
+  actual = sql2id("[name]")
+  expected = DBI::Id("name")
+  expect_identical(actual, expected)
+})
+
+test_that("multi sql string to Id", {
+  actual = sql2id("[db].[schema].[table]")
+  expected = DBI::Id("db", "schema", "table")
+  expect_identical(actual, expected)
+})

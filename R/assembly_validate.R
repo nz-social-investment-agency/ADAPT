@@ -26,6 +26,7 @@
 #' * Measure tables exist in the database or are found in the measure_file.
 #' * Measure columns exist in the database or are found in the measure_file.
 #' * Output methods are accepted types.
+#' * Output types are accepted SQL data types
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * Unrecognised column names are present.
@@ -72,7 +73,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   
   ## Required column names are present ----
   
-  req_cols = c("populaiton_uid", "period_start", "period_end", 
+  req_cols = c("population_uid", "period_start", "period_end", 
                "measure_table", "measure_uid", "measure_start", "measure_end",
                "measure_value", "output_name", "output_method", "output_type")
   missing_cols = setdiff(req_cols, colnames(control_file))
@@ -126,7 +127,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
       
       if(!pass){
         passes_all_critical_checks = FALSE
-        accepted = rownames(column_reqs)[column_reqs[[col]]]
+        accepted = paste(rownames(column_reqs)[column_reqs[[col]]], collapse = ", ")
         msg = glue::glue("Unaccepted input in column '{col}', row '{row}'\n",
                          "Accepted values are {accepted}")
         warning(msg)
@@ -136,7 +137,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   
   ## Master table exists ----
   
-  master_table_exists = DBI::dbExistsTable(db_connection, dplyr::sql(master_table))
+  master_table_exists = DBI::dbExistsTable(db_connection, sql2id(master_table))
   
   if(!master_table_exists){
     msg = glue::glue("Master table '{master_table}' not found in database.")
@@ -152,6 +153,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
     cols_to_check = c(control_file$population_uid, control_file$period_start, control_file$period_end)
     cols_to_check = cols_to_check[is_delimited(cols_to_check, "[]")]
     cols_to_check = unique(cols_to_check)
+    cols_to_check = remove_delimiters(cols_to_check, "[]")
     
     # connect to db table & get colnames
     remote_master_table = dplyr::tbl(db_connection, I(master_table))
@@ -173,14 +175,14 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   distinct_file_and_tables = dplyr::select(control_file, dplyr::all_of(c("measure_file", "measure_table")))
   distinct_file_and_tables = dplyr::distinct(distinct_file_and_tables)
   
-  for(row in seq_along(nrow(distinct_file_and_tables))){
+  for(row in seq_len(nrow(distinct_file_and_tables))){
     
     ### table ----
     this_file = distinct_file_and_tables$measure_file[row]
     this_table = distinct_file_and_tables$measure_table[row]
     
-    measure_table_exists = DBI::dbExistsTable(db_connection, dplyr::sql(this_table))
-    file_contents_exist = sql_file_exists_and_contains(this_file, this_table)
+    measure_table_exists = DBI::dbExistsTable(db_connection, sql2id(this_table))
+    file_contents_exist = sql_file_exists_and_contains(file.path(sql_folder, this_file), this_table)
     
     # warnings
     if(!(measure_table_exists | file_contents_exist)){
@@ -197,33 +199,34 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
     cols_to_check = c(tmp_cf$measure_uid, tmp_cf$measure_start, tmp_cf$measure_end, tmp_cf$measure_value)
     cols_to_check = cols_to_check[is_delimited(cols_to_check, "[]")]
     cols_to_check = unique(cols_to_check)
+    cols_to_check = remove_delimiters(cols_to_check, "[]")
     
     if(measure_table_exists){
-      # connect to db table & get colnames
+      # connect to db table & get column names
       remote_measure_table = dplyr::tbl(db_connection, I(this_table))
       measure_colnames = colnames(remote_measure_table)
       
       # missing cols
       missing_cols = setdiff(cols_to_check, measure_colnames)
       
-      msg = "Column '{col}' not found in table '{this_table}'."
+      display_msg = "Column '{col}' not found in table '{this_table}'."
     }
     
     if(file_contents_exist & !measure_table_exists){
       # cols to check in file
-      valid_cols = sql_file_exists_and_contains(this_file, cols_to_check)
+      valid_cols = sql_file_exists_and_contains(file.path(sql_folder, this_file), cols_to_check)
       missing_cols = cols_to_check[!valid_cols]
       
-      msg = "Column '{col}' not found in file '{this_file}'."
+      display_msg = "Column '{col}' not found in file '{this_file}'."
     }
     
     for(col in missing_cols){
-      msg = glue::glue(msg)
+      msg = glue::glue(display_msg)
       warning(msg)
     }
     passes_all_critical_checks = passes_all_critical_checks & length(missing_cols) == 0
     
-  }
+  } # end for loop over row
   
   ## Output methods are accepted types ----
   
@@ -238,6 +241,18 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   
   passes_all_critical_checks = passes_all_critical_checks & length(invalid_methods) == 0
 
+  ## Output data types are valid SQL ----
+  
+  actual_output_types = unique(control_file$output_type)
+  invalid_types = actual_output_types[!is_valid_data_type(actual_output_types)]
+  
+  for(tt in invalid_types){
+    msg = glue::glue("Output type '{tt}' is not an accepted data type.")
+    warning(msg)
+  }
+  
+  passes_all_critical_checks = passes_all_critical_checks & length(invalid_types) == 0
+  
   ## conclude ----
   return(passes_all_critical_checks)
 }

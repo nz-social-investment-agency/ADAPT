@@ -126,3 +126,22 @@ no_obvious_injection = function(string) {
   
   return(no_special_characters & no_unmatched_quotes & no_unmatched_brackets)
 }
+
+## SQL character string to Id --------------------------------------------- ----
+#' Convert character string of SQL name to Id
+#' 
+#' @param sql_string A string containing the name of an SQL object, most likely
+#' delimited with square brackets.
+#' 
+#' @returns A `DBI::Id` object converting from splitting `sql_string` by `.`
+#' and removing `[]` delimiters.
+#' 
+#' @export
+sql2id = function(sql_string){
+  stopifnot(is.character(sql_string))
+  stopifnot(length(sql_string) == 1)
+  
+  split = strsplit(sql_string, ".", fixed = TRUE)[[1]]
+  sql_id = DBI::Id(remove_delimiters(split, "[]"))
+  return(sql_id)
+}

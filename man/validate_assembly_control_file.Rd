@@ -6,7 +6,7 @@
 \usage{
 validate_assembly_control_file(
   control_file,
-  connection_string,
+  db_connection,
   master_table,
   sql_folder = "."
 )
@@ -15,8 +15,7 @@ validate_assembly_control_file(
 \item{control_file}{a data frame containing assembly instructions. Most
 likely read into memory by \code{load_control_file}.}
 
-\item{connection_string}{A connection string for the database containing
-the data, where assembly should take place.}
+\item{db_connection}{A connection to the database where assembly is to occur.}
 
 \item{master_table}{The name of the table onto which columns should be
 assembled. It is recommended using the full table name: database.schema.table}
@@ -42,6 +41,7 @@ The following checks are run and generate a failure if not passed:
 \item Measure tables exist in the database or are found in the measure_file.
 \item Measure columns exist in the database or are found in the measure_file.
 \item Output methods are accepted types.
+\item Output types are accepted SQL data types
 }
 
 The following checks are run and only generate a warning if not passed:
