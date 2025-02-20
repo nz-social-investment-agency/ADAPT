@@ -27,6 +27,7 @@ The following checks are run and generate a failure if not passed:
 \item dynamic formula can be executed
 \item Each row has at least one summary generated
 \item columns to sum are numeric
+\item grouping columns are not dynamic
 }
 
 The following checks are run and only generate a warning if not passed:
@@ -34,5 +35,6 @@ The following checks are run and only generate a warning if not passed:
 \item acceptable column names ("enabled", "group", "label", "distinct", "count",
 "sum", "entity", "stddev", "notes")
 \item column is not empty
+\item grouping columns not used for summarising
 }
 }

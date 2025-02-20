@@ -271,3 +271,164 @@ test_that("additional columns ignored",{
   actual = generate_summary_commands(summary_row)
   expect_equal(actual, expected)
 })
+
+## entity_union_all_conversion(summary_row, tbl) -------------------------- ----
+
+test_that("No entities returns unchanged", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "uid",
+    entity = NA_character_,
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    ent = c(100,200,100,200,300,200),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_union_all_conversion(summary_row, tbl)
+  
+  expect_identical(actual, tbl)
+})
+
+test_that("Existing entities returns unchanged", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "uid",
+    entity = "ent",
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    ent = c(100,200,100,200,300,200),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_union_all_conversion(summary_row, tbl)
+  
+  expect_identical(actual, tbl)
+})
+
+test_that("Unaccepted reuse errors", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "region",
+    entity = "ent",
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    ent__min = c(100,200,100,200,300,200),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_error(entity_union_all_conversion(summary_row, tbl), "group and summary")
+})
+
+test_that("Min and max doubled", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "uid",
+    entity = "ent",
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    age = c(20,30,40,50,60,70),
+    ent__min = c(100,200,100,200,300,200),
+    ent__max = c(700,800,800,700,800,900),
+    stringsAsFactors = FALSE
+  )
+  
+  expected = data.frame(
+    region = rep(c(1,2,3,1,2,3), 2),
+    area = rep(c(9,9,9,8,8,8), 2),
+    uid = c(111,222,333,444,555,666,rep(NA,6)),
+    age = c(20,30,40,50,60,70,rep(NA,6)),
+    ent__min = c(100,200,100,200,300,200,rep(NA,6)),
+    ent__max = c(700,800,800,700,800,900,rep(NA,6)),
+    ent = c(100,200,100,200,300,200,700,800,800,700,800,900),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_union_all_conversion(summary_row, tbl)
+  
+  expect_identical(actual, expected)
+})
+
+test_that("only min works", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "uid",
+    entity = "ent",
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    age = c(20,30,40,50,60,70),
+    ent__min = c(100,200,100,200,300,200),
+    stringsAsFactors = FALSE
+  )
+  
+  expected = data.frame(
+    region = rep(c(1,2,3,1,2,3), 2),
+    area = rep(c(9,9,9,8,8,8), 2),
+    uid = c(111,222,333,444,555,666,rep(NA,6)),
+    age = c(20,30,40,50,60,70,rep(NA,6)),
+    ent__min = c(100,200,100,200,300,200,rep(NA,6)),
+    ent = c(100,200,100,200,300,200,rep(NA,6)),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_union_all_conversion(summary_row, tbl)
+  
+  expect_identical(actual, expected)
+})
+
+test_that("only max works", {
+  summary_row = data.frame(
+    group = "region",
+    group2 = "area",
+    count = "uid",
+    entity = "ent",
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    region = c(1,2,3,1,2,3),
+    area = c(9,9,9,8,8,8),
+    uid = c(111,222,333,444,555,666),
+    age = c(20,30,40,50,60,70),
+    ent__max = c(700,800,800,700,800,900),
+    stringsAsFactors = FALSE
+  )
+  
+  expected = data.frame(
+    region = rep(c(1,2,3,1,2,3), 2),
+    area = rep(c(9,9,9,8,8,8), 2),
+    uid = c(111,222,333,444,555,666,rep(NA,6)),
+    age = c(20,30,40,50,60,70,rep(NA,6)),
+    ent__max = c(700,800,800,700,800,900,rep(NA,6)),
+    ent = c(rep(NA,6),700,800,800,700,800,900),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_union_all_conversion(summary_row, tbl)
+  
+  expect_identical(actual, expected)
+})

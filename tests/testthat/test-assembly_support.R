@@ -9,7 +9,7 @@ test_that("single column dropped", {
   
   actual = alter_table_drop_column("mt", "col_name")
   
-  expect_true(grepl("ALTER TABLE mt", actual))
+  expect_true(grepl("ALTER TABLE \\[mt\\]", actual))
   expect_true(grepl("DROP\\nCOLUMN ", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col_name\\]", actual))
 })
@@ -18,7 +18,7 @@ test_that("multi column dropped", {
   
   actual = alter_table_drop_column("mt", c("col1", "col2"))
   
-  expect_true(grepl("ALTER TABLE mt", actual))
+  expect_true(grepl("ALTER TABLE \\[mt\\]", actual))
   expect_true(grepl("DROP\\nCOLUMN ", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col1\\]", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col2\\]", actual))
@@ -37,14 +37,14 @@ test_that("single column added", {
   
   actual = alter_table_add_column("mt", "col_name", "int")
   
-  expect_true(grepl("ALTER TABLE mt ADD", actual))
+  expect_true(grepl("ALTER TABLE \\[mt\\] ADD", actual))
   expect_true(grepl("\\[col_name\\] INT", actual))
 })
 
 test_that("multi column added", {
   actual = alter_table_add_column("mt", c("col1", "col2"), c("varchar(10)", "date"))
   
-  expect_true(grepl("ALTER TABLE mt ADD", actual))
+  expect_true(grepl("ALTER TABLE \\[mt\\] ADD", actual))
   expect_true(grepl("\\[col1\\] VARCHAR\\(10\\)", actual))
   expect_true(grepl("\\[col2\\] DATE", actual))
 })

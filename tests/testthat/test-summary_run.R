@@ -239,3 +239,32 @@ test_that("summary_wide_worked_example passes", {
   
   expect_true(all.equal(actual, results))
 })
+
+test_that("summary_entity_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_entity_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_entity_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_entity_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  control_file = load_control_file(control_file)
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  
+  actual = run_summary(control_file, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+})

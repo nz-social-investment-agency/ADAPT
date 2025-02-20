@@ -59,8 +59,9 @@ in the column.
 during validation the tool will error is this column is not numeric.
 \item STDDEV - name of columns of \code{tbl} - calculates the standard deviation of the
 column.
-\item ENTITY  - name of columns of \code{tbl} -  works like DISTINCT, but labeled to
-reflect the intention of counting entities.
+\item ENTITY  - name of columns of \code{tbl} -  similar to DISTINCT, but checks for
+columns with \verb{*__min} and \verb{*__max} suffixes and takes a distinct over the union
+of these columns if available. Designed for counting entities.
 \item NOTES - free text - column is ignored and does not effect output. Intended
 for adding notes to control file. Any other column names are also ignored,
 but generate a warning.

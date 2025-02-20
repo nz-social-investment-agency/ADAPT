@@ -7,6 +7,6 @@ TRUE,retired,region,,,"{ ifelse(age > 65, 1, NA) }",,,,,DISTINCT counts the numb
 TRUE,working age,region,,,"{ ifelse(16 < age & age < 65, 1, NA) }",,,,,COUNT counts the number of non-missing values in the column.
 TRUE,children,region,,,"{ ifelse(age < 16, 1, NA) }",,,,,"SUM calculates the sum total of the column, during validation the tool will error is this column is not numeric."
 FALSE,,,,,,,,,,STDDEV calculates the standard deviation of the column.
-FALSE,,,,,,,,,,"ENTITY works like DISTINCT, but with different labelling to reflect the intention."
+FALSE,,,,,,,,,,"ENTITY works like DISTINCT, but will union over _min and _max suffixes too."
 FALSE,,,,,,,,,,"NOTES columns are ignored. Any other column names are ignored, but generate a warning."
 FALSE,,,,,,,,,,"Input in {curry brackets} is treated as R code, this is intended for making minor adjustments to variables."

@@ -1,0 +1,7 @@
+﻿label,grplabel,group,distinct1,distinct2,entity1,entity2,entity3
+static,area_number,1,2,2,2,2,2
+static,area_number,4,1,5,1,5,6
+static,area_number,12,5,5,5,5,10
+static,area_number,25,1,1,1,1,1
+dynamic,region,s,6,6,6,6,11
+dynamic,region,n,2,6,2,6,6

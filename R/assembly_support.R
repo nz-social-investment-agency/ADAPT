@@ -20,6 +20,8 @@ alter_table_drop_column = function(table_name, columns, if_exists = TRUE){
   stopifnot(is.character(columns) & length(columns) >= 1)
   stopifnot(if_exists %in% c(TRUE, FALSE))
   
+  table_name = add_delimiters(table_name, delimiter = "[]")
+  
   if_exists = ifelse(if_exists, " IF EXISTS ", " ")
   
   columns = sapply(columns, add_delimiters, delimiter = "[]")
@@ -48,6 +50,8 @@ alter_table_add_column = function(table_name, columns, types){
   stopifnot(is.character(columns) & length(columns) >= 1)
   stopifnot(is.character(types) & length(types) >= 1)
   stopifnot(length(columns) == length(types))
+  
+  table_name = add_delimiters(table_name, delimiter = "[]")
   
   types = toupper(types)
   stopifnot(all(sapply(types, is_valid_data_type)))

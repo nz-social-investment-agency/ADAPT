@@ -179,3 +179,89 @@ generate_summary_commands = function(summary_row){
   
   return(summary_command)
 }
+
+## Union all over entities ------------------------------------------------ ----
+#' Take union of tbl to allow for combining of min and max entities
+#'
+#' @param summary_row A single row of the control file.
+#' @param tbl a data frame to summarise. Can be in-memory or remote accessed
+#' with dbplyr.
+#' 
+#' @returns The tbl modified for handling `*__min` and `*__max` entities if
+#' required.
+#' 
+#' @details
+#' The 'entity' summary type takes distinct values. It also allows for distinct
+#' values over two columns `*__min` and `*__max`. The only practical way to
+#' implement this is to take a union all of the table stacking the `*__min` and
+#' `*__max` columns into a single column.
+#' 
+#' 
+entity_union_all_conversion = function(summary_row, tbl){
+  stopifnot(is.data.frame(summary_row))
+  stopifnot(nrow(summary_row) == 1)
+  stopifnot(is.data.frame(tbl))
+  
+  ## determine if extra entity handling is required ----
+  entity_columns = grepl("^entity", tolower(colnames(summary_row)))
+  entity_columns = unlist(summary_row[1,entity_columns], use.names = FALSE)
+  entity_columns = entity_columns[!is.na(entity_columns)]
+  missing_entity_columns = setdiff(entity_columns, colnames(tbl))
+  
+  ## exit asap if no entity ----
+  if(length(missing_entity_columns) == 0){
+    return(tbl)
+  }
+  
+  ## extract required cols ----
+  
+  # entity column names
+  new_entity_cols = missing_entity_columns
+  min_entity_cols = glue::glue("{missing_entity_columns}__min")
+  max_entity_cols = glue::glue("{missing_entity_columns}__max")
+  
+  # grouping column names
+  group_cols = grepl("^group", tolower(colnames(summary_row)))
+  group_cols = unlist(summary_row[1,group_cols], use.names = FALSE)
+  group_cols = group_cols[!is.na(group_cols)]
+  
+  ## check for conflicts ----
+  
+  summary_cols = c("distinct", "count", "sum", "entity", "stddev")
+  summary_cols = paste0("^", summary_cols, collapse = "|")
+  summary_cols = grepl(summary_cols, tolower(colnames(summary_row)))
+  summary_cols = unlist(summary_row[1,summary_cols], use.names = FALSE)
+  summary_cols = summary_cols[!is.na(summary_cols)]
+  
+  for(cc in group_cols){
+    # pass if grouping column not found in any summary column
+    if(!any(grepl(paste0("\\b", cc, "\\b"), summary_cols))){ next }
+    
+    msg = "Can not use column for both group and summary when processing 2-column entities"
+    msg = glue::glue("{msg}\nPlease review: {cc}.")
+    stop(msg)
+  }
+  
+  ## make first table ----
+  
+  mutate_commands = ifelse(min_entity_cols %in% colnames(tbl), min_entity_cols, NA_character_)
+  names(mutate_commands) = new_entity_cols
+  
+  first_tbl = dplyr::mutate(tbl, !!!rlang::parse_exprs(mutate_commands))
+  first_tbl = dplyr::select(first_tbl, dplyr::all_of(c(colnames(tbl), new_entity_cols)))
+  
+  ## make second table ----
+  
+  mutate_commands = ifelse(max_entity_cols %in% colnames(tbl), max_entity_cols, NA_character_)
+  names(mutate_commands) = new_entity_cols
+  
+  non_group_cols = setdiff(colnames(tbl), group_cols)
+  mutate_commands2 = rep(NA_character_, length(non_group_cols))
+  names(mutate_commands2) = non_group_cols
+  
+  second_tbl = dplyr::mutate(tbl, !!!rlang::parse_exprs(c(mutate_commands, mutate_commands2)))
+  second_tbl = dplyr::select(second_tbl, dplyr::all_of(c(colnames(tbl), new_entity_cols)))
+  
+  ## return union all ----
+  return(dplyr::union_all(first_tbl, second_tbl))
+}

@@ -119,7 +119,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$distinct1 = 19
   
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(control_file, tmp, stable_above = 1000)
   
   # RR3 to 18
   non_nas = !is.na(actual$conf_num_hhlds)
@@ -130,7 +130,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$distinct1 = 20
   
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(control_file, tmp, stable_above = 1000)
   
   # RR3 to 21
   non_nas = !is.na(actual$conf_num_hhlds)
@@ -141,7 +141,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$count1 = 19
   
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(control_file, tmp, stable_above = 1000)
   
   # GRR to 18
   non_nas = !is.na(actual$conf_num_people)
@@ -155,11 +155,11 @@ test_that("thresholds respected",{
   cf = control_file
   cf[6,2] = "count1 < 42"
   
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(cf, tmp, stable_above = 1000)
   
   # GRR to 45
   non_nas = !is.na(actual$conf_num_people)
-  expect_true(sum(non_nas) > 0)
+  expect_true(sum(non_nas, na.rm = TRUE) > 0)
   expect_true(all(actual$conf_num_people[non_nas] == 45))
   
 })

@@ -44,8 +44,9 @@
 #' during validation the tool will error is this column is not numeric.
 #' * STDDEV - name of columns of `tbl` - calculates the standard deviation of the
 #' column.
-#' * ENTITY  - name of columns of `tbl` -  works like DISTINCT, but labeled to
-#' reflect the intention of counting entities.
+#' * ENTITY  - name of columns of `tbl` -  similar to DISTINCT, but checks for
+#' columns with `*__min` and `*__max` suffixes and takes a distinct over the union
+#' of these columns if available. Designed for counting entities.
 #' * NOTES - free text - column is ignored and does not effect output. Intended
 #' for adding notes to control file. Any other column names are also ignored,
 #' but generate a warning.
@@ -114,6 +115,9 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
     
     this_row = control_file[ii,]
     
+    # union all conversion for entities
+    entity_tbl = entity_union_all_conversion(this_row, tbl)
+    
     # group commands
     group_command = this_row[,col_type == "group", drop = FALSE]
     group_command = group_command[,!is.na(group_command), drop = FALSE]
@@ -141,7 +145,7 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
     rename_command = unlist(rename_inputs)
     
     # execute
-    tmp_results = dplyr::group_by(tbl, !!!rlang::syms(group_command))
+    tmp_results = dplyr::group_by(entity_tbl, !!!rlang::syms(group_command))
     tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
     tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
     tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))

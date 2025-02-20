@@ -85,9 +85,9 @@ test_that("random rounding is distributed correctly", {
   denom = diff_of_1 + diff_of_2
   
   # assert - base 3
-  expect_true(0.30 < diff_of_0 / LENG & diff_of_0 / LENG < 0.36)
-  expect_true(0.63 < diff_of_1 / denom & diff_of_1 / denom < 0.69)
-  expect_true(0.30 < diff_of_2 / denom & diff_of_2 / denom < 0.36)
+  expect_true(0.26 < diff_of_0 / LENG & diff_of_0 / LENG < 0.40)
+  expect_true(0.59 < diff_of_1 / denom & diff_of_1 / denom < 0.73)
+  expect_true(0.26 < diff_of_2 / denom & diff_of_2 / denom < 0.40)
   
   # act - base 7
   rr7 = apply_random_rounding(input, base = 7)

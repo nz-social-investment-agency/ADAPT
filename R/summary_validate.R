@@ -19,11 +19,13 @@
 #' * dynamic formula can be executed
 #' * Each row has at least one summary generated
 #' * columns to sum are numeric
+#' * grouping columns are not dynamic
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
 #'   "sum", "entity", "stddev", "notes")
 #' * column is not empty
+#' * grouping columns not used for summarising
 #' @md
 #' 
 #' @importFrom  rlang .data
@@ -51,7 +53,7 @@ validate_summary_control_file = function(control_file, tbl){
   ## setup for checks ----
   
   # entries of control file (exclude columns: enabled, label, notes)
-  tmp = dplyr::select(control_file, -dplyr::starts_with("enabled"), -dplyr::starts_with("label"), -dplyr::starts_with("note"))
+  tmp = dplyr::select(control_file, -dplyr::starts_with(c("enabled", "label", "note")))
   indexes = which(!is.na(control_file), arr.ind = TRUE)
   entries = data.frame(
     row = indexes[,1],
@@ -61,8 +63,11 @@ validate_summary_control_file = function(control_file, tbl){
   entries$duplicate = duplicated(entries$value)
   entries$is_function = substr(entries$value, 1, 1) == "{"
   entries$column_name = ctr_cols[entries$column]
-  entries$is_non_calc = !entries$column_name %in% c("group", "distinct", "count", "sum", "entity", "stddev")
+  calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev")
+  entries$is_non_calc = !grepl(paste0("^", calc_cols, collapse = "|"), entries$column_name)
   
+  # union_all for handling entity__min and entity__max required
+  entity_union_all_req = FALSE
   # track passing of checks
   passes_all_critical_checks = TRUE
   
@@ -94,16 +99,46 @@ validate_summary_control_file = function(control_file, tbl){
   ## columns in data frame ----
   
   # required columns exist in data frame
-  for(ii in 1:nrow(entries)){
+  for(ii in seq_len(nrow(entries))){
     # pass if duplicate, function, non-calculation, or value in column names
     if(entries$duplicate[ii]){ next }
     if(entries$is_function[ii]){ next }
     if(entries$is_non_calc[ii]){ next }
     if(entries$value[ii] %in% tbl_cols){ next }
     
+    # entity
+    if(grepl("^entity", entries$column_name[ii])){
+      min_ent = paste0(entries$value[ii], "__min")
+      max_ent = paste0(entries$value[ii], "__max")
+      if(any(c(min_ent, max_ent) %in% tbl_cols)){
+        entity_union_all_req = TRUE
+        next
+      }
+    }
+    
     num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
     msg = glue::glue(
       "Column '{entries$value[ii]}' not found in input table:",
+      " (row {entries$row[ii]}, column {entries$column[ii]}).",
+      ifelse(num_dupes > 0, " And {num_dupes} other cells.", ""),
+      ifelse(grepl("^entity", entries$column_name[ii]), " *__min or *__max not found either.", "")
+    )
+    warning(msg)
+    passes_all_critical_checks = FALSE
+  }
+  
+  ## group columns are not dynamic ----
+  
+  # required columns exist in data frame
+  for(ii in seq_len(nrow(entries))){
+    # pass if duplicate, non-group, non-function
+    if(entries$duplicate[ii]){ next }
+    if(!grepl("^group", entries$column_name[ii])){ next }
+    if(!entries$is_function[ii]){ next }
+    
+    num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
+    msg = glue::glue(
+      "Group '{entries$value[ii]}' not accepted as groups may not be dynamic:",
       " (row {entries$row[ii]}, column {entries$column[ii]}).",
       ifelse(num_dupes > 0, " And {num_dupes} other cells.", "")
     )
@@ -193,7 +228,7 @@ validate_summary_control_file = function(control_file, tbl){
   
   ## sum of non-numeric columns ----
   
-  cols_to_check = dplyr::filter(entries, !.data$is_function & .data$column_name == "sum")
+  cols_to_check = dplyr::filter(entries, !.data$is_function & grepl("^sum", .data$column_name))
   cols_to_check = unique(cols_to_check$value)
   
   # get example data
@@ -206,6 +241,35 @@ validate_summary_control_file = function(control_file, tbl){
       warning(msg)
       passes_all_critical_checks = FALSE
     }
+  }
+  
+  ## grouping columns not used for summarizing ----
+  
+  # grouping entities
+  grp_entities = dplyr::filter(entries, grepl("^group", .data$column_name))
+  # summary entities
+  sum_entities = dplyr::filter(entries, !.data$is_non_calc & !grepl("^group", .data$column_name))
+  
+  for(cc in colnames(tbl)){
+    # skip if no need for union_all
+    if(!entity_union_all_req){ next }
+    
+    rows_used_for_grouping = dplyr::filter(grp_entities, grepl(paste0("\\b",cc,"\\b"), .data$value))
+    rows_used_for_grouping = unique(dplyr::pull(rows_used_for_grouping, "row"))
+    
+    rows_used_for_summary = dplyr::filter(sum_entities, grepl(paste0("\\b",cc,"\\b"), .data$value))
+    rows_used_for_summary = unique(dplyr::pull(rows_used_for_summary, "row"))
+    
+    # skip if no row has both
+    rows_use_for_both = base::intersect(rows_used_for_grouping, rows_used_for_summary)
+    if(length(rows_use_for_both) == 0){ next }
+    rows_use_for_both = paste0(rows_use_for_both, collapse = ", ")
+    
+    # warn on both
+    msg = glue::glue(
+      "Column '{cc}' is used for grouping and summarising in row(s) {rows_use_for_both}.",
+      " Due to how entities are handled this risks double counting in your results.")
+    warning(msg)
   }
   
   ## conclude ----
