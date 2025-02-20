@@ -15,11 +15,12 @@
 #'
 #' @details
 #' The following checks are run and generate a failure if not passed:
-#' * required columns exist in data frame
-#' * dynamic formula can be executed
+#' * Required columns exist in data frame
+#' * Dynamic formula contain `no_obvious_escaping_injection`
+#' * Dynamic formula can be executed
 #' * Each row has at least one summary generated
-#' * columns to sum are numeric
-#' * grouping columns are not dynamic
+#' * Columns to sum are numeric
+#' * Grouping columns are not dynamic
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
@@ -158,11 +159,11 @@ validate_summary_control_file = function(control_file, tbl){
     formula = remove_delimiters(formula, "{}")
     
     # potential injection
-    possible_injection = !no_obvious_injection(formula)
+    possible_injection = !no_obvious_escaping_injection(formula)
     if(possible_injection){
       num_dupes = sum(entries$duplicate[entries$value == entries$value[ii]])
       msg = glue::glue(
-        "Formula {formula} not tested due to potential code injection:",
+        "Formula {formula} not tested due to potential escaping code injection:",
         " (row {entries$row[ii]}, column {entries$column[ii]}).",
         ifelse(num_dupes > 0, " And {num_dupes} other cells.", "")
       )

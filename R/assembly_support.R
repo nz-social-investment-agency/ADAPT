@@ -112,13 +112,13 @@ sql_file_exists_and_contains = function(file, text){
   stopifnot(length(file) == 1)
   stopifnot(is.character(text))
   
-  # FALSE if not SQL file
-  if(tolower(tools::file_ext(file)) != "sql"){
+  # FALSE if file does not exist
+  if(!file.exists(file)){
     return(FALSE)
   }
   
-  # FALSE if file does not exist
-  if(!file.exists(file)){
+  # FALSE if not SQL file
+  if(tolower(tools::file_ext(file)) != "sql"){
     return(FALSE)
   }
   

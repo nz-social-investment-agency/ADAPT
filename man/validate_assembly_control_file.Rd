@@ -4,8 +4,7 @@
 \alias{validate_assembly_control_file}
 \title{Notes
 \itemize{
-\item dynamic code contains no special characters (+ documentation + tests)
-\item new parameter db_only / check_measure_files T/F
+\item dynamic code contains no special characters (+ tests)
 Confirm that control file instructions can be executed.
 }}
 \usage{
@@ -13,7 +12,7 @@ validate_assembly_control_file(
   control_file,
   db_connection,
   master_table,
-  sql_folder = "."
+  sql_folder = NA_character_
 )
 }
 \arguments{
@@ -25,9 +24,9 @@ likely read into memory by \code{load_control_file}.}
 \item{master_table}{The name of the table onto which columns should be
 assembled. It is recommended using the full table name: database.schema.table}
 
-\item{sql_folder}{The folder location containing SQL scripts. Will only be
-used if tables listed in the control file can not be found in the database
-and might have to be generated from SQL scripts.}
+\item{sql_folder}{Optional folder location containing SQL scripts. If given
+and tables listed in the control file can not be found in the database, then
+will check for evidence of table and column names in this folder.}
 }
 \value{
 T/F whether or not all validation checks are passed. Generating
@@ -36,8 +35,7 @@ warnings for all failed checks.
 \description{
 Notes
 \itemize{
-\item dynamic code contains no special characters (+ documentation + tests)
-\item new parameter db_only / check_measure_files T/F
+\item dynamic code contains no special characters (+ tests)
 Confirm that control file instructions can be executed.
 }
 }
@@ -46,6 +44,7 @@ The following checks are run and generate a failure if not passed:
 \itemize{
 \item Required column names are present.
 \item Inputs match expected formats / delimiters.
+\item Dynamic inputs contain \code{no_obvious_escaping_injection}
 \item Master table exists.
 \item Master table columns exist.
 \item Measure tables exist in the database or are found in the measure_file.

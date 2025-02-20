@@ -4,15 +4,15 @@
 ################################################################################
 
 #' Confirm that control file instructions can be executed.
-#'
+#' 
 #' @param control_file a data frame containing assembly instructions. Most
 #' likely read into memory by `load_control_file`.
 #' @param db_connection A connection to the database where assembly is to occur.
 #' @param master_table The name of the table onto which columns should be
 #' assembled. It is recommended using the full table name: database.schema.table
-#' @param sql_folder The folder location containing SQL scripts. Will only be
-#' used if tables listed in the control file can not be found in the database
-#' and might have to be generated from SQL scripts.
+#' @param sql_folder Optional folder location containing SQL scripts. If given
+#' and tables listed in the control file can not be found in the database, then
+#' will check for evidence of table and column names in this folder.
 #'
 #' @return T/F whether or not all validation checks are passed. Generating
 #' warnings for all failed checks.
@@ -21,6 +21,7 @@
 #' The following checks are run and generate a failure if not passed:
 #' * Required column names are present.
 #' * Inputs match expected formats / delimiters.
+#' * Dynamic inputs contain `no_obvious_escaping_injection`
 #' * Master table exists.
 #' * Master table columns exist.
 #' * Measure tables exist in the database or are found in the measure_file.
@@ -35,12 +36,12 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-validate_assembly_control_file = function(control_file, db_connection, master_table, sql_folder = "."){
+validate_assembly_control_file = function(control_file, db_connection, master_table, sql_folder = NA_character_){
   stopifnot(is.data.frame(control_file))
   stopifnot(DBI::dbIsValid(db_connection))
   stopifnot(is.character(master_table))
   stopifnot(is.character(sql_folder))
-  stopifnot(dir.exists(sql_folder))
+  stopifnot(is.na(sql_folder) || dir.exists(sql_folder))
   
   ## initialize ----
   
@@ -135,6 +136,24 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
     } # end row iteration
   } # end column iteration
   
+  ## Dynamic inputs contain on escaping code injection ----
+  
+  # get only dynamic cells in control file
+  dynamic_cells = unlist(control_file, use.names = FALSE)
+  dynamic_cells = dynamic_cells[!is.na(dynamic_cells)]
+  dynamic_cells = dynamic_cells[is_delimited(dynamic_cells, "{}")]
+  dynamic_cells = unique(dynamic_cells)
+  
+  dynamic_cells = trimws(dynamic_cells)
+  dynamic_cells = remove_delimiters(dynamic_cells, "{}")
+  
+  for(cell in dynamic_cells){
+    if(no_obvious_escaping_injection(cell)){ next }
+    msg = glue::glue("Dynamic input '{cell}' rejected due to potential escaping code injection")
+    warning(msg)
+    passes_all_critical_checks = FALSE
+  }
+
   ## Master table exists ----
   
   master_table_exists = DBI::dbExistsTable(db_connection, sql2id(master_table))
@@ -186,7 +205,10 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
     
     # warnings
     if(!(measure_table_exists | file_contents_exist)){
-      msg = glue::glue("Table '{this_table}' not found in database or in '{this_file}'.")
+      msg = glue::glue(
+        "Table '{this_table}' not found in database",
+        ifelse(is.na(this_file), ".", " or in {this_file}.")
+      )
       warning(msg)
       passes_all_critical_checks = FALSE
       next

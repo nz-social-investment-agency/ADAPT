@@ -83,31 +83,31 @@ test_that("non-sql delimiters work", {
   expect_false(is_delimited(" stringb", "ab"))
 })
 
-## no_obvious_injection(string) ------------------------------------------- ----
+## no_obvious_escaping_injection(string) ---------------------------------- ----
 
 test_that("innocent text accepted", {
-  expect_true(no_obvious_injection("innocent text"))
-  expect_true(no_obvious_injection("innocent text()"))
-  expect_true(no_obvious_injection("'innocent text'"))
+  expect_true(no_obvious_escaping_injection("innocent text"))
+  expect_true(no_obvious_escaping_injection("innocent text()"))
+  expect_true(no_obvious_escaping_injection("'innocent text'"))
 })
 
 test_that("special characters rejected", {
-  expect_false(no_obvious_injection("not innocent text;"))
-  expect_false(no_obvious_injection("not innocent text}"))
-  expect_false(no_obvious_injection("not{innocent text"))
+  expect_false(no_obvious_escaping_injection("not innocent text;"))
+  expect_false(no_obvious_escaping_injection("not innocent text}"))
+  expect_false(no_obvious_escaping_injection("not{innocent text"))
 })
 
 test_that("unmatched quotes rejected", {
-  expect_false(no_obvious_injection("not \"innocent text"))
-  expect_false(no_obvious_injection("not innocent' text"))
-  expect_false(no_obvious_injection("`not innocent text"))
+  expect_false(no_obvious_escaping_injection("not \"innocent text"))
+  expect_false(no_obvious_escaping_injection("not innocent' text"))
+  expect_false(no_obvious_escaping_injection("`not innocent text"))
 })
 
 test_that("unmatched brackets rejected", {
-  expect_false(no_obvious_injection("not (innocent text"))
-  expect_false(no_obvious_injection("not innocent text)"))
-  expect_false(no_obvious_injection("not [innocent text"))
-  expect_false(no_obvious_injection("not innocent text]"))
+  expect_false(no_obvious_escaping_injection("not (innocent text"))
+  expect_false(no_obvious_escaping_injection("not innocent text)"))
+  expect_false(no_obvious_escaping_injection("not [innocent text"))
+  expect_false(no_obvious_escaping_injection("not innocent text]"))
 })
 
 ## sql2id(sql_string) ----------------------------------------------------- ----

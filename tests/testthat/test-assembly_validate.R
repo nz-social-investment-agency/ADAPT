@@ -91,6 +91,14 @@ test_that("unexpected delimiters fail", {
   expect_warning(validate_assembly_control_file(tmp, db_connection, master_table, sql_folder), "measure_uid")
 })
 
+test_that("escaping code injection fails", {
+  tmp = control_file
+  tmp$measure_value[1] = "{ command;command }"
+  
+  expect_false(suppressWarnings(validate_assembly_control_file(tmp, db_connection, master_table)))
+  expect_warning(validate_assembly_control_file(tmp, db_connection, master_table), "escaping code injection")
+})
+
 test_that("unavailable master table fails", {
   expect_false(suppressWarnings(validate_assembly_control_file(control_file, db_connection, "invalid_master_table", sql_folder)))
   expect_warning(validate_assembly_control_file(control_file, db_connection, "invalid_master_table", sql_folder), "master[ _]table")

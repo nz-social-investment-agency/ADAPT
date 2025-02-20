@@ -23,11 +23,12 @@ Confirm that control file instructions can be executed.
 \details{
 The following checks are run and generate a failure if not passed:
 \itemize{
-\item required columns exist in data frame
-\item dynamic formula can be executed
+\item Required columns exist in data frame
+\item Dynamic formula contain \code{no_obvious_escaping_injection}
+\item Dynamic formula can be executed
 \item Each row has at least one summary generated
-\item columns to sum are numeric
-\item grouping columns are not dynamic
+\item Columns to sum are numeric
+\item Grouping columns are not dynamic
 }
 
 The following checks are run and only generate a warning if not passed:

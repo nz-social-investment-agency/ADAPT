@@ -99,14 +99,15 @@ is_delimited = function(string, delimiter) {
 #' Check input string for obvious markers of code injection.
 #' 
 #' Identifies special characters `;{}`, unmatched quotes, and unmatched
-#' brackets. Helps prevent code injection, but not a complete solution.
+#' brackets. Helps prevent escaping code injection, but not a complete solution.
 #' 
 #' @param string a string to be checked for special characters.
 #' 
 #' @return TRUE if no special characters in string and any quotes are matched,
 #' FALSE if special characters or unmatched quotes found.
 #' 
-no_obvious_injection = function(string) {
+#' @export
+no_obvious_escaping_injection = function(string) {
   stopifnot(is.character(string))
   stopifnot(length(string) <= 1)
   
