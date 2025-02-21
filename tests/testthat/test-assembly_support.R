@@ -156,3 +156,236 @@ test_that("test files found", {
   expect_true(sql_file_exists_and_contains(file.path(test_folder, "demo_script_benefits.sql"), "tmp_benefit_payment"))
 })
 
+## handle_summary_case(control_file_row, sqlite) -------------------------- ----
+
+test_that("SQL Server MIN types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "MIN",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "MIN(dmt.mv) AS name")
+})
+
+test_that("SQL Server MAX types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "MAX",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row, prefix = "qqq")
+  
+  expect_equal(actual, "MAX(qqq.mv) AS name")
+})
+
+test_that("SQL Server EXISTS types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "EXISTS",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "IIF(COUNT(dmt.mv) >= 1, 1, 0) AS name")
+})
+
+test_that("SQL Server COUNT types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "COUNT",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "COUNT(dmt.mv) AS name")
+})
+
+test_that("SQL Server MEAN types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "MEAN",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "AVG(dmt.mv) AS name")
+})
+
+test_that("SQL Server DISTINCT types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "DISTINCT",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "COUNT(DISTINCT dmt.mv) AS name")
+})
+
+test_that("SQL Server ENTITY types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "ENTITY",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row, prefix = "ents")
+  
+  expect_equal(actual, c("MIN(ents.mv) AS name__min", "MAX(ents.mv) AS name__max"))
+})
+
+test_that("SQL Server SUM types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "SUM(dmt.mv) AS name")
+})
+
+test_that("SQL Server SUM_WITHIN types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "SUM_WITHIN",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row, prefix = "z")
+  
+  expected = paste0(
+    "SUM(1.0 * ",
+    "(1+DATEDIFF(DAY, IIF(z.ms < z.ps, z.ps, z.ms), IIF(z.me < z.pe, z.me, z.pe)))",
+    "/ (1+DATEDIFF(DAY, z.ms, z.me)) * z.mv) AS name"
+  )
+  
+  actual = as.character(gsub("[[:space:]]", "", actual))
+  expected = gsub("[[:space:]]", "", expected)
+  
+  expect_equal(actual, expected)
+})
+
+test_that("SQL Server DURATION types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "DURATION",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row)
+  
+  expected = "SUM(1+DATEDIFF(DAY, IIF(dmt.ms < dmt.ps, dmt.ps, dmt.ms), IIF(dmt.me < dmt.pe, dmt.me, dmt.pe))) AS name"
+
+  actual = as.character(gsub("[[:space:]]", "", actual))
+  expected = gsub("[[:space:]]", "", expected)
+  
+  expect_equal(actual, expected)
+})
+
+test_that("SQLite SUM_WITHIN types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "SUM_WITHIN",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row, prefix = "x", sqlite = TRUE)
+  
+  expected = paste0(
+    "SUM(1.0 * ",
+    "(1 + JULIANDAY(IIF(x.me < x.pe, x.me, x.pe)) - JULIANDAY(IIF(x.ms < x.ps, x.ps, x.ms)))",
+    "/ (1 + JULIANDAY(x.me) - JULIANDAY(x.ms)) * x.mv) AS name"
+  )
+  
+  actual = as.character(gsub("[[:space:]]", "", actual))
+  expected = gsub("[[:space:]]", "", expected)
+  
+  expect_equal(actual, expected)
+})
+  
+test_that("SQLite DURATION types handle correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "mv",
+    output_name = "name",
+    output_method = "DURATION",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_summary_case(row, prefix = "x", sqlite = TRUE)
+  
+  expected = "SUM(1 + JULIANDAY(IIF(x.me < x.pe, x.me, x.pe)) - JULIANDAY(IIF(x.ms < x.ps, x.ps, x.ms))) AS name"
+  
+  actual = as.character(gsub("[[:space:]]", "", actual))
+  expected = gsub("[[:space:]]", "", expected)
+  
+  expect_equal(actual, expected)
+})

@@ -145,3 +145,106 @@ sql_file_exists_and_contains = function(file, text){
   # return text in file
   return(sapply(text, grepl, x = contents, USE.NAMES = FALSE))
 }
+
+## Handle cases of assembly summary --------------------------------------- ----
+#' Handle summary cases for assembly
+#' 
+#' A range of summary methods can be chosen for the output:
+#' MIN, MAX, EXISTS, COUNT, MEAN, DISTINCT, ENTITY, SUM, SUM_WITHIN, DURATION.
+#' 
+#' Each of these needs to be translated into an SQL calculation for the form:
+#' `method(input_column) AS output_column`.
+#' These are used to build the SQL code required for assembly.
+#' 
+#' @param control_file_row A row on an assembly control_file.
+#' @param prefix The alias prefix for the source table in the query.
+#' @param sqlite T/F is the connection SQLite (different handling is required
+#' as SQLite does not have a DATE data type).
+#'
+#' @return Text containing the SQL calculation. When method is ENTITY, this
+#' text will have length = 2.
+#' 
+handle_summary_case = function(control_file_row, prefix = "dmt", sqlite = FALSE){
+  stopifnot(is.data.frame(control_file_row))
+  stopifnot(nrow(control_file_row) == 1)
+  stopifnot(sqlite %in% c(TRUE, FALSE))
+  
+  req_cols = c("period_start", "period_end", "measure_start", "measure_end", "measure_value", "output_name", "output_method")
+  stopifnot(all(req_cols %in% colnames(control_file_row)))
+  
+  accepted_methods = c("MIN", "MAX", "EXISTS", "COUNT", "MEAN", "DISTINCT", "ENTITY", "SUM", "SUM_WITHIN", "DURATION")
+  control_file_row$output_method = toupper(control_file_row$output_method)
+  stopifnot(all(control_file_row$output_method %in% accepted_methods))
+  
+  # aliases for ease of reading
+  method = control_file_row$output_method
+  m_value = glue::glue("{prefix}.{control_file_row$measure_value}")
+  o_name = control_file_row$output_name
+  
+  # data range supporting calculations
+  p_start = glue::glue("{prefix}.{control_file_row$period_start}")
+  p_end = glue::glue("{prefix}.{control_file_row$period_end}")
+  m_start = glue::glue("{prefix}.{control_file_row$measure_start}")
+  m_end = glue::glue("{prefix}.{control_file_row$measure_end}")
+  
+  # later start date - earlier end date
+  numerator = ifelse(
+    sqlite,
+    glue::glue(
+      "JULIANDAY(IIF({m_end} < {p_end}, {m_end}, {p_end}))",
+      " - ",
+      "JULIANDAY(IIF({m_start} < {p_start}, {p_start}, {m_start}))"
+    ),
+    glue::glue(
+      "DATEDIFF(DAY,",
+      "IIF({m_start} < {p_start}, {p_start}, {m_start}),",
+      "IIF({m_end} < {p_end}, {m_end}, {p_end}))"
+    )
+  )
+  denominator = ifelse(
+    sqlite,
+    glue::glue("JULIANDAY({m_end}) - JULIANDAY({m_start})"),
+    glue::glue("DATEDIFF(DAY, {m_start}, {m_end})")
+  )
+  
+  # handle cases
+  if (method == "MIN") {
+    value = glue::glue("MIN({m_value}) AS {o_name}")
+    
+  } else if (method == "MAX") {
+    value = glue::glue("MAX({m_value}) AS {o_name}")
+    
+  } else if (method == "EXISTS") {
+    value = glue::glue("IIF(COUNT({m_value}) >= 1, 1, 0) AS {o_name}")
+    
+  } else if (method == "COUNT") {
+    value = glue::glue("COUNT({m_value}) AS {o_name}")
+    
+  } else if (method == "MEAN") {
+    value = glue::glue("AVG({m_value}) AS {o_name}")
+  
+  } else if (method == "DISTINCT") {
+    value = glue::glue("COUNT(DISTINCT {m_value}) AS {o_name}")
+    
+  } else if (method == "ENTITY") {
+    value = c(
+      glue::glue("MIN({m_value}) AS {o_name}__min"),
+      glue::glue("MAX({m_value}) AS {o_name}__max")
+    )
+  
+  } else if (method == "SUM") {
+    value = glue::glue("SUM({m_value}) AS {o_name}")
+    
+  } else if (method == "SUM_WITHIN") {
+    value = glue::glue("SUM(1.0 * (1 + {numerator}) / (1 + {denominator}) * {m_value}) AS {o_name}")
+
+  } else if (method == "DURATION") {
+      value = glue::glue("SUM(1 + {numerator}) AS {o_name}")
+
+  } else {
+    stop("unrecognised summary_type")
+    
+  }
+  
+  return(value)
+}

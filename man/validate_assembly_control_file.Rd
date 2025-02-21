@@ -2,11 +2,7 @@
 % Please edit documentation in R/assembly_validate.R
 \name{validate_assembly_control_file}
 \alias{validate_assembly_control_file}
-\title{Notes
-\itemize{
-\item dynamic code contains no special characters (+ tests)
-Confirm that control file instructions can be executed.
-}}
+\title{Notes}
 \usage{
 validate_assembly_control_file(
   control_file,
@@ -33,11 +29,7 @@ T/F whether or not all validation checks are passed. Generating
 warnings for all failed checks.
 }
 \description{
-Notes
-\itemize{
-\item dynamic code contains no special characters (+ tests)
 Confirm that control file instructions can be executed.
-}
 }
 \details{
 The following checks are run and generate a failure if not passed:
