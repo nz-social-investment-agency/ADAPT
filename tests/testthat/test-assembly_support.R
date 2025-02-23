@@ -10,7 +10,7 @@ test_that("single column dropped", {
   actual = alter_table_drop_column("mt", "col_name")
   
   expect_true(grepl("ALTER TABLE \\[mt\\]", actual))
-  expect_true(grepl("DROP\\nCOLUMN ", actual))
+  expect_true(grepl("DROP COLUMN ", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col_name\\]", actual))
 })
 
@@ -19,14 +19,14 @@ test_that("multi column dropped", {
   actual = alter_table_drop_column("mt", c("col1", "col2"))
   
   expect_true(grepl("ALTER TABLE \\[mt\\]", actual))
-  expect_true(grepl("DROP\\nCOLUMN ", actual))
+  expect_true(grepl("DROP COLUMN ", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col1\\]", actual))
   expect_true(grepl("COLUMN IF EXISTS \\[col2\\]", actual))
 })
 
 test_that("existance turns on and off", {
   
-  actual = alter_table_drop_column("mt", "col_name", FALSE)
+  actual = alter_table_drop_column("mt", "col_name", if_exists = FALSE)
   
   expect_true(grepl("COLUMN \\[col_name\\]", actual))
 })
@@ -156,6 +156,67 @@ test_that("test files found", {
   expect_true(sql_file_exists_and_contains(file.path(test_folder, "demo_script_benefits.sql"), "tmp_benefit_payment"))
 })
 
+## entity_to_min_and_max(control_file) ------------------------------------ ----
+
+test_that("no entity rows returned unchanged", {
+  control_file = data.frame(
+    measure_value = c("a", "b"),
+    output_name = c("x", "y"),
+    output_method = c("COUNT", "SUM"),
+    output_type = c("INT", "FLOAT"),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_to_min_and_max(control_file)
+  
+  expect_equal(actual, control_file)
+})
+
+test_that("entity rows duplicated", {
+  control_file = data.frame(
+    measure_value = c("a", "b", "c"),
+    output_name = c("x", "y", "z"),
+    output_method = c("COUNT", "ENTITY", "SUM"),
+    output_type = c("INT", "VARCHAR(50)", "FLOAT"),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_to_min_and_max(control_file)
+  
+  expected = data.frame(
+    measure_value = c("a", "b", "b", "c"),
+    output_name = c("x", "y__min", "y__max", "z"),
+    output_method = c("COUNT", "MIN", "MAX", "SUM"),
+    output_type = c("INT", "VARCHAR(50)", "VARCHAR(50)", "FLOAT"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+
+test_that("multiple entity rows all duplicate", {
+  control_file = data.frame(
+    measure_value = c("a", "b", "c", "d", "e"),
+    output_name = c("v", "\"w\"", "x", "y", "z"),
+    output_method = c("COUNT", "ENTITY", "SUM", "ENTITY", "MAX"),
+    output_type = c("INT", "VARCHAR(50)", "FLOAT", "INT", "INT"),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = entity_to_min_and_max(control_file)
+  
+  expected = data.frame(
+    measure_value = c("a", "b", "b", "c", "d", "d", "e"),
+    output_name = c("v", "\"w__min\"", "\"w__max\"", "x", "y__min", "y__max", "z"),
+    output_method = c("COUNT", "MIN", "MAX", "SUM", "MIN", "MAX", "MAX"),
+    output_type = c("INT", "VARCHAR(50)", "VARCHAR(50)", "FLOAT", "INT", "INT", "INT"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
 ## handle_summary_case(control_file_row, sqlite) -------------------------- ----
 
 test_that("SQL Server MIN types handle correctly", {
@@ -172,7 +233,7 @@ test_that("SQL Server MIN types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "MIN(dmt.mv) AS name")
+  expect_equal(actual, "MIN(mv) AS name")
 })
 
 test_that("SQL Server MAX types handle correctly", {
@@ -187,9 +248,9 @@ test_that("SQL Server MAX types handle correctly", {
     stringsAsFactors = FALSE
   )
   
-  actual = handle_summary_case(row, prefix = "qqq")
+  actual = handle_summary_case(row)
   
-  expect_equal(actual, "MAX(qqq.mv) AS name")
+  expect_equal(actual, "MAX(mv) AS name")
 })
 
 test_that("SQL Server EXISTS types handle correctly", {
@@ -206,7 +267,7 @@ test_that("SQL Server EXISTS types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "IIF(COUNT(dmt.mv) >= 1, 1, 0) AS name")
+  expect_equal(actual, "IIF(COUNT(mv) >= 1, 1, 0) AS name")
 })
 
 test_that("SQL Server COUNT types handle correctly", {
@@ -223,7 +284,7 @@ test_that("SQL Server COUNT types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "COUNT(dmt.mv) AS name")
+  expect_equal(actual, "COUNT(mv) AS name")
 })
 
 test_that("SQL Server MEAN types handle correctly", {
@@ -240,7 +301,7 @@ test_that("SQL Server MEAN types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "AVG(dmt.mv) AS name")
+  expect_equal(actual, "AVG(mv) AS name")
 })
 
 test_that("SQL Server DISTINCT types handle correctly", {
@@ -257,7 +318,7 @@ test_that("SQL Server DISTINCT types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "COUNT(DISTINCT dmt.mv) AS name")
+  expect_equal(actual, "COUNT(DISTINCT mv) AS name")
 })
 
 test_that("SQL Server ENTITY types handle correctly", {
@@ -272,9 +333,9 @@ test_that("SQL Server ENTITY types handle correctly", {
     stringsAsFactors = FALSE
   )
   
-  actual = handle_summary_case(row, prefix = "ents")
+  actual = handle_summary_case(row)
   
-  expect_equal(actual, c("MIN(ents.mv) AS name__min", "MAX(ents.mv) AS name__max"))
+  expect_equal(actual, c("MIN(mv) AS name__min", "MAX(mv) AS name__max"))
 })
 
 test_that("SQL Server SUM types handle correctly", {
@@ -291,7 +352,7 @@ test_that("SQL Server SUM types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "SUM(dmt.mv) AS name")
+  expect_equal(actual, "SUM(mv) AS name")
 })
 
 test_that("SQL Server SUM_WITHIN types handle correctly", {
@@ -306,12 +367,12 @@ test_that("SQL Server SUM_WITHIN types handle correctly", {
     stringsAsFactors = FALSE
   )
   
-  actual = handle_summary_case(row, prefix = "z")
+  actual = handle_summary_case(row)
   
   expected = paste0(
     "SUM(1.0 * ",
-    "(1+DATEDIFF(DAY, IIF(z.ms < z.ps, z.ps, z.ms), IIF(z.me < z.pe, z.me, z.pe)))",
-    "/ (1+DATEDIFF(DAY, z.ms, z.me)) * z.mv) AS name"
+    "(1+DATEDIFF(DAY, IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms), IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)))",
+    "/ (1+DATEDIFF(DAY, ms, me)) * mv) AS name"
   )
   
   actual = as.character(gsub("[[:space:]]", "", actual))
@@ -334,7 +395,7 @@ test_that("SQL Server DURATION types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expected = "SUM(1+DATEDIFF(DAY, IIF(dmt.ms < dmt.ps, dmt.ps, dmt.ms), IIF(dmt.me < dmt.pe, dmt.me, dmt.pe))) AS name"
+  expected = "SUM(1+DATEDIFF(DAY, IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms), IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end))) AS name"
 
   actual = as.character(gsub("[[:space:]]", "", actual))
   expected = gsub("[[:space:]]", "", expected)
@@ -354,12 +415,12 @@ test_that("SQLite SUM_WITHIN types handle correctly", {
     stringsAsFactors = FALSE
   )
   
-  actual = handle_summary_case(row, prefix = "x", sqlite = TRUE)
+  actual = handle_summary_case(row, sqlite = TRUE)
   
   expected = paste0(
     "SUM(1.0 * ",
-    "(1 + JULIANDAY(IIF(x.me < x.pe, x.me, x.pe)) - JULIANDAY(IIF(x.ms < x.ps, x.ps, x.ms)))",
-    "/ (1 + JULIANDAY(x.me) - JULIANDAY(x.ms)) * x.mv) AS name"
+    "(1 + JULIANDAY(IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)) - JULIANDAY(IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms)))",
+    "/ (1 + JULIANDAY(me) - JULIANDAY(ms)) * mv) AS name"
   )
   
   actual = as.character(gsub("[[:space:]]", "", actual))
@@ -380,12 +441,134 @@ test_that("SQLite DURATION types handle correctly", {
     stringsAsFactors = FALSE
   )
   
-  actual = handle_summary_case(row, prefix = "x", sqlite = TRUE)
+  actual = handle_summary_case(row, sqlite = TRUE)
   
-  expected = "SUM(1 + JULIANDAY(IIF(x.me < x.pe, x.me, x.pe)) - JULIANDAY(IIF(x.ms < x.ps, x.ps, x.ms))) AS name"
+  expected = "SUM(1 + JULIANDAY(IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)) - JULIANDAY(IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms))) AS name"
   
   actual = as.character(gsub("[[:space:]]", "", actual))
   expected = gsub("[[:space:]]", "", expected)
+  
+  expect_equal(actual, expected)
+})
+
+test_that("constants handled correctly", {
+  row = data.frame(
+    period_start = "[ps]",
+    period_end = "[pe]",
+    measure_start = "[ms]",
+    measure_end = "[me]",
+    measure_value = "\"1\"",
+    output_name = "\"name\"",
+    output_method = "MIN",
+    stringsAsFactors = FALSE
+  )
+  
+  row = handle_delimiters_and_prefixes(row, "mt", c("ps", "pe", "puid"), "m", c("ms", "me", "mv", "muid"))
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "MIN('1') AS name")
+})
+
+test_that("dynamics handled correctly", {
+  row = data.frame(
+    period_start = "ps",
+    period_end = "pe",
+    measure_start = "ms",
+    measure_end = "me",
+    measure_value = "IIF(mv > 0, mv, NULL)",
+    output_name = "\"name\"",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  row = handle_delimiters_and_prefixes(row, "mt", c("ps", "pe", "puid"), "m", c("ms", "me", "mv", "muid"))
+  actual = handle_summary_case(row)
+  
+  expect_equal(actual, "SUM(IIF(m.mv > 0, m.mv, NULL)) AS name")
+})
+
+## handle_delimiters_and_prefixes(df, mt_prefix, mt_cols, measure_prefix, measure_cols) ----
+
+test_that("delimiters changed as expected", {
+  row = data.frame(
+    period_start = "{ps}",
+    period_end = "\"pe\"",
+    measure_start = "\"ms\"",
+    measure_end = "{me}",
+    measure_value = "[mv]",
+    output_name = "\"name\"",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_delimiters_and_prefixes(row, "x", "non_existance_col", "z", "non_existance_col")
+  
+  expected = data.frame(
+    period_start = "ps",
+    period_end = "'pe'",
+    measure_start = "'ms'",
+    measure_end = "me",
+    measure_value = "[mv]",
+    output_name = "name",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("master table prefixes added as expected", {
+  row = data.frame(
+    period_start = "{ IIF(ps > 0, 1, NULL) }",
+    period_end = "[pe]",
+    measure_start = "[ms]",
+    measure_end = "{me}",
+    measure_value = "[mv]",
+    output_name = "\"name\"",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_delimiters_and_prefixes(row, "x", c("ps", "pe"), "z", "non_existance_col")
+  
+  expected = data.frame(
+    period_start = "IIF(x.ps > 0, 1, NULL)",
+    period_end = "x.[pe]",
+    measure_start = "[ms]",
+    measure_end = "me",
+    measure_value = "[mv]",
+    output_name = "name",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("measure table prefixes added as expected", {
+  row = data.frame(
+    period_start = "{ IIF(ps > 0, 1, NULL) }",
+    period_end = "[pe]",
+    measure_start = "{\"ms\"}",
+    measure_end = "{me}",
+    measure_value = "{ DATEDIFF(DAY, me, [ms]) }",
+    output_name = "\"name\"",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = handle_delimiters_and_prefixes(row, "x", "non_existance_col", "z", c("me","ms", "mv","muid"))
+  
+  expected = data.frame(
+    period_start = "IIF(ps > 0, 1, NULL)",
+    period_end = "[pe]",
+    measure_start = "z.\"ms\"",
+    measure_end = "z.me",
+    measure_value = "DATEDIFF(DAY, z.me, z.[ms])",
+    output_name = "name",
+    output_method = "SUM",
+    stringsAsFactors = FALSE
+  )
   
   expect_equal(actual, expected)
 })

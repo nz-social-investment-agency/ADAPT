@@ -4,13 +4,21 @@
 \alias{alter_table_drop_column}
 \title{Notes}
 \usage{
-alter_table_drop_column(table_name, columns, if_exists = TRUE)
+alter_table_drop_column(
+  table_name,
+  columns,
+  sqlite = FALSE,
+  if_exists = !sqlite
+)
 }
 \arguments{
 \item{table_name}{The name of the table from which columns should be dropped.
 It is recommended to use the full table name: database.schema.table}
 
 \item{columns}{An array containing the name of the column or columns to drop.}
+
+\item{sqlite}{T/F is the connection SQLite (different handling is required
+as SQLite does not have a DATE data type).}
 
 \item{if_exists}{T/F whether the query should account for existence of
 columns. If TRUE, adds text "IF EXISTS" to result. If FALSE, executing the

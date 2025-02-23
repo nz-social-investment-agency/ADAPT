@@ -4,7 +4,7 @@
 \alias{alter_table_add_column}
 \title{Create alter table statement to add columns}
 \usage{
-alter_table_add_column(table_name, columns, types)
+alter_table_add_column(table_name, columns, types, sqlite = FALSE)
 }
 \arguments{
 \item{table_name}{The name of the table to which columns should be added.
@@ -14,6 +14,9 @@ It is recommended to use the full table name: database.schema.table}
 
 \item{types}{An array of the SQL data types that correspond to columns.
 Will error if invalid SQL data types are provided.}
+
+\item{sqlite}{T/F is the connection SQLite (different handling is required
+as SQLite does not have a DATE data type).}
 }
 \value{
 A character string with an SQL Server query for adding columns.

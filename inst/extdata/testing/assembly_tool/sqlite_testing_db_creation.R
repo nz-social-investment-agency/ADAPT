@@ -2,6 +2,7 @@
 # Notes:
 # - Creates SQLite database for testing assembly tool
 # - Run to setup basic database for package testing
+# - For SQLite, store dates as text in YYYY-MM-DD format
 #
 ################################################################################
 
@@ -21,11 +22,8 @@ db_conn = DBI::dbConnect(RSQLite::SQLite(), db_path)
 
 copy_r_to_sql = function(db_connection, sql_table, r_table) {
   stopifnot("tbl_sql" %not_in% class(r_table))
-  
-  # copy data
-  suppressMessages( # mutes any translation message
-    DBI::dbWriteTable(db_connection, DBI::Id(table = sql_table), r_table)
-  )
+  # copy data - mute any translation message
+  suppressMessages(DBI::dbWriteTable(db_connection, DBI::Id(table = sql_table), r_table))
 }
 
 ## load data csv's to db -------------------------------------------------- ----
@@ -40,11 +38,10 @@ copy_r_to_sql(db_conn, sql_table = "tmp_master_table", r_table = data_master_tab
 
 ## confirm contents ------------------------------------------------------- ----
 
-print(DBI::dbListTables(db_conn))
-# For SQLite - store dates as text in YYYY-MM-DD format
-print(dplyr::collect(dplyr::tbl(db_conn, "tmp_accidents")))
-print(dplyr::collect(dplyr::tbl(db_conn, "tmp_benefit_payment")))
-print(dplyr::collect(dplyr::tbl(db_conn, "tmp_master_table")))
+# print(DBI::dbListTables(db_conn))
+# print(dplyr::collect(dplyr::tbl(db_conn, "tmp_accidents")))
+# print(dplyr::collect(dplyr::tbl(db_conn, "tmp_benefit_payment")))
+# print(dplyr::collect(dplyr::tbl(db_conn, "tmp_master_table")))
 
 ## Close connection ------------------------------------------------------- ----
 

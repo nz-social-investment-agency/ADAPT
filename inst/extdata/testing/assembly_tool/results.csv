@@ -1,5 +1,5 @@
-snz_uid,type,period,start_date,end_date,num_accidents,avg_recovery_time,different_types_accidents,any_accident,example_accident,rehab_entity_min,rehab_entity_max,max_payment,min_payment,days_benefit,total_payments,payment_within_period
-1,fast,before,2012-04-01,2012-07-01,2,2.5,2,0,NULL,11111,11111,100,100,1,100,1.64
-1,fast,after,2012-07-01,2014-07-01,NULL,NULL,2,1,vehicle,11111,11111,1000,1000,277,1000,1000
-2,delayed,before,2017-12-25,2018-03-25,NULL,NULL,4,1,April fools trick,22222,33333,20,20,29,20,20
-2,delayed,after,2018-03-25,2020-3-25,2,8.0,4,1,April fools trick,22222,33333,300,20,186,360,360
+snz_uid,type,period,start_date,end_date,num_accidents,avg_recovery_time,different_types_accidents,any_accident,example_accident,rehab_entity__min,rehab_entity__max,max_payment,min_payment,days_benefit,total_payments,payment_within_period
+1,fast,before,2012-04-01,2012-07-01,2,2.5,2,NA,NA,11111,11111,100,100,1,100,1.64
+1,fast,after,2012-07-01,2014-07-01,NA,NA,2,1,vehicle,11111,11111,1000,1000,277,1000,1000
+2,delayed,before,2017-12-25,2018-03-25,NA,NA,1,1,April fools trick,22222,33333,20,20,29,20,20
+2,delayed,after,2018-03-25,2020-03-25,2,8.0,1,1,April fools trick,22222,33333,300,20,186,360,360

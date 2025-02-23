@@ -4,12 +4,10 @@
 \alias{handle_summary_case}
 \title{Handle summary cases for assembly}
 \usage{
-handle_summary_case(control_file_row, prefix = "dmt", sqlite = FALSE)
+handle_summary_case(control_file_row, sqlite = FALSE)
 }
 \arguments{
 \item{control_file_row}{A row on an assembly control_file.}
-
-\item{prefix}{The alias prefix for the source table in the query.}
 
 \item{sqlite}{T/F is the connection SQLite (different handling is required
 as SQLite does not have a DATE data type).}

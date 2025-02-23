@@ -65,7 +65,13 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
     return(NULL)
   }
   
+  # sqlite flag
+  is_sqlite = any(grepl("sqlite", class(db_connection), ignore.case = TRUE))
+  
   ## setup for assembly ----
+  
+  # handle entity types
+  control_file = entity_to_min_and_max(control_file)
   
   # distinct combinations
   distinction_cols = c("population_uid", "period_start", "period_end",
@@ -75,37 +81,53 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
   
   # master table
   remote_master_table = dplyr::tbl(db_connection, I(master_table))
-  master_columns = colnames(remote_master_table)
   
   # core query
-  query_text = c(
+  update_clause = ifelse(
+    is_sqlite,
+    # SQLite syntax
+    paste0(
+      "UPDATE {master_table} AS mt\n",
+      "SET {update_set_col_list}\n",
+      "FROM  setup\n",
+      "WHERE {this_row$population_uid} = setup.core_query_p_uid\n",
+      "AND {this_row$period_start} = setup.core_query_p_start\n",
+      "AND {this_row$period_end} = setup.core_query_p_end"
+    ),
+    # SQL Server syntax
+    paste0(
+      "UPDATE mt\n",
+      "SET {update_set_col_list}\n",
+      "FROM {master_table} AS mt\n",
+      "INNER JOIN setup AS s\n",
+      "ON {this_row$population_uid} = s.core_query_p_uid\n",
+      "AND {this_row$period_start} = s.core_query_p_start\n",
+      "AND {this_row$period_end} = s.core_query_p_end"
+    )
+  )
+  
+  query_text = paste0(
     "WITH distinct_mt AS (\n",
-    "    SELECT DISTINCT {this_row$population_uid}\n",
-    "        , {this_row$period_start}\n",
-    "        , {this_row$period_end}\n",
-    "    FROM {master_table}\n",
+    "    SELECT DISTINCT {this_row$population_uid} AS core_query_p_uid\n",
+    "        , {this_row$period_start} AS core_query_p_start\n",
+    "        , {this_row$period_end} AS core_query_p_end\n",
+    "    FROM {master_table} AS mt\n",
     "),\n",
     "setup AS (\n",
-    "    SELECT dmt.{this_row$population_uid}\n",
-    "        , dmt.{this_row$period_start}\n",
-    "        , dmt.{this_row$period_end}\n",
+    "    SELECT dmt.core_query_p_uid\n",
+    "        , dmt.core_query_p_start\n",
+    "        , dmt.core_query_p_end\n",
     "        , {update_summary_list}\n",
     "    FROM distinct_mt AS dmt\n",
     "    INNER JOIN {this_row$measure_table} AS m\n",
-    "    ON dmt.{this_row$population_uid} = m.{this_row$measure_uid}\n",
-    "    AND dmt.{this_row$period_start} <= m.{this_row$measure_end}\n",
-    "    AND dmt.{this_row$measure_start} <= m.{this_row$period_end}\n",
-    "    GROUP BY dmt.{this_row$population_uid}\n",
-    "        , dmt.{this_row$period_start}\n",
-    "        , dmt.{this_row$period_end}\n",
+    "    ON dmt.core_query_p_uid = m.{this_row$measure_uid}\n",
+    "    AND dmt.core_query_p_start <= {this_row$measure_end}\n",
+    "    AND {this_row$measure_start} <= dmt.core_query_p_end\n",
+    "    GROUP BY dmt.core_query_p_uid\n",
+    "        , dmt.core_query_p_start\n",
+    "        , dmt.core_query_p_end\n",
     ")\n",
-    "UPDATE mt\n",
-    "SET {update_set_col_list}\n",
-    "FROM {master_table} AS mt\n",
-    "INNER JOIN setup AS s\n",
-    "ON mt.{this_row$population_uid} = s.{this_row$population_uid}\n",
-    "AND mt.{this_row$period_start} = s.{this_row$period_start}\n",
-    "AND mt.{this_row$period_end} = s.{this_row$period_end}"
+    update_clause
   )
   
   ## assembly ----
@@ -117,35 +139,42 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
     this_row = summary_combinations[rr, ,drop = FALSE]
     summary_rows = dplyr::semi_join(control_file, this_row, by = colnames(this_row))
     
-    # delimiter conversion
-    cols_to_convert = c("period_start", "period_end", "measure_start", "measure_end", "measure_value")
-    for(cc in cols_to_convert){
-      to_single_quote = is_delimited(summary_rows[[cc]], "\"")
-      summary_rows[[cc]][to_single_quote] = remove_delimiters(summary_rows[[cc]][to_single_quote], "\"")
-      summary_rows[[cc]][to_single_quote] = add_delimiters(summary_rows[[cc]][to_single_quote], "'")
-      
-      to_unquoted = is_delimited(summary_rows[[cc]], "{}")
-      summary_rows[[cc]][to_unquoted] = trimws(remove_delimiters(summary_rows[[cc]][to_unquoted], "{}"))
-    }
+    remote_measure_table = dplyr::tbl(db_connection, I(this_row$measure_table))
+    
+    # assign alias prefixes
+    this_row = handle_delimiters_and_prefixes(
+      this_row,
+      mt_prefix = "mt",
+      mt_cols = colnames(remote_master_table),
+      measure_prefix = "m",
+      measure_cols = colnames(remote_measure_table)
+    )
+    summary_rows = handle_delimiters_and_prefixes(
+      summary_rows,
+      mt_prefix = "dmt",
+      mt_cols = colnames(remote_master_table),
+      measure_prefix = "m",
+      measure_cols = colnames(remote_measure_table)
+    )
     
     ### columns dropped and added ----
     
     output_col_names = remove_delimiters(summary_rows$output_name, "\"")
     
     # drop columns
-    query = alter_table_drop_column(master_table, intersect(colnames(master_columns), output_col_names))
+    query = alter_table_drop_column(master_table, intersect(colnames(remote_master_table), output_col_names), is_sqlite)
     if(!is.na(debug_folder)){
       save_code_to_script(query, "drop columns.sql", debug_folder)
     }
-    DBI::dbExecute(db_connection, query)
-    
+    sapply(query, DBI::dbExecute, conn = db_connection)
+
     # create columns
-    query = alter_table_add_column(master_table, output_col_names, summary_rows$output_type)
+    query = alter_table_add_column(master_table, output_col_names, summary_rows$output_type, is_sqlite)
     if(!is.na(debug_folder)){
       save_code_to_script(query, "create columns.sql", debug_folder)
     }
-    DBI::dbExecute(db_connection, query)
-    
+    sapply(query, DBI::dbExecute, conn = db_connection)
+
     ### prepare query ----
 
     # summary columns list
@@ -153,21 +182,21 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
       seq_len(nrow(summary_rows)),
       function(rnum, is_sqlite){
         row = summary_rows[rnum, , drop = FALSE]
-        handle_summary_case(row, is_sqlite)
+        handle_summary_case(row, sqlite = is_sqlite)
       },
-      is_sqlite = any(grepl("sqlite", class(db_connection), ignore.case = TRUE))
+      is_sqlite = is_sqlite
     )
     update_summary_list = unlist(update_summary_list, use.names = FALSE)
-    update_summary_list = paste(update_summary_list, collapse = "\n    , ")
+    update_summary_list = paste(update_summary_list, collapse = "\n        , ")
     
     # set column list for update
     update_set_col_list = lapply(
       seq_len(nrow(summary_rows)),
       function(rnum){
         row = summary_rows[rnum, , drop = FALSE]
-        suffix = ""
-        suffix = if(row$output_method == "ENTITY"){ suffix = c("__min", "__max") }
-        glue::glue("mt.{row$output_name}{suffix} = s.{row$output_name}{suffix}")
+        prefix1 = ifelse(is_sqlite, "", "mt.")
+        prefix2 = ifelse(is_sqlite, "setup.", "s.")
+        glue::glue("{prefix1}{row$output_name} = {prefix2}{row$output_name}")
       }
     )
     update_set_col_list = unlist(update_set_col_list, use.names = FALSE)
@@ -183,7 +212,6 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
 
     ### execute query ----
     DBI::dbExecute(db_connection, prepared_query)
-    
   }
 
   ## conclude ----
