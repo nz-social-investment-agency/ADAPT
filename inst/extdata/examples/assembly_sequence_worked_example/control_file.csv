@@ -1,0 +1,12 @@
+ENABLED,description,population_uid,period_start,period_end,measure_file,measure_table,measure_uid,measure_start,measure_end,measure_value,output_name,output_method,output_type
+TRUE,Any benefit receipt in 2010,[study_cohort],"""2010-01-01""","""2010-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2010""",EXISTS,INT
+TRUE,Any benefit receipt in 2011,[study_cohort],"""2011-01-01""","""2011-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2011""",EXISTS,INT
+TRUE,Any benefit receipt in 2012,[study_cohort],"""2012-01-01""","""2012-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2012""",EXISTS,INT
+TRUE,Any benefit receipt in 2013,[study_cohort],"""2013-01-01""","""2013-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2013""",EXISTS,INT
+TRUE,Any benefit receipt in 2014,[study_cohort],"""2014-01-01""","""2014-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2014""",EXISTS,INT
+TRUE,Any benefit receipt in 2015,[study_cohort],"""2015-01-01""","""2015-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2015""",EXISTS,INT
+TRUE,Any benefit receipt in 2016,[study_cohort],"""2016-01-01""","""2016-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2016""",EXISTS,INT
+TRUE,Any benefit receipt in 2017,[study_cohort],"""2017-01-01""","""2017-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2017""",EXISTS,INT
+TRUE,Any benefit receipt in 2018,[study_cohort],"""2018-01-01""","""2018-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2018""",EXISTS,INT
+TRUE,Any benefit receipt in 2019,[study_cohort],"""2019-01-01""","""2019-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2019""",EXISTS,INT
+TRUE,Any benefit receipt in 2020,[study_cohort],"""2020-01-01""","""2020-12-31""",demo_benefit.sql,[tmp_benefits],[snz_uid],[benefit_start],[benefit_end],"""1""","""benefit_2020""",EXISTS,INT

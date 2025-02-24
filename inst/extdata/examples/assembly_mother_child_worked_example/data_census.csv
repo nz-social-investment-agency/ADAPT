@@ -1,0 +1,51 @@
+﻿snz_uid,highest_qualification,household_type,region,smoking_status,born_in_NZ
+1,degree,single adult,17,yes,yes
+2,certificate,single adult,2,no,no
+3,none,two adults w child(ren),9,no,no
+4,degree,adult w child(ren),8,no,yes
+5,diploma,two adults w child(ren),16,no,no
+6,masters,adult w child(ren),16,no,yes
+7,certificate,two adults w child(ren),13,no,no
+8,degree,single adult,17,no,no
+9,certificate,adult w child(ren),6,no,yes
+10,degree,two adults,12,no,yes
+11,degree,two adults,1,yes,yes
+12,degree,other,14,no,yes
+13,none,single adult,1,no,yes
+14,phd,two adults w child(ren),8,no,no
+15,degree,single adult,18,yes,yes
+16,degree,adult w child(ren),18,no,no
+17,certificate,two adults w child(ren),8,no,yes
+18,degree,two adults,14,no,yes
+19,degree,single adult,14,no,yes
+20,degree,adult w child(ren),8,no,yes
+21,diploma,other,16,no,yes
+22,certificate,two adults,8,no,no
+23,none,single adult,5,no,no
+24,certificate,adult w child(ren),13,no,yes
+25,none,two adults,13,no,no
+26,diploma,two adults w child(ren),16,no,yes
+27,degree,two adults,17,no,yes
+28,certificate,single adult,10,no,yes
+29,certificate,adult w child(ren),12,yes,yes
+30,diploma,other,16,yes,yes
+31,phd,single adult,9,no,yes
+32,masters,other,8,no,no
+33,diploma,two adults w child(ren),9,no,yes
+34,certificate,two adults w child(ren),7,no,yes
+35,degree,two adults w child(ren),12,no,yes
+36,diploma,single adult,3,no,yes
+37,certificate,two adults,9,no,no
+38,degree,two adults,6,no,yes
+39,certificate,adult w child(ren),9,no,no
+40,none,two adults,16,no,yes
+41,certificate,two adults,18,no,yes
+42,none,two adults w child(ren),4,no,yes
+43,none,two adults,17,no,no
+44,certificate,two adults,6,no,yes
+45,diploma,two adults w child(ren),17,no,yes
+46,degree,single adult,16,yes,no
+47,certificate,two adults w child(ren),11,yes,no
+48,none,two adults w child(ren),14,no,yes
+49,masters,single adult,11,no,yes
+50,degree,two adults,6,no,yes

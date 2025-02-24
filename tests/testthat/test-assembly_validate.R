@@ -3,18 +3,64 @@
 #' 
 ################################################################################
 
-# testing folder
+## database setup --------------------------------------------------------- ----
+# Creates SQLite database for testing assembly tool
+# For SQLite, store dates as text in YYYY-MM-DD format
+
+required_packages = c("DBI", "RSQLite")
+stopifnot(all(required_packages %in% installed.packages()))
+
+make_sqlite_db_for_testing = function(csv_path, db_path){
+  # delete old database
+  unlink(db_path)
+  db_conn = DBI::dbConnect(RSQLite::SQLite(), db_path)
+  on.exit(DBI::dbDisconnect(db_conn), add = TRUE, after = TRUE)
+  on.exit(unlist(db_path), add = TRUE, after = TRUE)
+  
+  # write to database supporting function
+  copy_r_to_sql = function(db_connection, sql_table, r_table) {
+    stopifnot("tbl_sql" %not_in% class(r_table))
+    # copy data - mute any translation message
+    suppressMessages(DBI::dbWriteTable(db_connection, DBI::Id(table = sql_table), r_table))
+  }
+  
+  # get csv files to process
+  csv_files = list.files(csv_path, "\\.csv")
+  csv_files = setdiff(csv_files, c("control_file.csv", "results.csv"))
+  
+  # load csv files to db
+  for(cc in csv_files){
+    this_csv = read.csv(file.path(csv_path, cc), stringsAsFactors = FALSE)
+    
+    sql_table_name = gsub("^data_", "tmp_", cc)
+    sql_table_name = gsub("\\.csv", "", sql_table_name)
+    
+    copy_r_to_sql(db_conn, sql_table = sql_table_name, r_table = this_csv)
+  }
+  
+  return(invisible(length(csv_files)))
+}
+
+## setup ------------------------------------------------------------------ ----
+
+# paths
 test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+tmp_dir = tempdir()
+if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
+db_path = file.path(tmp_dir, "testing_sqlite.db")
+
+# setup database
+created_tables = make_sqlite_db_for_testing(test_folder, db_path)
+stopifnot(created_tables == 3)
+db_connection = DBI::dbConnect(RSQLite::SQLite(), db_path)
+on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
+on.exit(unlist(db_path), add = TRUE, after = TRUE)
 
 # setup control file
 control_file = file.path(test_folder, "control_file.csv")
 control_file = load_control_file(control_file)
 control_file$measure_table = gsub("[IDI_Sandpit].[DL-MAA20XX-YY].", "", control_file$measure_table, fixed = TRUE)
-
-# setup database
-db_path = file.path(test_folder, "testing_sqlite.db")
-db_connection = DBI::dbConnect(RSQLite::SQLite(), db_path)
-on.exit(DBI::dbDisconnect(db_connection))
+control_file$period_start = gsub("{ DATEADD(YEAR, -1, [start_date]) }", "{ DATE([start_date], '-1 years') }", control_file$period_start, fixed = TRUE)
 
 # constant arguments
 master_table = "tmp_master_table"

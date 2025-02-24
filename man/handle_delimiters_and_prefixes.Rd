@@ -42,4 +42,10 @@ source from which columns are fetched in the core query clear.
 \item Columns in \code{measure_cols} are given the prefix \code{measure_prefix}. This makes
 the source from which columns are fetched in the core query clear.
 }
+
+The first pair of tasks are necessary because we are moving between
+environments with different delimiters. The second pair of tasks are
+necessary to avoid confusion when input tables have the same column name.
+Regex approach required to handle cases where control_file contents are
+constant or dynamic.
 }

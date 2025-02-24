@@ -29,10 +29,42 @@
 #' without execution use `validate_assembly_control_file`.
 #' 
 #' The accepted columns for the control file are:
-#' *
+#' * Enabled - Optional but recommended column, containing True / false or
+#' yes / no. Allows for rows of the control file to be turned on and off.
+#' * Description  - Optional but recommended column, for user readable
+#' description of the intent of the output column. Not used during assembly.
+#' * Population_uid  - The name of the identity/uid column in the master table
+#' to use for assembly, delimited with [].
+#' * Period_start  - The start of the period, can be a column of the master
+#' table, a constant, or SQL code that generates the data.
+#' * Period_end  - The end of the period, can be a column of the master table,
+#' a constant, or SQL code that generates the data.
+#' * Measure_file  - The name of the SQL file that prepares the measure. Useful
+#' for tracking the lineage of a measure. If the measure table or columns are
+#' not found in the database, then the file is checked during validation.
+#' * Measure_table  - The name of the SQL table from which the measure is drawn.
+#' * Measure_uid  - The name of the identity/uid column in the measure table,
+#' delimited with [].
+#' * Measure_start  - The start of the measure event, can be a column of the
+#' measure table, a constant, or SQL code that generates the data.
+#' * Measure_end  - The end of the measure event, can be a column of the measure
+#' table, a constant, or SQL code that generates the data.
+#' * Measure_value  - The value that should be summarised to create a column in
+#' the master table, can be a column of the measure table, a constant, or SQL
+#' code that generates the data.
+#' * Output_name  - The name of the output column, should be unique and
+#' delimited with "". For ease of subsequent use it is best to use underscore
+#' instead of spaces in these names.
+#' * Output_method  - How the measure should be summarised to create the column
+#' for the master table.
+#' * Output_type  - The SQL data type for the new column.
+#' * Notes - free text column for adding notes to the control file. This column
+#' is ignored during assembly and does not effect output. Any other column names
+#' are also ignored, but generate a warning.
 #' 
-#' Anywhere dynamic input is accepted in the control file, you can instead give
-#' input in \{curry brackets\}. This input is treated as SQL code.
+#' For all inputs, SQL objects (like table and column names) should be delimited
+#' with `[]`; constants should be delimited with `""`, and dynamic input should
+#' be delimited with `{}`. Dynamic input is treated as SQL code.
 #' 
 #' The intended use of this feature is for making minor adjustments to
 #' variables. For example setting zero values to missing or adjusting dates.

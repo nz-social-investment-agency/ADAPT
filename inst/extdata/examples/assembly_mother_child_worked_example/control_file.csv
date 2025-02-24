@@ -1,0 +1,5 @@
+ENABLED,description,population_uid,period_start,period_end,measure_file,measure_table,measure_uid,measure_start,measure_end,measure_value,output_name,output_method,output_type,NOTES
+TRUE,mother's income at age 25,[mother_uid],[mother_25yr_start],[mother_25yr_end],demo_script_income.sql,[tmp_annual_income],[snz_uid],[tax_year],[tax_year],[income],"""mother_income_at_25""",SUM,FLOAT,
+TRUE,child's income at age 25,[child_uid],[child_25yr_start],[child_25yr_end],demo_script_income.sql,[tmp_annual_income],[snz_uid],[tax_year],[tax_year],[income],"""child_income_at_25""",SUM,FLOAT,
+TRUE,mother's highest qualificaiton at age 25,[mother_uid],[mother_25yr_start],[mother_25yr_end],demo_script_census.sql,[tmp_census],[snz_uid],"""1900-01-01""","""5000-01-01""",[highest_qualification],"""mother_qual_at_25""",MAX,VARCHAR(10),max of a single value is just a single value
+TRUE,child's highest qualificaiton at age 25,[child_uid],[child_25yr_start],[child_25yr_end],demo_script_census.sql,[tmp_census],[snz_uid],"""1900-01-01""","""5000-01-01""",[highest_qualification],"""child_qual_at_25""",MAX,VARCHAR(10),max of a single value is just a single value
