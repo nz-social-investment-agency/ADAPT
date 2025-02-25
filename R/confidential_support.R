@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## Extract components of suppression instructions ------------------------- ----
 #' Decompose suppression instructions into individual components and validate
 #' correctness of instructions.

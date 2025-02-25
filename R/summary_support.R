@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## Generate combinations of columns for summary --------------------------- ----
 #' Creates the cross-products of its inputs as a data frame. Designed for
 #' receiving column names as input and creating combinations to group-by in

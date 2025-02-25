@@ -1,9 +1,3 @@
-################################################################################
-#' Notes
-#' - documentation detail bullet points to do
-#' 
-################################################################################
-
 #' Execute assembly tool.
 #' 
 #' @param control_file a data frame containing assembly instructions. Most

@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 #' Confirm that control file instructions can be executed.
 #'
 #' @param control_file a data frame containing confidentialisation instructions.

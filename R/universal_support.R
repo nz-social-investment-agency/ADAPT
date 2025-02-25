@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## Provide example files -------------------------------------------------- ----
 #' Provide an examples of the tools - copying example files from the package
 #' data into a local folder. Includes example control files and worked examples

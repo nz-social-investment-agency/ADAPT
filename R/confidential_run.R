@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#'  
-################################################################################
-
 #' Execute confidentialisation tool.
 #' 
 #' @param control_file a data frame containing confidentialisation instructions.

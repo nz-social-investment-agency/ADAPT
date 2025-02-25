@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 #' Execute summary tool.
 #' 
 #' @param control_file a data frame containing summary instructions. Most likely
