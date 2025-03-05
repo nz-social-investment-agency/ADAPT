@@ -4,11 +4,16 @@
 \alias{run_confidential}
 \title{Execute confidentialisation tool.}
 \usage{
-run_confidential(control_file, tbl, stable_above = 30)
+run_confidential(control_file, sheet = NULL, tbl, stable_above = 30)
 }
 \arguments{
-\item{control_file}{a data frame containing confidentialisation instructions.
-Most likely read into memory by \code{load_control_file}.}
+\item{control_file}{location of the control file containing
+confidentialisation instructions to read into R. Accepted \code{.csv} and \code{.xlsx}
+file formats.}
+
+\item{sheet}{Sheet to read if control file is \code{.xlsx} format. As per
+\code{openxlsx2::read_xlsx}: either a string (name of a sheet), or an integer
+(the position of the sheet). Defaults to the first sheet otherwise.}
 
 \item{tbl}{a data frame to confidentialise. Should be in local R memory.}
 

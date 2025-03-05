@@ -23,6 +23,7 @@ Confirm that control file instructions can be executed.
 \details{
 The following checks are run and generate a failure if not passed:
 \itemize{
+\item The column 'file' exists
 \item Required columns exist in data frame
 \item Dynamic formula contain \code{no_obvious_escaping_injection}
 \item Dynamic formula can be executed

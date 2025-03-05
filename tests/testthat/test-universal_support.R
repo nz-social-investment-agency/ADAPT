@@ -37,11 +37,11 @@ test_that("simple paths updated", {
 
 test_that("MAA and IMR paths have prefixes changed", {
   
-  actual = adjust_file_path_handling("I:\\MAA\\MAA2020-20\\folder")
+  actual = suppressWarnings(adjust_file_path_handling("I:\\MAA\\MAA2020-20\\folder"))
   expected = "/nas/DataLab/MAA/MAA2020-20/folder"
   expect_equal(actual, expected)
   
-  actual = adjust_file_path_handling("I:\\IMR\\IMR2020-20\\folder")
+  actual = suppressWarnings(adjust_file_path_handling("I:\\IMR\\IMR2020-20\\folder"))
   expected = "/nas/DataLab/IMR/IMR2020-20/folder"
   expect_equal(actual, expected)
 })

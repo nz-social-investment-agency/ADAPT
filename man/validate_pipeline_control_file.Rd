@@ -2,10 +2,42 @@
 % Please edit documentation in R/pipeline_validate.R
 \name{validate_pipeline_control_file}
 \alias{validate_pipeline_control_file}
-\title{Confirm that pipeline control file instructions can be executed.}
+\title{Confirm that pipeline file instructions can be executed.}
 \usage{
-validate_pipeline_control_file(control_file, db_connection)
+validate_pipeline_control_file(
+  control_file,
+  db_connection_string = NA_character_
+)
+}
+\arguments{
+\item{control_file}{a data frame containing assembly instructions. Most
+likely read into memory by \code{load_control_file}.}
+
+\item{db_connection_string}{A connection string for connecting to the
+database. Only required if SQL files are included in the pipeline.}
+}
+\value{
+T/F whether or not all validation checks are passed. Generating
+warnings for all failed checks.
 }
 \description{
-Confirm that pipeline control file instructions can be executed.
+Confirm that pipeline file instructions can be executed.
+}
+\details{
+The following checks are run and generate a failure if not passed:
+\itemize{
+\item Required column names are present.
+\item File names are accepted extension.
+\item If any \code{.sql} files, then confirm database connection works
+\item All folders exist
+\item All files exist in their folders
+\item SQL files generate no errors on parse and compile (this does not guarantee
+files can be executed without error due to NOEXEC in SQL Server having
+deferred name resolution, but it helps catch the most obvious things).
+}
+
+The following checks are run and only generate a warning if not passed:
+\itemize{
+\item Unrecognised column names are present.
+}
 }

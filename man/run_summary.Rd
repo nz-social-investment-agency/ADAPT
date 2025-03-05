@@ -6,14 +6,19 @@
 \usage{
 run_summary(
   control_file,
+  sheet = NULL,
   tbl,
   remove_na_from_groups = TRUE,
   debug_folder = NA_character_
 )
 }
 \arguments{
-\item{control_file}{a data frame containing summary instructions. Most likely
-read into memory by \code{load_control_file}.}
+\item{control_file}{location of the control file containing summary
+instructions to read into R. Accepted \code{.csv} and \code{.xlsx} file formats.}
+
+\item{sheet}{Sheet to read if control file is \code{.xlsx} format. As per
+\code{openxlsx2::read_xlsx}: either a string (name of a sheet), or an integer
+(the position of the sheet). Defaults to the first sheet otherwise.}
 
 \item{tbl}{a data frame to summarise. Can be in-memory or remote accessed
 with dbplyr.}
@@ -47,6 +52,9 @@ The accepted columns for the control file are:
 \item ENABLED - TRUE/FALSE - If this column is included then rows set to FALSE
 will be omitted. Except for ENABLED, you can have any number of columns of
 each type.
+\item FILE - file path and name - where the summary output should be saved,
+output can be divided across multiple files. Files and folders will be
+created if they do not exist, and overwritten if they do exist.
 \item LABEL - free text - allows you to include arbitrary text in your output,
 this is intended to provide a description of the summary.
 \item GROUP - name of columns of \code{tbl} - When the summary for the row is

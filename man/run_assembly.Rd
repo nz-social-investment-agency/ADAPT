@@ -6,14 +6,19 @@
 \usage{
 run_assembly(
   control_file,
+  sheet = NULL,
   db_connection,
   master_table,
   debug_folder = NA_character_
 )
 }
 \arguments{
-\item{control_file}{a data frame containing assembly instructions. Most
-likely read into memory by \code{load_control_file}.}
+\item{control_file}{location of the control file containing assembly
+instructions to read into R. Accepted \code{.csv} and \code{.xlsx} file formats.}
+
+\item{sheet}{Sheet to read if control file is \code{.xlsx} format. As per
+\code{openxlsx2::read_xlsx}: either a string (name of a sheet), or an integer
+(the position of the sheet). Defaults to the first sheet otherwise.}
 
 \item{db_connection}{A connection to the database where assembly is to occur.}
 
@@ -43,7 +48,7 @@ without execution use \code{validate_assembly_control_file}.
 
 The accepted columns for the control file are:
 \itemize{
-\item Enabled - Optional but recommended column, containing True / false or
+\item Enabled - Optional but recommended column, containing True / False or
 yes / no. Allows for rows of the control file to be turned on and off.
 \item Description  - Optional but recommended column, for user readable
 description of the intent of the output column. Not used during assembly.
