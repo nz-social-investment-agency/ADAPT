@@ -2,7 +2,8 @@
 % Please edit documentation in R/confidential_support.R
 \name{suppression_format_extract}
 \alias{suppression_format_extract}
-\title{Notes}
+\title{Decompose suppression instructions into individual components and validate
+correctness of instructions.}
 \usage{
 suppression_format_extract(string)
 }

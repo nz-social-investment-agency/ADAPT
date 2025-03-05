@@ -2,7 +2,7 @@
 % Please edit documentation in R/assembly_support.R
 \name{alter_table_drop_column}
 \alias{alter_table_drop_column}
-\title{Notes}
+\title{Create alter table statement to drop columns}
 \usage{
 alter_table_drop_column(
   table_name,

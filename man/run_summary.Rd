@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary_run.R
 \name{run_summary}
 \alias{run_summary}
-\title{Notes}
+\title{Execute summary tool.}
 \usage{
 run_summary(
   control_file,

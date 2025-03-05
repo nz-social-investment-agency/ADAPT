@@ -11,6 +11,12 @@
   !("%in%"(x, y))
 }
 
+## Time-stamped info messages --------------------------------------------- ----
+
+run_time_infrom_user = function(msg, log = NA){
+  
+}
+
 ## Add delimiters --------------------------------------------------------- ----
 #' Add delimiters to text string
 #' 

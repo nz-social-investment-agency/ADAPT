@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{\%not_in\%}
 \alias{\%not_in\%}
-\title{Notes}
+\title{Negative of \%in\%}
 \usage{
 x \%not_in\% y
 }

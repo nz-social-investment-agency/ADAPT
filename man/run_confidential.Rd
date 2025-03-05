@@ -2,9 +2,7 @@
 % Please edit documentation in R/confidential_run.R
 \name{run_confidential}
 \alias{run_confidential}
-\title{Notes
-
-Execute confidentialisation tool.}
+\title{Execute confidentialisation tool.}
 \usage{
 run_confidential(control_file, tbl, stable_above = 30)
 }
@@ -23,8 +21,6 @@ A data frame created by applying to \code{tbl} the confidentialisation
 rules defined by \code{control_file}.
 }
 \description{
-Notes
-
 Execute confidentialisation tool.
 }
 \details{

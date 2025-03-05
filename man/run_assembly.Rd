@@ -2,10 +2,7 @@
 % Please edit documentation in R/assembly_run.R
 \name{run_assembly}
 \alias{run_assembly}
-\title{Notes
-\itemize{
-\item documentation detail bullet points to do
-}}
+\title{Execute assembly tool.}
 \usage{
 run_assembly(
   control_file,

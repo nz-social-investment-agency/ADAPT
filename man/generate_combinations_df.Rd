@@ -3,7 +3,9 @@
 \name{generate_combinations_df}
 \alias{generate_combinations_df}
 \alias{cross_product_column_names}
-\title{Notes}
+\title{Creates the cross-products of its inputs as a data frame. Designed for
+receiving column names as input and creating combinations to group-by in
+analysis.}
 \usage{
 generate_combinations_df(
   ...,

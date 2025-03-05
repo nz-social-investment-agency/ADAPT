@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary_validate.R
 \name{validate_summary_control_file}
 \alias{validate_summary_control_file}
-\title{Notes}
+\title{Confirm that control file instructions can be executed.}
 \usage{
 validate_summary_control_file(control_file, tbl)
 }
