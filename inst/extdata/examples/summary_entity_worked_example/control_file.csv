@@ -1,3 +1,3 @@
-﻿LABEL,GROUP,DISTINCT1,DISTINCT2,ENTITY1,ENTITY2,ENTITY3
-static,area_number,ent__min,ent__max,ent__min,ent__max,ent
-dynamic,region,ent__min,ent__max,ent__min,ent__max,ent
+﻿FILE,LABEL,GROUP,DISTINCT1,DISTINCT2,ENTITY1,ENTITY2,ENTITY3
+path/folder/output_file.csv,static,area_number,ent__min,ent__max,ent__min,ent__max,ent
+path/folder/output_file.csv,dynamic,region,ent__min,ent__max,ent__min,ent__max,ent

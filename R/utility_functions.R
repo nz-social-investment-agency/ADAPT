@@ -12,9 +12,29 @@
 }
 
 ## Time-stamped info messages --------------------------------------------- ----
-
-run_time_infrom_user = function(msg, log = NA){
+#' Prints to console time of function call followed by msg.
+#' 
+#' @param msg A message to display time stamped for the user.
+#' @param log Optional path to an existing log to write to.
+#' 
+#' @return The time-stamped message invisibly.
+#' 
+#' @export
+run_time_inform_user = function(msg, log = NA_character_) {
+  stopifnot(is.character(msg))
+  stopifnot(is.character(log))
+  stopifnot(is.na(log) | file.exists(log))
   
+  now = as.character(Sys.time())
+  now = substr(now, 1, 19)
+  msg = paste0(now, " | ", msg)
+  cat(msg, "\n")
+  
+  if(!is.na(log)){
+    write(msg, log, append = TRUE)
+  }
+  
+  return(invisible(msg))
 }
 
 ## Add delimiters --------------------------------------------------------- ----
@@ -107,7 +127,6 @@ is_delimited = function(string, delimiter) {
 #' @return TRUE if no special characters in string and any quotes are matched,
 #' FALSE if special characters or unmatched quotes found.
 #' 
-#' @export
 no_obvious_escaping_injection = function(string) {
   stopifnot(is.character(string))
   stopifnot(length(string) <= 1)
@@ -138,7 +157,6 @@ no_obvious_escaping_injection = function(string) {
 #' @returns A `DBI::Id` object converting from splitting `sql_string` by `.`
 #' and removing `[]` delimiters.
 #' 
-#' @export
 sql2id = function(sql_string){
   stopifnot(is.character(sql_string))
   stopifnot(length(sql_string) == 1)
@@ -146,4 +164,43 @@ sql2id = function(sql_string){
   split = strsplit(sql_string, ".", fixed = TRUE)[[1]]
   sql_id = DBI::Id(remove_delimiters(split, "[]"))
   return(sql_id)
+}
+
+## increment file name ---------------------------------------------------- ----
+#' Increment number in file path to create a unique file name
+#'
+#' @param path_and_file_name The path to the file that might need incrementing.
+#'
+#' @return The file path incremented if necessary to ensure file name is unique.
+#' 
+#' @details
+#' This is a simple mimic of an existing Windows function that will rename
+#' `file.csv` to `file (1).csv` or `file (1).csv` to `file (2).csv` if the
+#' existing file name already exists.
+#' 
+increment_file_name = function(path_and_file_name){
+  stopifnot(is.character(path_and_file_name))
+  
+  # return immediately if unique
+  if(!file.exists(path_and_file_name)){
+    return(path_and_file_name)
+  }
+  
+  ext = tools::file_ext(path_and_file_name)
+  pattern = glue::glue("(.* \\()([0-9]+)(\\)\\.{ext})$")
+  
+  while(file.exists(path_and_file_name)){
+    # no number in name
+    if(!grepl(pattern, path_and_file_name)){
+      path_and_file_name = gsub(glue::glue("\\.{ext}$"), glue::glue(" (1).{ext}"), path_and_file_name)
+      next
+    }
+    
+    # number in name
+    counter = gsub(pattern, "\\2", path_and_file_name)
+    counter = as.numeric(counter) + 1
+    path_and_file_name = gsub(pattern, glue::glue("\\1{counter}\\3"), path_and_file_name)
+  }
+  
+  return(path_and_file_name)
 }

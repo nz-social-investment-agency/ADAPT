@@ -10,6 +10,7 @@
 #'
 #' @details
 #' The following checks are run and generate a failure if not passed:
+#' * The column 'file' exists
 #' * Required columns exist in data frame
 #' * Dynamic formula contain `no_obvious_escaping_injection`
 #' * Dynamic formula can be executed
@@ -49,7 +50,7 @@ validate_summary_control_file = function(control_file, tbl){
   ## setup for checks ----
   
   # entries of control file (exclude columns: enabled, label, notes)
-  tmp = dplyr::select(control_file, -dplyr::starts_with(c("enabled", "label", "note")))
+  tmp = dplyr::select(control_file, -dplyr::starts_with(c("enabled", "file", "label", "note")))
   indexes = which(!is.na(control_file), arr.ind = TRUE)
   entries = data.frame(
     row = indexes[,1],
@@ -70,12 +71,18 @@ validate_summary_control_file = function(control_file, tbl){
   ## control file column names ----
   
   # acceptable column names in control file
-  expected_columns_names = c("enabled", "group", "label", "distinct", "count", "sum", "entity", "stddev", "note", "notes")
+  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "note", "notes")
   for(cc in ctr_cols){
     if(gsub("[0-9\\.]", "", cc) %in% expected_columns_names){ next }
     
     msg = glue::glue("Control file column {cc} not an accepted name and will be ignored during summarisation.")
     warning(msg)
+  }
+  
+  # file in column names
+  if("file" %not_in% ctr_cols){
+    warning("Control file must have a column 'File' for where to write output.")
+    passes_all_critical_checks = FALSE
   }
   
   ## at least one summary per row ----

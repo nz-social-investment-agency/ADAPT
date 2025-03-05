@@ -1,7 +1,7 @@
-﻿ENABLED,LABEL,LABEL,GROUP,GROUP,GROUP,COUNT,DISTINCT,DISTINCT,COUNT,SUM
-TRUE,1,employed (region),region,,employed,person_uid,household_uid,,income,income
-TRUE,2,employed (sex),,sex,employed,person_uid,household_uid,region,income,income
-TRUE,3,employed (region x sex),region,sex,employed,person_uid,household_uid,,income,income
-TRUE,4,unemployed (region),region,,unemployed,person_uid,household_uid,,income,income
-TRUE,5,unemployed (sex),,sex,unemployed,person_uid,household_uid,region,income,income
-TRUE,6,unemployed (region x sex),region,sex,unemployed,person_uid,household_uid,,income,income
+﻿ENABLED,FILE,LABEL,LABEL,GROUP,GROUP,GROUP,COUNT,DISTINCT,DISTINCT,COUNT,SUM
+TRUE,path/folder/output_file.csv,1,employed (region),region,,employed,person_uid,household_uid,,income,income
+TRUE,path/folder/output_file.csv,2,employed (sex),,sex,employed,person_uid,household_uid,region,income,income
+TRUE,path/folder/output_file.csv,3,employed (region x sex),region,sex,employed,person_uid,household_uid,,income,income
+TRUE,path/folder/output_file.csv,4,unemployed (region),region,,unemployed,person_uid,household_uid,,income,income
+TRUE,path/folder/output_file.csv,5,unemployed (sex),,sex,unemployed,person_uid,household_uid,region,income,income
+TRUE,path/folder/output_file.csv,6,unemployed (region x sex),region,sex,unemployed,person_uid,household_uid,,income,income

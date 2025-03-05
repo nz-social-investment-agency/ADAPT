@@ -1,7 +1,11 @@
 #' Execute confidentialisation tool.
 #' 
-#' @param control_file a data frame containing confidentialisation instructions.
-#' Most likely read into memory by `load_control_file`.
+#' @param control_file location of the control file containing
+#' confidentialisation instructions to read into R. Accepted `.csv` and `.xlsx`
+#' file formats.
+#' @param sheet Sheet to read if control file is `.xlsx` format. As per
+#' `openxlsx2::read_xlsx`: either a string (name of a sheet), or an integer
+#' (the position of the sheet). Defaults to the first sheet otherwise.
 #' @param tbl a data frame to confidentialise. Should be in local R memory.
 #' @param stable_above Minimum source value for which consistent seeds are
 #' required. Defaults to 30, because in practice smaller values come from
@@ -61,22 +65,27 @@
 #' @md
 #' 
 #' @export
-run_confidential = function(control_file, tbl, stable_above = 30){
-  stopifnot(is.data.frame(control_file))
+run_confidential = function(control_file, sheet = NULL, tbl, stable_above = 30){
+  stopifnot(is.character(control_file), file.exists(control_file))
+  stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.data.frame(tbl))
+  
+  ## load control file ----
+  
+  loaded_cf = load_control_file(control_file, sheet = sheet)
   
   ## initialize ----
   
-  valid_control_file = validate_confidential_control_file(control_file, tbl)
+  valid_control_file = validate_confidential_control_file(loaded_cf, tbl)
   stopifnot(valid_control_file)
   
-  conf_cmds = tolower(control_file[,1])
-  ncols = ncol(control_file)
+  conf_cmds = tolower(loaded_cf[,1])
+  ncols = ncol(loaded_cf)
   
   ## setup for generation ----
   
   # setup
-  suppress_entries = control_file[conf_cmds == "suppress",2:ncols]
+  suppress_entries = loaded_cf[conf_cmds == "suppress",2:ncols]
   suppress_entries = suppress_entries[!is.na(suppress_entries)]
   suppress_entries = unique(suppress_entries)
   
@@ -88,7 +97,7 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   
   ## convert NAs ----
   
-  treat_na_row = control_file[conf_cmds == "missing_to",2:ncols, drop = FALSE]
+  treat_na_row = loaded_cf[conf_cmds == "missing_to",2:ncols, drop = FALSE]
   treat_na_row = treat_na_row[1,!is.na(treat_na_row), drop = FALSE]
   
   mutate_command = glue::glue("dplyr::coalesce({names(treat_na_row)}, {as.numeric(treat_na_row)})")
@@ -98,7 +107,7 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   
   ## renaming columns ----
   
-  rename_row = control_file[conf_cmds == "rename", 2:ncols, drop = FALSE]
+  rename_row = loaded_cf[conf_cmds == "rename", 2:ncols, drop = FALSE]
   rename_row = rename_row[1,!is.na(rename_row), drop = FALSE]
   from_name = colnames(rename_row)
   to_name = unlist(rename_row, use.names = FALSE)
@@ -118,7 +127,7 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   
   ## round and suppression ----
   
-  round_and_suppress = control_file[conf_cmds %in% c("round", "suppress"), 2:ncols, drop = FALSE]
+  round_and_suppress = loaded_cf[conf_cmds %in% c("round", "suppress"), 2:ncols, drop = FALSE]
   round_and_suppress = dplyr::rename(round_and_suppress, !!!rlang::parse_exprs(rename_command))
   
   # iterate through columns
@@ -180,7 +189,7 @@ run_confidential = function(control_file, tbl, stable_above = 30){
   
   ## drop unwanted columns ----
   
-  drop_row = control_file[conf_cmds == "drop",2:ncols, drop = FALSE]
+  drop_row = loaded_cf[conf_cmds == "drop",2:ncols, drop = FALSE]
   drop_row = drop_row[1,!is.na(drop_row), drop = FALSE]
   drop_row = drop_row[1,tolower(drop_row) %in% c("true", "1", "t", "yes", "drop"), drop = FALSE]
   

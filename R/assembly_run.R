@@ -1,7 +1,10 @@
 #' Execute assembly tool.
 #' 
-#' @param control_file a data frame containing assembly instructions. Most
-#' likely read into memory by `load_control_file`.
+#' @param control_file location of the control file containing assembly
+#' instructions to read into R. Accepted `.csv` and `.xlsx` file formats.
+#' @param sheet Sheet to read if control file is `.xlsx` format. As per
+#' `openxlsx2::read_xlsx`: either a string (name of a sheet), or an integer
+#' (the position of the sheet). Defaults to the first sheet otherwise.
 #' @param db_connection A connection to the database where assembly is to occur.
 #' @param master_table The name of the table onto which columns should be
 #' assembled. This table must already exist in the database. It is recommended
@@ -23,7 +26,7 @@
 #' without execution use `validate_assembly_control_file`.
 #' 
 #' The accepted columns for the control file are:
-#' * Enabled - Optional but recommended column, containing True / false or
+#' * Enabled - Optional but recommended column, containing True / False or
 #' yes / no. Allows for rows of the control file to be turned on and off.
 #' * Description  - Optional but recommended column, for user readable
 #' description of the intent of the output column. Not used during assembly.
@@ -66,27 +69,36 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_assembly = function(control_file, db_connection, master_table, debug_folder = NA_character_){
-  stopifnot(is.data.frame(control_file))
+run_assembly = function(control_file, sheet = NULL, db_connection, master_table, debug_folder = NA_character_){
+  stopifnot(is.character(control_file), file.exists(control_file))
+  stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(DBI::dbIsValid(db_connection))
   stopifnot(is.character(master_table))
   stopifnot(is.character(debug_folder))
   stopifnot(is.na(debug_folder) | dir.exists(debug_folder) )
-
+  
+  run_time_inform_user("Assembly tool initiated.")
+  
+  ## load control file ----
+  
+  loaded_cf = load_control_file(control_file, sheet = sheet)
+  # drop progress reporting columns
+  loaded_cf = dplyr::select(loaded_cf, -dplyr::any_of(c("start_time", "end_time", "status")))
+  
   ## initialize ----
   
-  ctr_cols = trimws(tolower(colnames(control_file)))
-  colnames(control_file) = ctr_cols
+  ctr_cols = trimws(tolower(colnames(loaded_cf)))
+  colnames(loaded_cf) = ctr_cols
   
-  valid_control_file = validate_assembly_control_file(control_file, db_connection, master_table)
+  valid_control_file = validate_assembly_control_file(loaded_cf, db_connection, master_table)
   stopifnot(valid_control_file)
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
+    loaded_cf = dplyr::filter(loaded_cf, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
   }
   
-  if(nrow(control_file) == 0){
+  if(nrow(loaded_cf) == 0){
     warning("All rows of control file disabled, returnig NULL")
     return(NULL)
   }
@@ -97,12 +109,12 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
   ## setup for assembly ----
   
   # handle entity types
-  control_file = entity_to_min_and_max(control_file)
+  loaded_cf = entity_to_min_and_max(loaded_cf)
   
   # distinct combinations
   distinction_cols = c("population_uid", "period_start", "period_end",
                        "measure_table", "measure_uid", "measure_start", "measure_end")
-  summary_combinations = dplyr::select(control_file, dplyr::all_of(distinction_cols))
+  summary_combinations = dplyr::select(loaded_cf, dplyr::all_of(distinction_cols))
   summary_combinations = dplyr::distinct(summary_combinations)
   
   # master table
@@ -158,12 +170,14 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
   
   ## assembly ----
   
+  result_list = list()
+  
   for(rr in seq_len(nrow(summary_combinations))){
     ### setup ----
     
     # extract
     this_row = summary_combinations[rr, ,drop = FALSE]
-    summary_rows = dplyr::semi_join(control_file, this_row, by = colnames(this_row))
+    summary_rows = dplyr::semi_join(loaded_cf, this_row, by = colnames(this_row))
     
     remote_measure_table = dplyr::tbl(db_connection, I(this_row$measure_table))
     
@@ -237,9 +251,98 @@ run_assembly = function(control_file, db_connection, master_table, debug_folder 
     }
 
     ### execute query ----
-    DBI::dbExecute(db_connection, prepared_query)
+    
+    msg = sprintf("Assembly step %3d of %d: Started", rr, nrow(summary_combinations))
+    run_time_inform_user(msg)
+    result = try_run_SQL_query(prepared_query, db_connection)
+    
+    ## log results ----
+    
+    result = c(
+      population_uid = summary_combinations$population_uid[rr],
+      period_start = summary_combinations$period_start[rr],
+      period_end = summary_combinations$period_end[rr],
+      measure_table = summary_combinations$measure_table[rr],
+      measure_uid = summary_combinations$measure_uid[rr],
+      measure_start = summary_combinations$measure_start[rr],
+      measure_end = summary_combinations$measure_end[rr],
+      result
+    )
+    result_list = c(result_list, list(result))
+    msg = sprintf("Assembly step %3d of %d: %s", rr, nrow(summary_combinations), result$status)
+    run_time_inform_user(msg)
   }
 
+  ## results df ----
+  
+  result_df = dplyr::bind_rows(result_list)
+  req_cols = c("population_uid", "period_start", "period_end",
+               "measure_table", "measure_uid", "measure_start", "measure_end",
+               "status", "start_time", "end_time")
+  result_df = dplyr::select(result_df, dplyr::all_of(req_cols))
+  
   ## conclude ----
-  return(invisible(1))
+  save_control_file_w_progress(control_file, sheet = sheet, result_df)
+  run_time_inform_user("Assembly tool complete.")
+  return(invisible(result_df))
+}
+
+## Try run assembly query ------------------------------------------------- ----
+#' Execute SQL query with error handling
+#'
+#' @param query The query to execute
+#' @param db_connection A connection to the database where assembly is to occur.
+#' @param ignore_warnings T/F whether execution should continue even if warnings
+#' occur. If `FALSE` (the default) then will stop on the first warning and
+#' return the warning message. If `TRUE` then will suppress all warnings.
+#'
+#' @return A list containing three components:
+#' * status - Status message, of success or stopped with error/warning and the
+#' error/warning message.
+#' * start_time - the system time when the query started running.
+#' * end_time - the system time when the query ceased running.
+#' @md
+#' 
+#' @details
+#' The SQL query is executed in the database environment on the provided
+#' connection.
+#' 
+#' It is assumed that `query` is a single SQL query. This is not validated and
+#' multi-query submissions may work, but are not supported. The internal
+#' function `try_run_SQL_file` is designed to handle entire SQL scripts and may
+#' be suitable for multi-query applications.
+#' 
+#' @export
+try_run_SQL_query = function(query, db_connection, ignore_warnings = FALSE){
+  stopifnot(is.character(query))
+  stopifnot(DBI::dbIsValid(db_connection))
+  stopifnot(ignore_warnings %in% c(TRUE, FALSE))
+  
+  start_time = as.character(Sys.time())
+  
+  # execute, capturing messages
+  status = tryCatch(
+    {
+      if(ignore_warnings){
+        result = suppressWarnings(DBI::dbExecute(db_connection, query, immediate = TRUE))
+      } else {
+        DBI::dbExecute(db_connection, query, immediate = TRUE)
+      }
+      "Successful completion"
+    },
+    error = function(e){
+      msg = paste(e$message, collapse = "\n")
+      msg = glue::glue("Stopped with error: ", msg)
+      return(msg)
+    },
+    warning = function(w){
+      msg = paste(w$message, collapse = "\n")
+      msg = paste("Stopped with warning: ", msg)
+      return(msg)
+    }
+  )
+  
+  # conclude
+  end_time = as.character(Sys.time())
+  return(list(status = status, start_time = start_time, end_time = end_time))
 }

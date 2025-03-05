@@ -1,7 +1,10 @@
 #' Execute summary tool.
 #' 
-#' @param control_file a data frame containing summary instructions. Most likely
-#' read into memory by `load_control_file`.
+#' @param control_file location of the control file containing summary
+#' instructions to read into R. Accepted `.csv` and `.xlsx` file formats.
+#' @param sheet Sheet to read if control file is `.xlsx` format. As per
+#' `openxlsx2::read_xlsx`: either a string (name of a sheet), or an integer
+#' (the position of the sheet). Defaults to the first sheet otherwise.
 #' @param tbl a data frame to summarise. Can be in-memory or remote accessed
 #' with dbplyr.
 #' @param remove_na_from_groups T/F whether missing values from grouping columns
@@ -27,6 +30,9 @@
 #' * ENABLED - TRUE/FALSE - If this column is included then rows set to FALSE
 #' will be omitted. Except for ENABLED, you can have any number of columns of
 #' each type.
+#' * FILE - file path and name - where the summary output should be saved,
+#' output can be divided across multiple files. Files and folders will be
+#' created if they do not exist, and overwritten if they do exist.
 #' * LABEL - free text - allows you to include arbitrary text in your output,
 #' this is intended to provide a description of the summary.
 #' * GROUP - name of columns of `tbl` - When the summary for the row is
@@ -57,30 +63,58 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_folder = NA_character_){
-  stopifnot(is.data.frame(control_file))
+run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = TRUE, debug_folder = NA_character_){
+  stopifnot(is.character(control_file), file.exists(control_file))
+  stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.data.frame(tbl))
   stopifnot(is.logical(remove_na_from_groups))
   stopifnot(is.character(debug_folder))
   stopifnot(is.na(debug_folder) | dir.exists(debug_folder) )
   
+  run_time_inform_user("Summary tool initiated.")
+  
+  ## load control file ----
+  
+  loaded_cf = load_control_file(control_file, sheet = sheet)
+  # drop progress reporting columns
+  loaded_cf = dplyr::select(loaded_cf, -dplyr::any_of(c("start_time", "end_time", "status")))
+  
+  result_df = dplyr::mutate(
+    loaded_cf,
+    start_time = NA_character_,
+    end_time = NA_character_,
+    status = NA_character_
+  )
+  
   ## initialize ----
   
-  ctr_cols = trimws(tolower(colnames(control_file)))
-  colnames(control_file) = ctr_cols
+  ctr_cols = trimws(tolower(colnames(loaded_cf)))
+  colnames(loaded_cf) = ctr_cols
   tbl_cols = colnames(tbl)
+  is_sql = dbplyr::is.sql(tbl)
   
-  valid_control_file = validate_summary_control_file(control_file, tbl)
+  valid_control_file = validate_summary_control_file(loaded_cf, tbl)
   stopifnot(valid_control_file)
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
+    loaded_cf = dplyr::filter(loaded_cf, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
   }
   
-  if(nrow(control_file) == 0){
+  if(nrow(loaded_cf) == 0){
     warning("All rows of control file disabled, returnig NULL")
     return(NULL)
+  }
+  
+  # file path fix
+  loaded_cf$file = adjust_file_path_handling(loaded_cf$file)
+  
+  ## remove existing files ----
+  
+  for(ff in unique(loaded_cf$file)){
+    if(file.exists(ff)){
+      unlink(ff)
+    }
   }
   
   ## setup for generation ----
@@ -103,12 +137,16 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
   
   ## generate each output ----
   
-  results_list = list()
-  
   # process each row
-  for(ii in 1:nrow(control_file)){
+  for(ii in seq_len(nrow(loaded_cf))){
     
-    this_row = control_file[ii,]
+    this_row = loaded_cf[ii,]
+
+    start_time = as.character(Sys.time())
+    msg = sprintf("Summary step %3d of %d", ii, nrow(loaded_cf))
+    run_time_inform_user(msg)
+
+    ## prepare commands ----
     
     # union all conversion for entities
     entity_tbl = entity_union_all_conversion(this_row, tbl)
@@ -139,21 +177,41 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
     rename_inputs = rename_inputs[,!is.na(rename_inputs), drop = FALSE]
     rename_command = unlist(rename_inputs)
     
-    # execute
-    tmp_results = dplyr::group_by(entity_tbl, !!!rlang::syms(group_command))
-    tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
-    tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
-    tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
-    tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
+    ## execute commands ----
     
-    # write out for debug
-    if(!is.na(debug_folder)){
-      # remote SQL table
-      if(dbplyr::is.sql(tmp_results)){
-        save_code_to_script(dplyr::show_query(tmp_results), "summary.sql", debug_folder)
-        next  
+    # execute, capturing messages
+    status = tryCatch(
+      {
+        
+        tmp_results = dplyr::group_by(entity_tbl, !!!rlang::syms(group_command))
+        tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
+        tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
+        tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
+        tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
+        
+        if(is_sql){
+          sql_query = dplyr::show_query(tmp_results)
+        }
+        # fetch results
+        this_df = dplyr::collect(tmp_results)
+        
+        "Successful completion"
+      },
+      error = function(e){
+        msg = paste(e$message, collapse = "\n")
+        msg = glue::glue("Stopped with error: ", msg)
+        return(msg)
       }
-      # otherwise local data frame
+    )
+    
+    ## debug write ----
+    
+    # write out for debug - remote SQL table
+    if(!is.na(debug_folder) && is_sql && exists("sql_query")){
+      save_code_to_script(sql_query, "summary.sql", debug_folder)
+    }
+    # write out for debug - R process
+    if(!is.na(debug_folder) && !is_sql){
       tmp = glue::glue(
         "\nGROUP\n",
         paste(group_command, collapse = "\n"),
@@ -162,48 +220,67 @@ run_summary = function(control_file, tbl, remove_na_from_groups = TRUE, debug_fo
         "\n\nRENAME\n",
         paste(names(rename_command),"=",rename_command, collapse = "\n"),
         "\n\nMUTATE\n",
-        paste(names(mutate_command),"=",mutate_command, collapse = "\n")
+        paste(names(mutate_command),"=",mutate_command, collapse = "\n"),
+        "\n\nSELECT\n",
+        paste(select_command, collapse = "\n")
       )
-      save_code_to_script(tmp, "summary.R", debug_folder)
+    save_code_to_script(tmp, "summary.R", debug_folder)
+    }
+
+    ## filter out NAs if required ----
+    
+    if(remove_na_from_groups){
+      group_cols = colnames(this_df)
+      group_cols = group_cols[grepl("^group", group_cols, ignore.case = TRUE)]
+      group_suffix = gsub("^group", "", group_cols)
+      
+      # only discard rows where grplabel is not NA but group is NA
+      # so keep where grplabel is NA or group is not NA
+      filter_commands = glue::glue("(is.na(grplabel{group_suffix}) | !is.na(group{group_suffix}))")
+      
+      this_df = dplyr::filter(this_df, !!!rlang::parse_exprs(filter_commands))
     }
     
-    # fetch results
-    this_df = dplyr::collect(tmp_results)
-    # add to output
-    results_list = c(results_list, list(this_df))
-  }
-  
-  ## combine ----
-  
-  # ensure label and group columns are character
-  results_list = lapply(
-    results_list,
-    function(df){
-      text_cols = colnames(df)
-      text_cols = text_cols[grepl("^(grplabel|group|label)", text_cols, ignore.case = TRUE)]
-      for(cc in text_cols){
-        df[[cc]] = as.character(df[[cc]])
-      }
-      return(df)
+    ## write to disk ----
+    
+    # ensure label and group columns are character
+    text_cols = colnames(this_df)
+    text_cols = text_cols[grepl("^(grplabel|group|label)", text_cols, ignore.case = TRUE)]
+    for(cc in text_cols){
+      this_df[[cc]] = as.character(this_df[[cc]])
     }
-  )
-  
-  results_df = dplyr::bind_rows(results_list)
-  
-  ## filter our NAs if required ----
-  if(remove_na_from_groups){
-    group_cols = colnames(results_df)
-    group_cols = group_cols[grepl("^group", group_cols, ignore.case = TRUE)]
-    group_suffix = gsub("^group", "", group_cols)
     
-    # only discard rows where grplabel is not NA but group is NA
-    # so keep where grplabel is NA or group is not NA
-    filter_commands = glue::glue("(is.na(grplabel{group_suffix}) | !is.na(group{group_suffix}))")
+    # create directory
+    out_file = loaded_cf$file[ii]
+    if(!dir.exists(dirname(out_file))){
+      dir.create(dirname(out_file), recursive = TRUE)
+    }
     
-    results_df = dplyr::filter(results_df, !!!rlang::parse_exprs(filter_commands))
+    # write
+    utils::write.table(
+      this_df,
+      out_file,
+      append = file.exists(out_file),
+      sep = ",",
+      dec = ".",
+      col.names = !file.exists(out_file),
+      row.names = FALSE,
+      qmethod = "double"
+    )
+
+    ## conclude ----
+    end_time = as.character(Sys.time())
+    msg = sprintf("Summary step %3d of %d: %s", ii, nrow(loaded_cf), status)
+    run_time_inform_user(msg)
+    
+    result_df$start_time[ii] = start_time
+    result_df$end_time[ii] = end_time
+    result_df$status[ii] = status
   }
   
   ## conclude ----
-  results_df = dplyr::select(results_df, dplyr::all_of(select_command))
-  return(results_df)
+  
+  save_control_file_w_progress(control_file, sheet = sheet, result_df)
+  run_time_inform_user("Summary tool complete.")
+  return(invisible(result_df))
 }

@@ -1,6 +1,6 @@
-ENABLED,LABEL,GROUP1,GROUP2,DISTINCT,COUNT1,COUNT2,SUM,STDDEV,ENTITY
-TRUE,people in regions,region,,uid,,,,,ent
-TRUE,people w income,region,age_group,,uid,income,,,
-TRUE,regions by island,island,,region,uid,,,,
-TRUE,income for everyone,,type,ent,,,income,income,"{ifelse(is.na(ent),""x"",ent)}"
-FALSE,deactivated,region,type,,uid,,,,
+ENABLED,FILE,LABEL,GROUP1,GROUP2,DISTINCT,COUNT1,COUNT2,SUM,STDDEV,ENTITY
+TRUE,C:/path/temp_results.csv,people in regions,region,,uid,,,,,ent
+TRUE,C:/path/temp_results.csv,people w income,region,age_group,,uid,income,,,
+TRUE,C:/path/temp_results.csv,regions by island,island,,region,uid,,,,
+TRUE,C:/path/temp_results.csv,income for everyone,,type,ent,,,income,income,"{ifelse(is.na(ent),""x"",ent)}"
+FALSE,C:/path/temp_results.csv,deactivated,region,type,,uid,,,,

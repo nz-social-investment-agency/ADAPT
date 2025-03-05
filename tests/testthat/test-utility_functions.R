@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## "%not_in%"(x, y) ------------------------------------------------------- ----
 
 test_that("multivariate LHS is correct", {
@@ -20,6 +15,28 @@ test_that("different calls work", {
   b2 <- c("c", "d", "e")
   
   expect_equal(b1 %not_in% b2, `%not_in%`(b1, b2))
+})
+
+## run_time_inform_user(msg, log = NA_character_) ------------------------- ----
+
+test_that("msg displayed", {
+  
+  expect_output(run_time_inform_user("hello there"), "hello there")
+  expect_output(run_time_inform_user("hello there"), as.character(Sys.Date()))
+  
+})
+
+test_that("log written", {
+  
+  tmp_dir = tempdir()
+  log_file = file.path(tmp_dir, "log.text")
+  write("", log_file)
+  
+  expect_output(run_time_inform_user("hello there", log_file))
+  
+  actual = readLines(log_file)
+  
+  expect_true(any(grepl("hello there", actual, fixed = TRUE)))
 })
 
 ## add_delimiters(string, delimiter) -------------------------------------- ----
@@ -123,3 +140,42 @@ test_that("multi sql string to Id", {
   expected = DBI::Id("db", "schema", "table")
   expect_identical(actual, expected)
 })
+
+## increment_file_name(path_and_file_name) -------------------------------- ----
+
+test_that("file numbers incremented", {
+  
+  tmp_dir = tempdir()
+  num = floor(1e6 * stats::runif(1))
+  file_name = glue::glue("test {num}.txt")
+  
+  file = increment_file_name(file.path(tmp_dir, file_name))
+  writeLines("hello", file)
+  
+  expect_true(file.exists(file.path(tmp_dir, glue::glue("test {num}.txt"))))
+  expect_false(file.exists(file.path(tmp_dir, glue::glue("test {num} (1).txt"))))
+  
+  file = increment_file_name(file.path(tmp_dir, file_name))
+  writeLines("hello", file)
+  
+  expect_true(file.exists(file.path(tmp_dir, glue::glue("test {num} (1).txt"))))
+  expect_false(file.exists(file.path(tmp_dir, glue::glue("test {num} (2).txt"))))
+  
+  file = increment_file_name(file.path(tmp_dir, file_name))
+  writeLines("hello", file)
+  
+  expect_true(file.exists(file.path(tmp_dir, glue::glue("test {num} (2).txt"))))
+  expect_false(file.exists(file.path(tmp_dir, glue::glue("test {num} (3).txt"))))
+  
+  file = increment_file_name(file.path(tmp_dir, file_name))
+  writeLines("hello", file)
+  
+  expect_true(file.exists(file.path(tmp_dir, glue::glue("test {num} (3).txt"))))
+  
+  unlink(file.path(tmp_dir, glue::glue("test {num}.txt")))
+  unlink(file.path(tmp_dir, glue::glue("test {num} (1).txt")))
+  unlink(file.path(tmp_dir, glue::glue("test {num} (2).txt")))
+  unlink(file.path(tmp_dir, glue::glue("test {num} (3).txt")))
+})
+
+

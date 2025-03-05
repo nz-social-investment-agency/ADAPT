@@ -1,0 +1,5 @@
+ENABLED,ORDER,FOLDER,FILE
+TRUE,2,IDIr/testing/pipeline_tool,calculate.sql
+TRUE,1,IDIr/testing/pipeline_tool,setup.sql
+TRUE,3,IDIr/testing/pipeline_tool,fizzbuzz.R
+FALSE,,IDIr/testing/pipeline_tool,file that does not exist.R

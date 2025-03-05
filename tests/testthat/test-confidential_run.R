@@ -1,15 +1,9 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 # setup
 control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "IDIr")
 tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "IDIr")
 results = system.file("extdata", "testing", "confidential_tool", "results.csv", package = "IDIr")
 
 # load
-control_file = load_control_file(control_file)
 tbl = read.csv(tbl)
 results = read.csv(results)
 
@@ -20,6 +14,8 @@ results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
 ## helper for checking rounding ------------------------------------------- ----
 
 help_check_rounding = function(cc, control_file, actual, results){
+  
+  control_file = load_control_file(control_file)
   
   # get rounding type
   renaming = control_file[,1] == "RENAME"
@@ -60,7 +56,7 @@ help_check_rounding = function(cc, control_file, actual, results){
 
 test_that("worked example passes",{
   
-  actual = run_confidential(control_file, tbl)
+  actual = run_confidential(control_file, sheet = NULL, tbl)
   actual = dplyr::tibble(actual)
   
   expect_equal(nrow(actual), nrow(results))
@@ -89,12 +85,15 @@ test_that("worked example passes",{
 test_that("NA handling effects output",{
   
   # setup
-  actual_unmodified = run_confidential(control_file, tbl)
+  actual_unmodified = run_confidential(control_file, sheet = NULL, tbl)
   
-  tmp = control_file
+  tmp = load_control_file(control_file, sheet = NULL)
   tmp$entity1[tmp$COMMAND == "MISSING_TO"] = 0
   
-  actual_modified = run_confidential(tmp, tbl)
+  tmp_cf = file.path(tempdir(), "tmp_cf.csv")
+  write.csv(tmp, tmp_cf, row.names = FALSE)
+  
+  actual_modified = run_confidential(tmp_cf, sheet = NULL, tbl)
   
   # standardise
   actual_unmodified = dplyr::select(actual_unmodified, dplyr::all_of(colnames(results)))
@@ -119,7 +118,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$distinct1 = 19
   
-  actual = run_confidential(control_file, tmp, stable_above = 1000)
+  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = 1000)
   
   # RR3 to 18
   non_nas = !is.na(actual$conf_num_hhlds)
@@ -130,7 +129,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$distinct1 = 20
   
-  actual = run_confidential(control_file, tmp, stable_above = 1000)
+  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = 1000)
   
   # RR3 to 21
   non_nas = !is.na(actual$conf_num_hhlds)
@@ -141,7 +140,7 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$count1 = 19
   
-  actual = run_confidential(control_file, tmp, stable_above = 1000)
+  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = 1000)
   
   # GRR to 18
   non_nas = !is.na(actual$conf_num_people)
@@ -152,10 +151,13 @@ test_that("thresholds respected",{
   tmp = tbl
   tmp$count1 = 44
   
-  cf = control_file
+  cf = load_control_file(control_file, sheet = NULL)
   cf[6,2] = "count1 < 42"
   
-  actual = run_confidential(cf, tmp, stable_above = 1000)
+  tmp_cf = file.path(tempdir(), "tmp_cf.csv")
+  write.csv(cf, tmp_cf, row.names = FALSE)
+  
+  actual = run_confidential(tmp_cf, sheet = NULL, tmp, stable_above = 1000)
   
   # GRR to 45
   non_nas = !is.na(actual$conf_num_people)
@@ -171,13 +173,13 @@ test_that("consistent rounding in RR3",{
   tmp$distinct1 = 50
   
   # single value
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(control_file, sheet = NULL, tmp)
   non_nas = !is.na(actual$conf_num_hhlds)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_hhlds[non_nas])) == 1)
   
   # multi-values value
-  actual = run_confidential(control_file, tmp, stable_above = Inf)
+  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = Inf)
   non_nas = !is.na(actual$conf_num_hhlds)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_hhlds[non_nas])) > 1)
@@ -190,13 +192,13 @@ test_that("consistent rounding in GRR",{
   tmp$count1 = 905
   
   # single value
-  actual = run_confidential(control_file, tmp)
+  actual = run_confidential(control_file, sheet = NULL, tmp)
   non_nas = !is.na(actual$conf_num_people)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_people[non_nas])) == 1)
   
   # multi-values value
-  actual = run_confidential(control_file, tmp, stable_above = Inf)
+  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = Inf)
   non_nas = !is.na(actual$conf_num_people)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_people[non_nas])) > 1)
@@ -204,10 +206,13 @@ test_that("consistent rounding in GRR",{
 
 test_that("errors in control file prevent execution", {
   
-  tmp = control_file
+  tmp = load_control_file(control_file, sheet = NULL)
   colnames(tmp)[4] = "non_existant_column"
   
-  expect_error(suppressWarnings(run_confidential(tmp, tbl)))
+  tmp_cf = file.path(tempdir(), "tmp_cf.csv")
+  write.csv(tmp, tmp_cf, row.names = FALSE)
+  
+  expect_error(suppressWarnings(run_confidential(tmp_cf, sheet = NULL, tbl)))
 })
 
 ## test examples ---------------------------------------------------------- ----
@@ -220,7 +225,6 @@ test_that("confidential_simple_worked_example passes", {
   results = system.file("extdata", "examples", "confidential_simple_worked_example", "results.csv", package = "IDIr")
   
   # load
-  control_file = load_control_file(control_file)
   tbl = read.csv(tbl)
   results = read.csv(results)
   
@@ -228,7 +232,7 @@ test_that("confidential_simple_worked_example passes", {
   results = dplyr::tibble(results)
   results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
   
-  actual = run_confidential(control_file, tbl)
+  actual = run_confidential(control_file, sheet = NULL, tbl)
   
   expect_equal(nrow(actual), nrow(results))
   expect_equal(ncol(actual), ncol(results))
@@ -261,7 +265,6 @@ test_that("confidential_survey_worked_example passes", {
   results = system.file("extdata", "examples", "confidential_survey_worked_example", "results.csv", package = "IDIr")
   
   # load
-  control_file = load_control_file(control_file)
   tbl = read.csv(tbl)
   results = read.csv(results)
   
@@ -269,7 +272,7 @@ test_that("confidential_survey_worked_example passes", {
   results = dplyr::tibble(results)
   results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
   
-  actual = run_confidential(control_file, tbl)
+  actual = run_confidential(control_file, sheet = NULL, tbl)
   
   expect_equal(nrow(actual), nrow(results))
   expect_equal(ncol(actual), ncol(results))
@@ -302,7 +305,6 @@ test_that("confidential_wide_worked_example passes", {
   results = system.file("extdata", "examples", "confidential_wide_worked_example", "results.csv", package = "IDIr")
   
   # load
-  control_file = load_control_file(control_file)
   tbl = read.csv(tbl)
   results = read.csv(results)
   
@@ -310,7 +312,7 @@ test_that("confidential_wide_worked_example passes", {
   results = dplyr::tibble(results)
   results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
   
-  actual = run_confidential(control_file, tbl)
+  actual = run_confidential(control_file, sheet = NULL, tbl)
   
   expect_equal(nrow(actual), nrow(results))
   expect_equal(ncol(actual), ncol(results))

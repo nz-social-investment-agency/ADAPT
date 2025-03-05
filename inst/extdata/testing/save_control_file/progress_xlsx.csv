@@ -1,0 +1,5 @@
+population_uid,period_start,period_end,measure_table,measure_uid,measure_start,measure_end,start_time,end_time,status
+[snz_uid],[start_date],[end_date],[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],28/02/2025 15:46,28/02/2025 15:47,Success
+[snz_uid],"""1950-01-01""","""2050-01-01""",[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],28/02/2025 15:47,28/02/2025 15:47,Error
+[snz_uid],"{ DATEADD(YEAR, -1, [start_date]) }",[start_date],[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_accidents],[snz_uid],[accident_date],[accident_date],28/02/2025 15:47,28/02/2025 15:47,Warning
+[snz_uid],[start_date],[end_date],[IDI_Sandpit].[DL-MAA20XX-YY].[tmp_benefit_payment],[snz_uid],[benefit_start_date],[benefit_end_date],28/02/2025 15:47,28/02/2025 15:47,Success 2

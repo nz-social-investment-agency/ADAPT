@@ -1,4 +1,4 @@
-﻿ENABLED,LABEL,GROUP,COUNT,SUM1,SUM2
-TRUE,all,support_type,person_uid,duration,cost
-TRUE,long stay,support_type,"{ ifelse(duration > 1, person_uid, NA) }","{ ifelse(duration > 1, duration, NA) }","{ ifelse(duration > 1, cost, NA) }"
-TRUE,high_cost,support_type,"{ ifelse(cost > 1500, person_uid, NA) }","{ ifelse(cost > 1500, duration, NA) }","{ ifelse(cost > 1500, cost, NA) }"
+﻿ENABLED,FILE,LABEL,GROUP,COUNT,SUM1,SUM2
+TRUE,path/folder/output_file.csv,all,support_type,person_uid,duration,cost
+TRUE,path/folder/output_file.csv,long stay,support_type,"{ ifelse(duration > 1, person_uid, NA) }","{ ifelse(duration > 1, duration, NA) }","{ ifelse(duration > 1, cost, NA) }"
+TRUE,path/folder/output_file.csv,high_cost,support_type,"{ ifelse(cost > 1500, person_uid, NA) }","{ ifelse(cost > 1500, duration, NA) }","{ ifelse(cost > 1500, cost, NA) }"

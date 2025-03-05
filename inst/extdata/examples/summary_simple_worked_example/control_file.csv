@@ -1,8 +1,8 @@
-﻿ENABLED,LABEL,GROUP,GROUP,COUNT
-TRUE,ethnicity,,eth_european,person_uid
-TRUE,ethnicity,,eth_maori,person_uid
-TRUE,ethnicity,,eth_pacific,person_uid
-TRUE,ethnicity,,eth_asian,person_uid
-TRUE,ethnicity,,eth_melaa,person_uid
-TRUE,ethnicity,,eth_other,person_uid
-FALSE,area,region,,person_uid
+﻿ENABLED,FILE,LABEL,GROUP,GROUP,COUNT
+TRUE,path/folder/output_file.csv,ethnicity,,eth_european,person_uid
+TRUE,path/folder/output_file.csv,ethnicity,,eth_maori,person_uid
+TRUE,path/folder/output_file.csv,ethnicity,,eth_pacific,person_uid
+TRUE,path/folder/output_file.csv,ethnicity,,eth_asian,person_uid
+TRUE,path/folder/output_file.csv,ethnicity,,eth_melaa,person_uid
+TRUE,path/folder/output_file.csv,ethnicity,,eth_other,person_uid
+FALSE,,area,region,,person_uid

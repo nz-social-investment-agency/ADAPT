@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## alter_table_drop_column(table_name, columns, if_exists = TRUE) --------- ----
 
 test_that("single column dropped", {
@@ -193,7 +188,6 @@ test_that("entity rows duplicated", {
   
   expect_equal(actual, expected)
 })
-
 
 test_that("multiple entity rows all duplicate", {
   control_file = data.frame(

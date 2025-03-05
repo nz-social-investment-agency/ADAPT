@@ -1,6 +1,6 @@
-﻿ENABLED,GROUP,COUNT
-TRUE,year,person_uid
-TRUE,month,person_uid
-TRUE,region,person_uid
-TRUE,license,person_uid
-TRUE,expired,person_uid
+﻿ENABLED,FILE,GROUP,COUNT
+TRUE,path/folder/output_file.csv,year,person_uid
+TRUE,path/folder/output_file.csv,month,person_uid
+TRUE,path/folder/output_file.csv,region,person_uid
+TRUE,path/folder/output_file.csv,license,person_uid
+TRUE,path/folder/output_file.csv,expired,person_uid

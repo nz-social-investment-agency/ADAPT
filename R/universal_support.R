@@ -50,14 +50,49 @@ provide_example = function(example = NA_character_, folder = "."){
   return(new_files)
 }
 
+## Adjust file paths ------------------------------------------------------ ----
+#' Adjust Windows paths to R paths
+#' 
+#' @param file_name_and_path The file path and folder to adjust.
+#' 
+#' @return The input adjusted for R pathing.
+#' 
+#' @details
+#' Converts forward slashes to back slashes and replaces drive letter with
+#' Data Lab location prefix. The Data Lab location prefix is specific to the
+#' IDI at time of development.
+#' 
+#' The inclusion of this function allows researchers to copy-and-paste paths
+#' from Windows into the pipeline control file.
+#' 
+adjust_file_path_handling = function(file_name_and_path){
+  stopifnot(is.character(file_name_and_path))
+  
+  # adjust if needed
+  file_name_and_path = gsub("\\\\", "/", file_name_and_path)
+  file_name_and_path = gsub("//", "/", file_name_and_path)
+  
+  file_name_and_path = gsub("^[a-zA-Z]:/MAA/", "/nas/DataLab/MAA/", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/IMR/", "/nas/DataLab/IMR/", file_name_and_path)
+  
+  # warn if paths may be out of date
+  MAA_out_of_date = grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
+  IMR_out_of_date = grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
+  if(any(MAA_out_of_date) | any(IMR_out_of_date)){
+    warning("data lab paths in IDIr may be out of date")
+  }
+  
+  return(file_name_and_path)
+}
+
 ## Load control file ------------------------------------------------------ ----
 #' Auto-detecting which file read command is needed
 #'
-#' Used to support csv, xls, and xlsx formatted control files.
+#' Used to support csv and xlsx formatted control files.
 #'
 #' @param path_and_file_name location of the file to read into R
-#' @param sheet Sheet to read if Excel file as per `readxl::read_excel`:
-#' Either a string (name of a sheet), #' or an integer (the position of the
+#' @param sheet Sheet to read if Excel file as per `openxlsx2::read_xlsx`:
+#' Either a string (name of a sheet), or an integer (the position of the
 #' sheet). Defaults to the first sheet otherwise.
 #'
 #' @return the file contents as a data.frame
@@ -66,19 +101,17 @@ provide_example = function(example = NA_character_, folder = "."){
 #' example_control_file = example_summary_control_file(".")
 #' control_file = load_control_file(example_control_file[1])
 #' 
+#' @export
 load_control_file = function(path_and_file_name, sheet = NULL){
   stopifnot(is.character(path_and_file_name))
   stopifnot(file.exists(path_and_file_name))
-  
+  stopifnot(is.null(sheet) | is.character(sheet))
   extension = tolower(tools::file_ext(path_and_file_name))
-  stopifnot(extension %in% c("xlsx", "xls", "csv"))
+  stopifnot(extension %in% c("xlsx", "csv"))
   
   # load file
-  if (extension == "xls") {
-    file_contents = readxl::read_xls(path_and_file_name, sheet = sheet, col_types = "text")
-  }
   if (extension == "xlsx") {
-    file_contents = readxl::read_xlsx(path_and_file_name, sheet = sheet, col_types = "text")
+    file_contents = openxlsx2::read_xlsx(path_and_file_name, sheet = sheet, convert = FALSE)
   }
   if (extension == "csv") {
     file_contents = utils::read.csv(path_and_file_name, stringsAsFactors = FALSE, colClasses = "character")
@@ -95,6 +128,149 @@ load_control_file = function(path_and_file_name, sheet = NULL){
   file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]
   
   return(file_contents)
+}
+
+## Save control file with progress reporting ------------------------------ ----
+#' Save progress update to control file
+#'
+#' @param path_and_file_name location of the file to read into R
+#' @param sheet Sheet to read if Excel file as per `openxlsx2::read_xlsx`:
+#' Either a string (name of a sheet), or an integer (the position of the
+#' sheet). Defaults to the first sheet otherwise.
+#' @param progress_df A data frame with the columns start_time, end_time, and
+#' status. And all other columns in common with the control file.
+#' @param overwrite T/F should the existing file be overwritten. If FALSE, will
+#' increment the file name (for example: `file.csv` becomes `file (1).csv`).
+#' If TRUE will attempt to overwrite and if overwrite fails, will increment the
+#' file name.
+#'
+#' @return The path of the written file.
+#' 
+save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progress_df, overwrite = TRUE){
+  stopifnot(is.character(path_and_file_name))
+  stopifnot(file.exists(path_and_file_name))
+  stopifnot(is.null(sheet) | is.character(sheet))
+  extension = tolower(tools::file_ext(path_and_file_name))
+  stopifnot(extension %in% c("xlsx", "csv"))
+  stopifnot(is.data.frame(progress_df))
+  stopifnot(overwrite %in% c(TRUE, FALSE))
+  
+  ## control file prep ----
+  
+  # load control file
+  control_file = load_control_file(path_and_file_name, sheet = sheet)
+  control_file = merge_progress_into_control_file(control_file, progress_df)
+  
+  ## write xlsx ----
+  if (extension == "xlsx") {
+    
+    wb = openxlsx2::wb_load(path_and_file_name)
+    wb = openxlsx2::wb_set_active_sheet(wb, sheet)
+    wb = openxlsx2::wb_clean_sheet(wb, sheet)
+    wb = openxlsx2::wb_add_data(wb, sheet, x = control_file)
+    
+    if(!overwrite){
+      path_and_file_name = increment_file_name(path_and_file_name)
+    }
+    
+    path_and_file_name = tryCatch({
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}'.")
+      run_time_inform_user(msg)
+      openxlsx2::wb_save(wb, path_and_file_name)
+      path_and_file_name
+    },
+    error = function(e){
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}' failed.")
+      run_time_inform_user(msg)
+      path_and_file_name = increment_file_name(path_and_file_name)
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}' instead.")
+      run_time_inform_user(msg)
+      openxlsx2::wb_save(wb, path_and_file_name)
+      return(path_and_file_name)
+    })
+  }
+  
+  ## write csv ----
+  if (extension == "csv") {
+    
+    if(!overwrite){
+      path_and_file_name = increment_file_name(path_and_file_name)
+    }
+    
+    path_and_file_name = tryCatch({
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}'.")
+      run_time_inform_user(msg)
+      utils::write.csv(control_file, path_and_file_name, row.names = FALSE)
+      path_and_file_name
+    },
+    error = function(e){
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}' failed.")
+      run_time_inform_user(msg)
+      path_and_file_name = increment_file_name(path_and_file_name)
+      msg = glue::glue("Writing progress to '{basename(path_and_file_name)}' instead.")
+      run_time_inform_user(msg)
+      utils::write.csv(control_file, path_and_file_name, row.names = FALSE)
+      return(path_and_file_name)
+    })
+  }
+  
+  ## conclude ----
+  return(path_and_file_name)
+}
+
+## Merge control file and progress report --------------------------------- ----
+#' Merge progress information into control file
+#'
+#' @param control_file A loaded control file to update.
+#' @param progress_df A data frame with the columns start_time, end_time, and
+#' status. And all other columns in common with the control file.
+#' 
+#' @return The control file with progress information merged in.
+#' 
+#' @details
+#' Merging only occurs when rows are enabled. Rows that have been disabled are
+#' not updated.
+#' 
+merge_progress_into_control_file = function(control_file, progress_df){
+  stopifnot(is.data.frame(control_file), is.data.frame(progress_df))
+  req_cols = c("start_time", "end_time", "status")
+  stopifnot(all(req_cols %in% colnames(progress_df)))
+  
+  # add reporting columns if missing
+  for(cc in req_cols){
+    if(cc %in% colnames(control_file)){ next }
+    control_file[[cc]] = NA_character_
+  }
+  
+  # join
+  control_file = dplyr::left_join(
+    control_file,
+    progress_df,
+    by = setdiff(colnames(progress_df), c("start_time", "end_time", "status")),
+    suffix = c("_cf", "_p")
+  )
+  
+  # column with 'enabled'
+  enabled_column = colnames(control_file)[tolower(colnames(control_file)) == "enabled"]
+  if(length(enabled_column) == 0){
+    enabled_column = "temporary_writing_enabled"
+    control_file[[enabled_column]] = "TRUE"
+  }
+  control_file[[enabled_column]] = tolower(control_file[[enabled_column]]) %in% c("true", "1", "t", "yes", "y")
+  
+  # merge reporting columns
+  control_file = dplyr::mutate(
+    control_file,
+    start_time = ifelse(!!rlang::sym(enabled_column), .data$start_time_p, .data$start_time_cf),
+    end_time = ifelse(!!rlang::sym(enabled_column), .data$end_time_p, .data$end_time_cf),
+    status = ifelse(!!rlang::sym(enabled_column), .data$status_p, .data$status_cf)
+  )
+  
+  # remove merging columns
+  drop_cols = c("start_time_cf", "end_time_cf", "status_cf", "start_time_p", "end_time_p", "status_p", "temporary_writing_enabled")
+  control_file = dplyr::select(control_file, -dplyr::any_of(drop_cols))
+  
+  return(control_file)
 }
 
 ## Save code to file ------------------------------------------------------ ----

@@ -1,0 +1,5 @@
+ENABLED,ORDER,FOLDER,FILE,start_time,end_time,status
+TRUE,2,IDIr/testing/pipeline_tool,calculate.sql,28/02/2025 15:45,28/02/2025 15:42,Success
+TRUE,1,IDIr/testing/pipeline_tool,setup.sql,28/02/2025 15:52,28/02/2025 15:42,Error
+TRUE,3,IDIr/testing/pipeline_tool,fizzbuzz.R,28/02/2025 15:32,28/02/2025 15:42,Warning
+FALSE,,IDIr/testing/pipeline_tool,file that does not exist.R,,,

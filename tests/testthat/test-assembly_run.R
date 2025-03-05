@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 ## database setup --------------------------------------------------------- ----
 # Creates SQLite database for testing assembly tool
 # For SQLite, store dates as text in YYYY-MM-DD format
@@ -65,12 +60,15 @@ test_that("worked example passes",{
   control_file$measure_table = gsub("[IDI_Sandpit].[DL-MAA20XX-YY].", "", control_file$measure_table, fixed = TRUE)
   control_file$period_start = gsub("{ DATEADD(YEAR, -1, [start_date]) }", "{ DATE([start_date], '-1 years') }", control_file$period_start, fixed = TRUE)
   
+  tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
+  write.csv(control_file, tmp_cf, row.names = FALSE)
+  
   # constant arguments
   master_table = "tmp_master_table"
   
   ### Act ----
   initial_contents = list.files(tmp_dir)
-  run_assembly(control_file, db_connection, master_table, debug_folder = tmp_dir)
+  expect_output(run_assembly(tmp_cf, sheet = NULL, db_connection, master_table, debug_folder = tmp_dir), "Assembly")
   
   actual = dplyr::tbl(db_connection, master_table)
   actual = as.data.frame(dplyr::collect(actual))
@@ -92,6 +90,9 @@ test_that("worked example passes",{
   actual$payment_within_period = round(actual$payment_within_period, 2)
   
   expect_equal(actual, results)
+  
+  output_cf = load_control_file(tmp_cf)
+  expect_true(all(c("start_time", "end_time", "status") %in% colnames(output_cf)))
 })
 
 ## test examples ---------------------------------------------------------- ----
@@ -118,12 +119,15 @@ test_that("assembly_mother_child_worked_example passes", {
   control_file$measure_table = gsub("[IDI_Sandpit].[DL-MAA20XX-YY].", "", control_file$measure_table, fixed = TRUE)
   control_file$period_start = gsub("{ DATEADD(YEAR, -1, [start_date]) }", "{ DATE([start_date], '-1 years') }", control_file$period_start, fixed = TRUE)
   
+  tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
+  write.csv(control_file, tmp_cf, row.names = FALSE)
+  
   # constant arguments
   master_table = "tmp_master_table"
   
   ### Act ----
   initial_contents = list.files(tmp_dir)
-  run_assembly(control_file, db_connection, master_table, debug_folder = tmp_dir)
+  expect_output(run_assembly(tmp_cf, sheet = NULL, db_connection, master_table, debug_folder = tmp_dir), "Assembly")
   
   actual = dplyr::tbl(db_connection, master_table)
   actual = as.data.frame(dplyr::collect(actual))
@@ -168,12 +172,15 @@ test_that("assembly_panel_worked_example passes", {
   control_file$measure_table = gsub("[IDI_Sandpit].[DL-MAA20XX-YY].", "", control_file$measure_table, fixed = TRUE)
   control_file$period_start = gsub("{ DATEADD(YEAR, -1, [start_date]) }", "{ DATE([start_date], '-1 years') }", control_file$period_start, fixed = TRUE)
   
+  tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
+  write.csv(control_file, tmp_cf, row.names = FALSE)
+  
   # constant arguments
   master_table = "tmp_master_table"
   
   ### Act ----
   initial_contents = list.files(tmp_dir)
-  run_assembly(control_file, db_connection, master_table, debug_folder = tmp_dir)
+  expect_output(run_assembly(tmp_cf, sheet = NULL, db_connection, master_table, debug_folder = tmp_dir), "Assembly")
   
   actual = dplyr::tbl(db_connection, master_table)
   actual = as.data.frame(dplyr::collect(actual))
@@ -219,12 +226,15 @@ test_that("assembly_sequence_worked_example passes", {
   control_file$measure_table = gsub("[IDI_Sandpit].[DL-MAA20XX-YY].", "", control_file$measure_table, fixed = TRUE)
   control_file$period_start = gsub("{ DATEADD(YEAR, -1, [start_date]) }", "{ DATE([start_date], '-1 years') }", control_file$period_start, fixed = TRUE)
   
+  tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
+  write.csv(control_file, tmp_cf, row.names = FALSE)
+  
   # constant arguments
   master_table = "tmp_master_table"
   
   ### Act ----
   initial_contents = list.files(tmp_dir)
-  run_assembly(control_file, db_connection, master_table, debug_folder = tmp_dir)
+  expect_output(run_assembly(tmp_cf, sheet = NULL, db_connection, master_table, debug_folder = tmp_dir), "Assembly")
   
   actual = dplyr::tbl(db_connection, master_table)
   actual = as.data.frame(dplyr::collect(actual))
@@ -245,4 +255,49 @@ test_that("assembly_sequence_worked_example passes", {
   actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
 
   expect_equal(actual, results)
+})
+
+## try_run_SQL_query(query, db_connection, ignore_warnings = FALSE) ------- ----
+
+test_that("query executes successfully", {
+  # paths
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  tmp_dir = tempdir()
+  if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
+  db_path = file.path(tmp_dir, "testing_sqlite.db")
+  
+  # setup database
+  created_tables = make_sqlite_db_for_testing(test_folder, db_path)
+  stopifnot(created_tables == 3)
+  db_connection = DBI::dbConnect(RSQLite::SQLite(), db_path)
+  on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
+  on.exit(unlist(db_path), add = TRUE, after = TRUE)
+  
+  test_query = "SELECT snz_uid FROM tmp_master_table"
+  actual = try_run_SQL_query(test_query, db_connection)
+  
+  expect_equal(names(actual), c("status", "start_time", "end_time"))
+  expect_equal(actual$status, "Successful completion")
+})
+
+test_that("query failure captured", {
+  # paths
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  tmp_dir = tempdir()
+  if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
+  db_path = file.path(tmp_dir, "testing_sqlite.db")
+  
+  # setup database
+  created_tables = make_sqlite_db_for_testing(test_folder, db_path)
+  stopifnot(created_tables == 3)
+  db_connection = DBI::dbConnect(RSQLite::SQLite(), db_path)
+  on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
+  on.exit(unlist(db_path), add = TRUE, after = TRUE)
+  
+  test_query = "SELECT snz_uid FROM non_existant_table"
+  actual = try_run_SQL_query(test_query, db_connection)
+  
+  expect_equal(names(actual), c("status", "start_time", "end_time"))
+  expect_true(grepl("Stopped with error", actual$status, fixed = TRUE))
+  expect_true(grepl("non_existant_table", actual$status, fixed = TRUE))
 })
