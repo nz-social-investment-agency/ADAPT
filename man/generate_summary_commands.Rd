@@ -5,10 +5,15 @@
 \title{Convert control file input to text string that can be used within
 dplyr::mutate via rlang::parse_exprs.}
 \usage{
-generate_summary_commands(summary_row)
+generate_summary_commands(summary_row, is_sql = FALSE)
 }
 \arguments{
 \item{summary_row}{a data frame containing 1 row.}
+
+\item{is_sql}{T/F whether summary occurs in SQL context or not. Counting
+distinct values in SQL always ignores missing values. Hence for
+consistency \code{n_distinct} uses argument \code{na.rm = TRUE} if not SQL and no
+argument if SQL (as this argument is not handled during SQL translation).}
 }
 \value{
 a named character array suitable for parse_exprs

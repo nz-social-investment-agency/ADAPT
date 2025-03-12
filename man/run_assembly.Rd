@@ -9,6 +9,7 @@ run_assembly(
   sheet = NULL,
   db_connection,
   master_table,
+  sql_folder = NA_character_,
   debug_folder = NA_character_
 )
 }
@@ -25,6 +26,10 @@ instructions to read into R. Accepted \code{.csv} and \code{.xlsx} file formats.
 \item{master_table}{The name of the table onto which columns should be
 assembled. This table must already exist in the database. It is recommended
 using the full table name: database.schema.table}
+
+\item{sql_folder}{Optional folder location containing SQL scripts. If given
+and tables listed in the control file can not be found in the database, then
+will check for evidence of table and column names in this folder.}
 
 \item{debug_folder}{an existing folder where debug information should be
 written to disc. If NA (the default) not debug information is written.}

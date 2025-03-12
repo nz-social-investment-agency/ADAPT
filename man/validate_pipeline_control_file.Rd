@@ -31,9 +31,9 @@ The following checks are run and generate a failure if not passed:
 \item If any \code{.sql} files, then confirm database connection works
 \item All folders exist
 \item All files exist in their folders
-\item SQL files generate no errors on parse and compile (this does not guarantee
-files can be executed without error due to NOEXEC in SQL Server having
-deferred name resolution, but it helps catch the most obvious things).
+\item SQL files generate no errors on parse (this does not guarantee
+files can be executed without error as scripts have not been compiled or
+executed, but it helps catch the most obvious things).
 }
 
 The following checks are run and only generate a warning if not passed:

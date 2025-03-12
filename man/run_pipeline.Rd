@@ -67,4 +67,10 @@ R and data lab expectations.
 is ignored during execution and does not effect output. Any other column
 names are also ignored, but generate a warning.
 }
+
+As an alternative, the text \verb{STOP IF ANY FAILURES} can be entered can be
+entered in the \code{File} column of the control file. This is a special command
+and will cause the tool to stop if any failures have occurred. This is
+useful for separating stages of the pipeline where subsequent stages should
+run only if all of the previous stage(s) complete.
 }
