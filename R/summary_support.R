@@ -102,6 +102,8 @@ generate_combinations_df = function(
 
 ## Cross product ---------------------------------------------------------- ----
 #' @rdname generate_combinations_df
+#' @export
+#' 
 cross_product_column_names = function(
     ...,
     always = NULL,
@@ -131,10 +133,14 @@ cross_product_column_names = function(
 #' Processes columns of types: "distinct", "count", "sum", "entity", "stddev"
 #' 
 #' @param summary_row a data frame containing 1 row.
+#' @param is_sql T/F whether summary occurs in SQL context or not. Counting
+#' distinct values in SQL always ignores missing values. Hence for
+#' consistency `n_distinct` uses argument `na.rm = TRUE` if not SQL and no
+#' argument if SQL (as this argument is not handled during SQL translation).
 #' 
 #' @return a named character array suitable for parse_exprs
 #' 
-generate_summary_commands = function(summary_row){
+generate_summary_commands = function(summary_row, is_sql = FALSE){
   stopifnot(nrow(summary_row) == 1)
   
   col_type = tolower(gsub("[0-9\\.]", "", colnames(summary_row)))
@@ -142,6 +148,12 @@ generate_summary_commands = function(summary_row){
   command_types = c("distinct", "count", "sum", "entity", "stddev")
   summary_cols = summary_row[,col_type %in% command_types, drop = FALSE]
   summary_cols = summary_cols[,!is.na(summary_cols), drop = FALSE]
+  
+  distinct_code = ifelse(
+    is_sql,
+    "dplyr::n_distinct({this_contents})",
+    "dplyr::n_distinct({this_contents}, na.rm = TRUE)"
+  )
   
   summary_command = sapply(
     1:ncol(summary_cols),
@@ -156,10 +168,10 @@ generate_summary_commands = function(summary_row){
       # produce required command
       this_command = switch(
         tolower(gsub("[0-9\\.]", "", this_name)),
-        distinct = "dplyr::n_distinct({this_contents}, na.rm = TRUE)",
+        distinct = distinct_code,
         count = "sum(ifelse(!is.na({this_contents}), 1, 0), na.rm = TRUE)",
         sum = "sum({this_contents}, na.rm = TRUE)",
-        entity = "dplyr::n_distinct({this_contents}, na.rm = TRUE)",
+        entity = distinct_code,
         stddev = "sd({this_contents}, na.rm = TRUE)"
       )
       
@@ -195,7 +207,7 @@ generate_summary_commands = function(summary_row){
 entity_union_all_conversion = function(summary_row, tbl){
   stopifnot(is.data.frame(summary_row))
   stopifnot(nrow(summary_row) == 1)
-  stopifnot(is.data.frame(tbl))
+  stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
   
   ## determine if extra entity handling is required ----
   entity_columns = grepl("^entity", tolower(colnames(summary_row)))
@@ -259,4 +271,63 @@ entity_union_all_conversion = function(summary_row, tbl){
   
   ## return union all ----
   return(dplyr::union_all(first_tbl, second_tbl))
+}
+
+## Column names to lower case --------------------------------------------- ----
+#' Column names in control file to lower case
+#' 
+#' @param summary_control_file a data frame containing summary instructions.
+#' @param tbl_cols an array with the column names of the table. Where these
+#' are found in the control file set them to lower case.
+#' 
+#' @return The control file with cells contents set to lower case to match
+#' lower case names of `tbl_cols`. Affects columns of type group, distinct,
+#' count, sum, entity, stddev, and where.
+#'  
+#'  This internal function exists because R is case sentitive, but SQL is not,
+#'  and control files might not be case sentivie either.
+#'  
+tolower_control_file_cells = function(summary_control_file, tbl_cols){
+  stopifnot(is.data.frame(summary_control_file))
+  stopifnot(is.character(tbl_cols))
+  
+  ## setup ----
+  tbl_cols = tolower(trimws(tbl_cols))
+  
+  col_types_to_process = c("group", "distinct", "count", "sum", "entity", "stddev", "where")
+  col_types_to_process = paste0("^", col_types_to_process, collapse = "|") # regex pattern
+  relevant_cols = colnames(summary_control_file)
+  relevant_cols = relevant_cols[grepl(col_types_to_process, relevant_cols, ignore.case = TRUE)]
+  
+  ## all contents ----
+  all_contents = unlist(summary_control_file, use.names = FALSE)
+  all_contents = unique(all_contents)
+  all_contents = all_contents[!is.na(all_contents)]
+  
+  ## process each column ----
+  for(col in relevant_cols){
+    
+    this_col = summary_control_file[[col]]
+    
+    # all non-dynamic values
+    is_na = is.na(this_col)
+    is_delim = is_delimited(this_col, "{}")
+    this_col[!is_na & !is_delim] = tolower(trimws(this_col[!is_na & !is_delim]))
+    
+    # dynamic values
+    unique_dynamics = unique(this_col[is_delim])
+    improved_dynamics = unique_dynamics
+    for(tt in tbl_cols){
+      pattern = glue::glue("\\b{tt}\\b")
+      improved_dynamics = gsub(pattern, tt, improved_dynamics, ignore.case = TRUE)
+    }
+    for(ii in seq_along(unique_dynamics)){
+      this_col[this_col == unique_dynamics[ii]] = improved_dynamics[ii]
+    }
+    
+    summary_control_file[[col]] = this_col
+  }
+  
+  ## conclude ----
+  return(summary_control_file)
 }

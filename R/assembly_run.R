@@ -9,6 +9,9 @@
 #' @param master_table The name of the table onto which columns should be
 #' assembled. This table must already exist in the database. It is recommended
 #' using the full table name: database.schema.table
+#' @param sql_folder Optional folder location containing SQL scripts. If given
+#' and tables listed in the control file can not be found in the database, then
+#' will check for evidence of table and column names in this folder.
 #' @param debug_folder an existing folder where debug information should be
 #' written to disc. If NA (the default) not debug information is written.
 #' 
@@ -69,7 +72,7 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_assembly = function(control_file, sheet = NULL, db_connection, master_table, debug_folder = NA_character_){
+run_assembly = function(control_file, sheet = NULL, db_connection, master_table, sql_folder = NA_character_, debug_folder = NA_character_){
   stopifnot(is.character(control_file), file.exists(control_file))
   stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(DBI::dbIsValid(db_connection))
@@ -90,7 +93,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
   ctr_cols = trimws(tolower(colnames(loaded_cf)))
   colnames(loaded_cf) = ctr_cols
   
-  valid_control_file = validate_assembly_control_file(loaded_cf, db_connection, master_table)
+  valid_control_file = validate_assembly_control_file(loaded_cf, db_connection, master_table, sql_folder = sql_folder)
   stopifnot(valid_control_file)
   
   # filter to enabled summaries
@@ -99,7 +102,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
   }
   
   if(nrow(loaded_cf) == 0){
-    warning("All rows of control file disabled, returnig NULL")
+    warning("All rows of control file disabled, returning NULL")
     return(NULL)
   }
   
@@ -168,15 +171,25 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     update_clause
   )
   
-  ## assembly ----
+  ## results ----
   
-  result_list = list()
+  result_df = dplyr::mutate(
+    summary_combinations,
+    start_time = NA_character_,
+    end_time = NA_character_,
+    status = NA_character_
+  )
+  on.exit(expr = {
+    save_control_file_w_progress(control_file, sheet = sheet, result_df)
+  }, add = TRUE, after = TRUE)
+  
+  ## assembly ----
   
   for(rr in seq_len(nrow(summary_combinations))){
     ### setup ----
     
     # extract
-    this_row = summary_combinations[rr, ,drop = FALSE]
+    this_row = dplyr::slice(summary_combinations, rr)
     summary_rows = dplyr::semi_join(loaded_cf, this_row, by = colnames(this_row))
     
     remote_measure_table = dplyr::tbl(db_connection, I(this_row$measure_table))
@@ -221,7 +234,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     update_summary_list = lapply(
       seq_len(nrow(summary_rows)),
       function(rnum, is_sqlite){
-        row = summary_rows[rnum, , drop = FALSE]
+        row = dplyr::slice(summary_rows, rnum)
         handle_summary_case(row, sqlite = is_sqlite)
       },
       is_sqlite = is_sqlite
@@ -233,7 +246,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     update_set_col_list = lapply(
       seq_len(nrow(summary_rows)),
       function(rnum){
-        row = summary_rows[rnum, , drop = FALSE]
+        row = dplyr::slice(summary_rows, rnum)
         prefix1 = ifelse(is_sqlite, "", "mt.")
         prefix2 = ifelse(is_sqlite, "setup.", "s.")
         glue::glue("{prefix1}{row$output_name} = {prefix2}{row$output_name}")
@@ -258,31 +271,15 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     
     ## log results ----
     
-    result = c(
-      population_uid = summary_combinations$population_uid[rr],
-      period_start = summary_combinations$period_start[rr],
-      period_end = summary_combinations$period_end[rr],
-      measure_table = summary_combinations$measure_table[rr],
-      measure_uid = summary_combinations$measure_uid[rr],
-      measure_start = summary_combinations$measure_start[rr],
-      measure_end = summary_combinations$measure_end[rr],
-      result
-    )
-    result_list = c(result_list, list(result))
     msg = sprintf("Assembly step %3d of %d: %s", rr, nrow(summary_combinations), result$status)
     run_time_inform_user(msg)
+    
+    result_df$start_time[rr] = result$start_time
+    result_df$end_time[rr] = result$end_time
+    result_df$status[rr] = result$status
   }
 
-  ## results df ----
-  
-  result_df = dplyr::bind_rows(result_list)
-  req_cols = c("population_uid", "period_start", "period_end",
-               "measure_table", "measure_uid", "measure_start", "measure_end",
-               "status", "start_time", "end_time")
-  result_df = dplyr::select(result_df, dplyr::all_of(req_cols))
-  
   ## conclude ----
-  save_control_file_w_progress(control_file, sheet = sheet, result_df)
   run_time_inform_user("Assembly tool complete.")
   return(invisible(result_df))
 }

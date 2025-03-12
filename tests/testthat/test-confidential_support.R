@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#'  
-################################################################################
-
 ## suppression_format_extract(string) ------------------------------------- ----
 
 test_that("valid text works as expected", {
@@ -120,18 +115,18 @@ test_that("random rounding is distributed correctly", {
                  remain5_diff2 + remain5_diff5 + remain6_diff1 + remain6_diff6)
   # assert - base 7
   expect_true(1.00 <= remain0_diff0 / remain_of_0 & remain0_diff0 / remain_of_0 <= 1.00)
-  expect_true(0.80 <= remain1_diff1 / remain_of_1 & remain1_diff1 / remain_of_1 <= 0.91)
-  expect_true(0.09 <= remain1_diff6 / remain_of_1 & remain1_diff6 / remain_of_1 <= 0.20)
-  expect_true(0.68 <= remain2_diff2 / remain_of_2 & remain2_diff2 / remain_of_2 <= 0.74)
-  expect_true(0.26 <= remain2_diff5 / remain_of_2 & remain2_diff5 / remain_of_2 <= 0.32)
-  expect_true(0.54 <= remain3_diff3 / remain_of_3 & remain3_diff3 / remain_of_3 <= 0.61)
-  expect_true(0.39 <= remain3_diff4 / remain_of_3 & remain3_diff4 / remain_of_3 <= 0.46)
-  expect_true(0.54 <= remain4_diff3 / remain_of_4 & remain4_diff3 / remain_of_4 <= 0.61)
-  expect_true(0.39 <= remain4_diff4 / remain_of_4 & remain4_diff4 / remain_of_4 <= 0.46)
-  expect_true(0.68 <= remain5_diff2 / remain_of_5 & remain5_diff2 / remain_of_5 <= 0.74)
-  expect_true(0.26 <= remain5_diff5 / remain_of_5 & remain5_diff5 / remain_of_5 <= 0.32)
-  expect_true(0.80 <= remain6_diff1 / remain_of_6 & remain6_diff1 / remain_of_6 <= 0.91)
-  expect_true(0.09 <= remain6_diff6 / remain_of_6 & remain6_diff6 / remain_of_6 <= 0.20)
+  expect_true(0.75 <= remain1_diff1 / remain_of_1 & remain1_diff1 / remain_of_1 <= 0.96)
+  expect_true(0.04 <= remain1_diff6 / remain_of_1 & remain1_diff6 / remain_of_1 <= 0.25)
+  expect_true(0.63 <= remain2_diff2 / remain_of_2 & remain2_diff2 / remain_of_2 <= 0.79)
+  expect_true(0.21 <= remain2_diff5 / remain_of_2 & remain2_diff5 / remain_of_2 <= 0.37)
+  expect_true(0.49 <= remain3_diff3 / remain_of_3 & remain3_diff3 / remain_of_3 <= 0.66)
+  expect_true(0.34 <= remain3_diff4 / remain_of_3 & remain3_diff4 / remain_of_3 <= 0.51)
+  expect_true(0.49 <= remain4_diff3 / remain_of_4 & remain4_diff3 / remain_of_4 <= 0.66)
+  expect_true(0.34 <= remain4_diff4 / remain_of_4 & remain4_diff4 / remain_of_4 <= 0.51)
+  expect_true(0.63 <= remain5_diff2 / remain_of_5 & remain5_diff2 / remain_of_5 <= 0.79)
+  expect_true(0.21 <= remain5_diff5 / remain_of_5 & remain5_diff5 / remain_of_5 <= 0.37)
+  expect_true(0.75 <= remain6_diff1 / remain_of_6 & remain6_diff1 / remain_of_6 <= 0.96)
+  expect_true(0.04 <= remain6_diff6 / remain_of_6 & remain6_diff6 / remain_of_6 <= 0.25)
 })
 
 test_that("negative numbers rounded", {

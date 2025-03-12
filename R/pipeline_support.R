@@ -92,6 +92,7 @@ read_and_prepare_sql_code = function(file_name_and_path){
   stopifnot(file.exists(file_name_and_path))
   
   sql_code = readLines(file_name_and_path)
+  sql_code = c(sql_code, "")
   sql_code = paste(sql_code, collapse = "\n")
   sql_code = remove_sql_comments(sql_code)
   
@@ -223,7 +224,8 @@ try_run_SQL_file = function(file, db_connection_string, ignore_warnings = FALSE)
   sql_batches = read_and_prepare_sql_code(file)
   
   db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
-  on.exit(DBI::dbDisconnect(db_connection))
+  DBI::dbExecute(db_connection, "SET NOCOUNT ON;", immediate = TRUE)
+  on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
   
   # execute, capturing messages
   status = tryCatch(
@@ -231,7 +233,7 @@ try_run_SQL_file = function(file, db_connection_string, ignore_warnings = FALSE)
       for(ii in seq_len(length(sql_batches$code))){
         lines = glue::glue("{sql_batches$start_lines[ii]}-{sql_batches$end_lines[ii]}")
         # modify for handling temp tables
-        this_code = paste("SET NOCOUNT ON;\n", sql_batches$code[ii])
+        this_code = sql_batches$code[ii]
         if(ignore_warnings){
           result = suppressWarnings(DBI::dbExecute(db_connection, this_code, immediate = TRUE))
         } else {

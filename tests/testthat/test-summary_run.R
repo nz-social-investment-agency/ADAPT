@@ -45,6 +45,33 @@ test_that("worked example passes",{
   unlink(tmp_results)
 })
 
+test_that("muddled capitalisation passes",{
+  
+  this_control_file$GROUP1 = toupper(this_control_file$GROUP1)
+  this_control_file$COUNT1 = toupper(this_control_file$COUNT1)
+  this_control_file$WHERE = toupper(this_control_file$WHERE)
+  
+  write.csv(this_control_file, tmp_cf, row.names = FALSE)
+  
+  expect_output(run_summary(tmp_cf, sheet = NULL, tbl), "Summary")
+  
+  actual = read.csv(tmp_results, stringsAsFactors = FALSE)
+  actual = tibble::as_tibble(actual)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+  
+  unlink(tmp_cf)
+  unlink(tmp_results)
+})
+
 test_that("output names respond to control file numbering",{
   
   unlink(tmp_results)
@@ -336,6 +363,45 @@ test_that("summary_entity_worked_example passes", {
   control_file = system.file("extdata", "examples", "summary_entity_worked_example", "control_file.csv", package = "IDIr")
   tbl = system.file("extdata", "examples", "summary_entity_worked_example", "tbl.csv", package = "IDIr")
   results = system.file("extdata", "examples", "summary_entity_worked_example", "results.csv", package = "IDIr")
+  
+  # control file setup
+  this_control_file = load_control_file(control_file)
+  this_control_file$FILE = tmp_results
+  tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
+  write.csv(this_control_file, tmp_cf, row.names = FALSE)
+  
+  # load
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  
+  capture_output(run_summary(tmp_cf, sheet = NULL, tbl))
+  actual = read.csv(tmp_results)
+  actual = tibble::as_tibble(actual)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+  
+  unlink(tmp_cf)
+  unlink(tmp_results)
+})
+
+test_that("summary_filter_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "summary_filter_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "summary_filter_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "summary_filter_worked_example", "results.csv", package = "IDIr")
   
   # control file setup
   this_control_file = load_control_file(control_file)

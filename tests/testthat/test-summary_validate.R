@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 # setup
 control_file = system.file("extdata", "testing", "summary_tool", "control_file.csv", package = "IDIr")
 tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "IDIr")
@@ -67,10 +62,10 @@ test_that("missing columns fail", {
   expect_warning(validate_summary_control_file(control_file, tmp), "uid")
   
   tmp = tbl
-  tmp$region = NULL
+  tmp$age_group = NULL
   
   expect_false(suppressWarnings(validate_summary_control_file(control_file, tmp)))
-  expect_warning(validate_summary_control_file(control_file, tmp), "region")
+  expect_warning(validate_summary_control_file(control_file, tmp), "age_group")
 })
 
 test_that("groups can not be dynamic", {

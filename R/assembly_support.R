@@ -184,7 +184,7 @@ entity_to_min_and_max = function(control_file){
   
   # for each row
   for(rr in ent_rows){
-    the_row = control_file[rr, , drop = FALSE]
+    the_row = dplyr::slice(control_file, rr)
     
     min_row = the_row
     min_row$output_method = "MIN"
@@ -199,10 +199,10 @@ entity_to_min_and_max = function(control_file){
     later_rows = row_numbers[row_numbers > rr]
     
     control_file = dplyr::bind_rows(
-      control_file[earlier_rows, , drop = FALSE],
+      dplyr::slice(control_file, earlier_rows),
       min_row,
       max_row,
-      control_file[later_rows, , drop = FALSE]
+      dplyr::slice(control_file, later_rows),
     )
   }
   

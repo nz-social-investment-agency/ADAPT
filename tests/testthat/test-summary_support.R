@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#'  
-################################################################################
-
 ## generate_combinations_df(...,always,drop.dupes.within,drop.dupes.across) ----
 
 test_that("cross product outputs", {
@@ -431,4 +426,62 @@ test_that("only max works", {
   actual = entity_union_all_conversion(summary_row, tbl)
   
   expect_identical(actual, expected)
+})
+
+## tolower_control_file_cells(summary_control_file, tbl_cols) ------------- ----
+
+test_that("capitalisation_changed", {
+  cf = data.frame(
+    GROUP = c("aa","bb","cc","dd"),
+    GROUP2 = c("AA","BB","CC","DD")
+  )
+  
+  actual = tolower_control_file_cells(cf, c("GROUP", "GROUP2"))
+  
+  expected = data.frame(
+    GROUP = c("aa","bb","cc","dd"),
+    GROUP2 = c("aa","bb","cc","dd")
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("Within dynamics changed", {
+  cf = data.frame(
+    WHERE = c("{ COL = 'string' }", "{ Col1 == Val1 }")
+  )
+  
+  actual = tolower_control_file_cells(cf, c("COL", "Col1", "Val1"))
+  
+  expected = data.frame(
+    WHERE = c("{ col = 'string' }", "{ col1 == val1 }")
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("whole words preserved", {
+  cf = data.frame(
+    SUM = c("{ COL = 'STRING' }", "{ rinG == COLUMN }")
+  )
+  
+  actual = tolower_control_file_cells(cf, c("COL", "ring"))
+  
+  expected = data.frame(
+    SUM = c("{ col = 'STRING' }", "{ ring == COLUMN }")
+  )
+  
+  expect_equal(actual, expected)
+  
+})
+
+test_that("out of scope cols unchanged", {
+  cf = data.frame(
+    GROUP = c("aa","bb","cc","dd"),
+    FILE = c("AA","BB","CC","DD")
+  )
+  
+  actual = tolower_control_file_cells(cf, c("GROUP", "GROUP2"))
+  
+  expect_equal(actual, cf)
 })

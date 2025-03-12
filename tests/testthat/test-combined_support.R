@@ -37,12 +37,12 @@ test_that("simple paths updated", {
 
 test_that("MAA and IMR paths have prefixes changed", {
   
-  actual = suppressWarnings(adjust_file_path_handling("I:\\MAA\\MAA2020-20\\folder"))
-  expected = "/nas/DataLab/MAA/MAA2020-20/folder"
+  actual = adjust_file_path_handling("I:\\MAA\\MAA2020-20\\test_folder")
+  expected = "/nas/DataLab/MAA/MAA2020-20/test_folder"
   expect_equal(actual, expected)
   
-  actual = suppressWarnings(adjust_file_path_handling("I:\\IMR\\IMR2020-20\\folder"))
-  expected = "/nas/DataLab/IMR/IMR2020-20/folder"
+  actual = adjust_file_path_handling("I:\\IMR\\IMR2020-20\\test_folder")
+  expected = "/nas/DataLab/IMR/IMR2020-20/test_folder"
   expect_equal(actual, expected)
 })
 
@@ -91,11 +91,7 @@ test_that("csv worked example runs", {
   
   actual_cf = read.csv(actual, stringsAsFactors = FALSE, colClasses = "character")
   expected_cf = read.csv(file.path(test_folder, "expected_csv.csv"), stringsAsFactors = FALSE, colClasses = "character")
-  
-  for(cc in colnames(expected_cf)){
-    expected_cf[[cc]] = ifelse(nchar(expected_cf[[cc]]) == 0, NA, expected_cf[[cc]])
-  }
-  
+
   expect_equal(actual, file.path(tmp_dir, "control_file (1).csv"))
   expect_equal(actual_cf, expected_cf)
 })
@@ -278,4 +274,57 @@ test_that("code files written", {
   expect_true(file_exists)
   expect_true(folder_exists)
   expect_false(folder_exists_at_end)
+})
+
+## tolower_colnames(tbl) -------------------------------------------------- ----
+
+test_that("in-memory columns renamed", {
+  tbl = data.frame(
+    COL1 = 1,
+    col2 = 2,
+    Col3 = 3
+  )
+  
+  out = tolower_colnames(tbl)
+  
+  expect_equal(colnames(out), tolower(colnames(tbl)))
+  expect_false(all(colnames(out) == colnames(tbl)))
+})
+
+test_that("remote columns renamed", {
+  # Arrange
+  required_packages = c("DBI", "RSQLite")
+  stopifnot(all(required_packages %in% installed.packages()))
+  
+  db_path = file.path(tempdir(), "testing_sqlite.db")
+  
+  unlink(db_path)
+  db_conn = DBI::dbConnect(RSQLite::SQLite(), db_path)
+  on.exit(DBI::dbDisconnect(db_conn), add = TRUE, after = TRUE)
+  on.exit(unlist(db_path), add = TRUE, after = TRUE)
+  
+  tbl = data.frame(
+    COL1 = 1,
+    col2 = 2,
+    Col3 = 3
+  )
+  suppressMessages(DBI::dbWriteTable(db_conn, "remote_tbl", tbl))
+  
+  remote_tbl = dplyr::tbl(db_conn, "remote_tbl")
+  
+  # Act
+  renamed_remote_tbl = tolower_colnames(remote_tbl)
+
+  # Assert
+  expect_equal(colnames(renamed_remote_tbl), tolower(colnames(remote_tbl)))
+  expect_false(all(colnames(renamed_remote_tbl) == colnames(remote_tbl)))
+})
+
+test_that("non-unique columns error", {
+  tbl = data.frame(
+    x = 1,
+    X = 2
+  )
+  
+  expect_error(tolower_colnames(tbl), "capital")
 })

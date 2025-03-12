@@ -29,13 +29,14 @@
 #' @export
 validate_summary_control_file = function(control_file, tbl){
   stopifnot(is.data.frame(control_file))
-  stopifnot(is.data.frame(tbl))
+  stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
   
   ## initialize ----
   
   ctr_cols = trimws(tolower(colnames(control_file)))
   colnames(control_file) = ctr_cols
   tbl_cols = colnames(tbl)
+  tbl = tolower_colnames(tbl)
   
   # warn if probably swapped arguments
   if(!("group" %in% ctr_cols) & all(c("group", "enabled") %in% tolower(tbl_cols))){
@@ -50,16 +51,17 @@ validate_summary_control_file = function(control_file, tbl){
   ## setup for checks ----
   
   # entries of control file (exclude columns: enabled, label, notes)
-  tmp = dplyr::select(control_file, -dplyr::starts_with(c("enabled", "file", "label", "note")))
   indexes = which(!is.na(control_file), arr.ind = TRUE)
   entries = data.frame(
     row = indexes[,1],
     column = indexes[,2],
     value = control_file[indexes]
   )
+  entries$column_name = ctr_cols[entries$column]
+  entries = dplyr::filter(entries, .data$column_name %not_in% c("enabled", "file", "label", "note"))
   entries$duplicate = duplicated(entries$value)
   entries$is_function = substr(entries$value, 1, 1) == "{"
-  entries$column_name = ctr_cols[entries$column]
+  
   calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev")
   entries$is_non_calc = !grepl(paste0("^", calc_cols, collapse = "|"), entries$column_name)
   
@@ -68,14 +70,21 @@ validate_summary_control_file = function(control_file, tbl){
   # track passing of checks
   passes_all_critical_checks = TRUE
   
+  # remove capitalisation if SQL
+  is_sql = any(grepl("sql", class(tbl), ignore.case = TRUE))
+  if(is_sql){
+    tbl_cols = tolower(tbl_cols)
+    entries$value = tolower(entries$value)
+  }
+  
   ## control file column names ----
   
   # acceptable column names in control file
-  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "note", "notes")
+  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "where", "note", "notes","start_time","end_time","status")
   for(cc in ctr_cols){
     if(gsub("[0-9\\.]", "", cc) %in% expected_columns_names){ next }
     
-    msg = glue::glue("Control file column {cc} not an accepted name and will be ignored during summarisation.")
+    msg = glue::glue("Control file column '{cc}' not an accepted name and will be ignored during summarisation.")
     warning(msg)
   }
   
@@ -88,7 +97,7 @@ validate_summary_control_file = function(control_file, tbl){
   ## at least one summary per row ----
   
   summary_types = c("distinct", "count", "sum", "entity", "stddev")
-  tmp = control_file[,gsub("[0-9]", "", ctr_cols) %in% summary_types, drop = FALSE]
+  tmp = dplyr::select(control_file, dplyr::starts_with(summary_types))
   na_row = apply(is.na(tmp), 1, all)
   
   if(any(na_row)){
@@ -213,7 +222,7 @@ validate_summary_control_file = function(control_file, tbl){
   cols_to_check = unique(tmp$value)
   cols_to_check = cols_to_check[cols_to_check %in% tbl_cols]
   
-  count_formula = glue::glue("sum(ifelse(!is.na({cols_to_check}), 1, 0))")
+  count_formula = glue::glue("sum(ifelse(!is.na({cols_to_check}), 1, 0), na.rm = TRUE)")
   names(count_formula) = cols_to_check
   
   # get number of missing values
@@ -253,7 +262,7 @@ validate_summary_control_file = function(control_file, tbl){
   # summary entities
   sum_entities = dplyr::filter(entries, !.data$is_non_calc & !grepl("^group", .data$column_name))
   
-  for(cc in colnames(tbl)){
+  for(cc in tbl_cols){
     # skip if no need for union_all
     if(!entity_union_all_req){ next }
     

@@ -63,8 +63,9 @@ provide_example = function(example = NA_character_, folder = "."){
 #' IDI at time of development.
 #' 
 #' The inclusion of this function allows researchers to copy-and-paste paths
-#' from Windows into the pipeline control file.
+#' from Windows into control files.
 #' 
+#' @export
 adjust_file_path_handling = function(file_name_and_path){
   stopifnot(is.character(file_name_and_path))
   
@@ -75,9 +76,12 @@ adjust_file_path_handling = function(file_name_and_path){
   file_name_and_path = gsub("^[a-zA-Z]:/MAA/", "/nas/DataLab/MAA/", file_name_and_path)
   file_name_and_path = gsub("^[a-zA-Z]:/IMR/", "/nas/DataLab/IMR/", file_name_and_path)
   
+  file_name_and_path = gsub("^[a-zA-Z]:/MAA20", "/nas/DataLab/MAA/MAA20", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/IMR20", "/nas/DataLab/IMR/MAA20", file_name_and_path)
+  
   # warn if paths may be out of date
-  MAA_out_of_date = grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
-  IMR_out_of_date = grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
+  MAA_out_of_date = !grepl("test_folder", file_name_and_path) & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
+  IMR_out_of_date = !grepl("test_folder", file_name_and_path) & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
   if(any(MAA_out_of_date) | any(IMR_out_of_date)){
     warning("data lab paths in IDIr may be out of date")
   }
@@ -122,7 +126,7 @@ load_control_file = function(path_and_file_name, sheet = NULL){
   file_contents = data.frame(lapply(file_contents, trimws))
   
   # 0 characters to NA
-  file_contents = data.frame(lapply(file_contents, function(x){ifelse(nchar(x) == 0, NA_character_, x)}))
+  file_contents = data.frame(lapply(file_contents, function(x){ifelse(is.na(x) | nchar(x) == 0, NA_character_, x)}))
   
   # drop rows that are all NA
   file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]
@@ -167,7 +171,7 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
     wb = openxlsx2::wb_load(path_and_file_name)
     wb = openxlsx2::wb_set_active_sheet(wb, sheet)
     wb = openxlsx2::wb_clean_sheet(wb, sheet)
-    wb = openxlsx2::wb_add_data(wb, sheet, x = control_file)
+    wb = openxlsx2::wb_add_data(wb, sheet, x = control_file, na.strings = "")
     
     if(!overwrite){
       path_and_file_name = increment_file_name(path_and_file_name)
@@ -200,7 +204,7 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
     path_and_file_name = tryCatch({
       msg = glue::glue("Writing progress to '{basename(path_and_file_name)}'.")
       run_time_inform_user(msg)
-      utils::write.csv(control_file, path_and_file_name, row.names = FALSE)
+      utils::write.csv(control_file, path_and_file_name, row.names = FALSE, na = "")
       path_and_file_name
     },
     error = function(e){
@@ -242,6 +246,10 @@ merge_progress_into_control_file = function(control_file, progress_df){
     control_file[[cc]] = NA_character_
   }
   
+  # case handling
+  current_colnames = colnames(control_file)
+  colnames(control_file) = tolower(colnames(control_file))
+  
   # join
   control_file = dplyr::left_join(
     control_file,
@@ -253,22 +261,22 @@ merge_progress_into_control_file = function(control_file, progress_df){
   # column with 'enabled'
   enabled_column = colnames(control_file)[tolower(colnames(control_file)) == "enabled"]
   if(length(enabled_column) == 0){
-    enabled_column = "temporary_writing_enabled"
-    control_file[[enabled_column]] = "TRUE"
+    control_file$temp_writing_enabled = TRUE
+  } else {
+    control_file$temp_writing_enabled = tolower(control_file[[enabled_column]]) %in% c("true", "1", "t", "yes", "y")
   }
-  control_file[[enabled_column]] = tolower(control_file[[enabled_column]]) %in% c("true", "1", "t", "yes", "y")
   
   # merge reporting columns
   control_file = dplyr::mutate(
     control_file,
-    start_time = ifelse(!!rlang::sym(enabled_column), .data$start_time_p, .data$start_time_cf),
-    end_time = ifelse(!!rlang::sym(enabled_column), .data$end_time_p, .data$end_time_cf),
-    status = ifelse(!!rlang::sym(enabled_column), .data$status_p, .data$status_cf)
+    start_time = ifelse(.data$temp_writing_enabled, .data$start_time_p, .data$start_time_cf),
+    end_time = ifelse(.data$temp_writing_enabled, .data$end_time_p, .data$end_time_cf),
+    status = ifelse(.data$temp_writing_enabled, .data$status_p, .data$status_cf)
   )
   
   # remove merging columns
-  drop_cols = c("start_time_cf", "end_time_cf", "status_cf", "start_time_p", "end_time_p", "status_p", "temporary_writing_enabled")
-  control_file = dplyr::select(control_file, -dplyr::any_of(drop_cols))
+  control_file = dplyr::select(control_file, dplyr::any_of(tolower(current_colnames)))
+  colnames(control_file) = current_colnames
   
   return(control_file)
 }
@@ -335,4 +343,32 @@ save_code_to_script = function(query, desc, folder_path) {
   )
   
   return(invisible())
+}
+
+## Colnames to lower ------------------------------------------------------ ----
+#' Convert column names to lower case
+#' 
+#' R is case sensitive, but most SQL databases are case insensitive, and user
+#' input in control files is not guaranteed to be case sensitive. One simple
+#' solution is to convert all column names to lower case. This function does so
+#' in a way that is dbplyr compatible for remote tables.
+#' 
+#' @param tbl a data frame to rename. Can be in-memory or remote accessed
+#' with dbplyr.
+#' 
+tolower_colnames = function(tbl){
+  stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
+  
+  current_colnames = colnames(tbl)
+  new_colnames = tolower(current_colnames)
+  
+  if(length(unique(new_colnames)) != length(current_colnames)){
+    stop("Column names must be unique without capitalisation")
+  }
+  
+  rename_command = current_colnames
+  names(rename_command) = new_colnames
+  
+  tbl = dplyr::rename(tbl, !!!rlang::parse_exprs(rename_command))
+  return(tbl)
 }

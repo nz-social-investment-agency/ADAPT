@@ -1,4 +1,4 @@
-FOLDER,FILE,start_time,end_time,status
+folder,file,start_time,end_time,status
 IDIr/testing/pipeline_tool,calculate.sql,28/02/2025 15:45,28/02/2025 15:42,Success
 IDIr/testing/pipeline_tool,setup.sql,28/02/2025 15:52,28/02/2025 15:42,Error
 IDIr/testing/pipeline_tool,fizzbuzz.R,28/02/2025 15:32,28/02/2025 15:42,Warning

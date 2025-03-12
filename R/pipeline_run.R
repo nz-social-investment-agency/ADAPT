@@ -44,6 +44,12 @@
 #' * Notes - free text column for adding notes to the control file. This column
 #' is ignored during execution and does not effect output. Any other column
 #' names are also ignored, but generate a warning.
+#' 
+#' As an alternative, the text `STOP IF ANY FAILURES` can be entered can be
+#' entered in the `File` column of the control file. This is a special command
+#' and will cause the tool to stop if any failures have occurred. This is
+#' useful for separating stages of the pipeline where subsequent stages should
+#' run only if all of the previous stage(s) complete.
 #' @md
 #' 
 #' @importFrom  rlang .data
@@ -68,6 +74,9 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
   ctr_cols = trimws(tolower(colnames(loaded_cf)))
   colnames(loaded_cf) = ctr_cols
   
+  stopifnot("folder" %in% ctr_cols)
+  loaded_cf$folder = sapply(loaded_cf$folder, adjust_file_path_handling, USE.NAMES = FALSE)
+  
   valid_control_file = validate_pipeline_control_file(loaded_cf, db_connection_string)
   stopifnot(valid_control_file)
   
@@ -81,19 +90,13 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     return(NULL)
   }
   
-  loaded_cf$folder = sapply(loaded_cf$folder, adjust_file_path_handling, USE.NAMES = FALSE)
   loaded_cf = dplyr::mutate(loaded_cf, full_path = file.path(.data$folder, .data$file))
   
   ## setup for pipeline ----
   
   if("order" %in% ctr_cols){
+    loaded_cf$order = suppressWarnings(as.numeric(loaded_cf$order))
     loaded_cf = dplyr::arrange(loaded_cf, .data$order)
-  }
-  
-  any_sql = any(tolower(tools::file_ext(loaded_cf$file)) == "sql")
-  if(any_sql){
-    db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
-    on.exit(DBI::dbDisconnect(db_connection))
   }
   
   ## impose delay if required ----
@@ -109,38 +112,59 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     run_time_inform_user("Resuming from sleep")
   }
   
+  ## results ----
+  
+  
+  result_df = dplyr::mutate(
+    loaded_cf,
+    file = basename(.data$full_path),
+    start_time = NA_character_,
+    end_time = NA_character_,
+    status = NA_character_
+  )
+  result_df = dplyr::select(result_df, dplyr::all_of(c("file", "status", "start_time", "end_time")))
+  
+  on.exit(expr = {
+    result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
+    save_control_file_w_progress(control_file, sheet = sheet, result_df)
+  }, add = TRUE, after = TRUE)
+  
   ## run each file ----
   
-  result_list = list()
-  
-  for(ff in loaded_cf$full_path){
-    msg = glue::glue("Pipeline file '{basename(ff)}': Started")
+  for(ii in seq_len(nrow(loaded_cf))){
+    this_file = loaded_cf$full_path[ii]
+    
+    if(grepl("STOP IF ANY FAILURES", this_file, fixed = TRUE)){
+      run_time_inform_user("Pipeline verifying no failures so far")
+      all_success_so_far = all(result_df$status == "Successful completion", na.rm = TRUE)
+      if(!all_success_so_far){
+        run_time_inform_user("Pipeline stop with failures")
+        break
+      }
+      next
+    }
+    
+    msg = glue::glue("Pipeline file '{basename(this_file)}': Started")
     run_time_inform_user(msg)
     
-    if(tolower(tools::file_ext(ff)) == "sql"){
-      result = try_run_SQL_file(file = ff, db_connection_string, ignore_warnings)
+    if(tolower(tools::file_ext(this_file)) == "sql"){
+      result = try_run_SQL_file(file = this_file, db_connection_string, ignore_warnings)
     }
-    if(tolower(tools::file_ext(ff)) == "r"){
-      result = try_run_R_file(file = ff, ignore_warnings)
+    if(tolower(tools::file_ext(this_file)) == "r"){
+      result = try_run_R_file(file = this_file, ignore_warnings)
     }
-    result = c(full_path = ff, result)
-    msg = glue::glue("Pipeline file '{basename(ff)}': {result$status}.")
+    
+    # conclude
+    msg = glue::glue("Pipeline file '{basename(this_file)}': {result$status}.")
     run_time_inform_user(msg)
-    result_list = c(result_list, list(result))
+    
+    result_df$start_time[ii] = result$start_time
+    result_df$end_time[ii] = result$end_time
+    result_df$status[ii] = result$status
   }
   
-  ## results df ----
-  
-  result_df = dplyr::bind_rows(result_list)
-  result_df = dplyr::mutate(
-    result_df,
-    file = basename(.data$full_path),
-    folder = dirname(.data$full_path)
-  )
-  result_df = dplyr::select(result_df, dplyr::all_of(c("folder", "file", "status", "start_time", "end_time")))
-  
   ## conclude ----
-  save_control_file_w_progress(control_file, sheet = sheet, result_df)
   run_time_inform_user("Pipeline tool complete.")
+  result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
   return(invisible(result_df))
 }

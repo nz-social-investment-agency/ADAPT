@@ -4,7 +4,7 @@ db_connection_string = "NA"
 can_connect = DBI::dbCanConnect(odbc::odbc(), .connection_string = db_connection_string)
 
 if(nchar(db_connection_string) > 5 & !can_connect){
-  stop("SQL Server conccetion string should not be part of package")
+  stop("SQL Server connection string should not be part of package")
 }
 
 ## remove_sql_comments(code) ---------------------------------------------- ----
@@ -88,9 +88,9 @@ test_that("simple case works", {
   actual = read_and_prepare_sql_code(sql_file)
   
   expected = list(
-    code = c("query1\n","\nquery2\nquery3","\nquery4"),
+    code = c("query1\n","\nquery2\nquery3","\nquery4\n"),
     start_lines = c(1,2,4),
-    end_lines = c(2,4,5)
+    end_lines = c(2,4,6)
   )
 
   expect_equal(names(actual), names(expected))
@@ -109,9 +109,9 @@ test_that("case with comments works", {
   actual = read_and_prepare_sql_code(sql_file)
   
   expected = list(
-    code = c("query1\n\n","\nquery3\n\nquery4","\n","\nquery5\n\n\n\n\nquery7"),
+    code = c("query1\n\n","\nquery3\n\nquery4","\n","\nquery5\n\n\n\n\nquery7\n"),
     start_lines = c(1,3,6,7),
-    end_lines = c(3,6,7,13)
+    end_lines = c(3,6,7,14)
   )
   
   expect_equal(names(actual), names(expected))
@@ -124,15 +124,15 @@ test_that("multiple newlines work", {
   tmp_dir = tempdir()
   sql_file = file.path(tmp_dir, "code.sql")
   
-  code = "query1\n\n\nGO\n\n\nquery2"
+  code = "query1\n\n\nGO\n\n\nquery2\n"
   writeLines(code, sql_file)
   
   actual = read_and_prepare_sql_code(sql_file)
   
   expected = list(
-    code = c("query1\n\n\n", "\n\n\nquery2"),
+    code = c("query1\n\n\n", "\n\n\nquery2\n\n"),
     start_lines = c(1,4),
-    end_lines = c(4,7)
+    end_lines = c(4,9)
   )
   
   expect_equal(names(actual), names(expected))

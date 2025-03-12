@@ -36,6 +36,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   stopifnot(DBI::dbIsValid(db_connection))
   stopifnot(is.character(master_table))
   stopifnot(is.character(sql_folder))
+  sql_folder = adjust_file_path_handling(sql_folder)
   stopifnot(is.na(sql_folder) || dir.exists(sql_folder))
   
   ## initialize ----
@@ -85,7 +86,7 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
   
   ## Unrecognised column names are present (no error) ----
   
-  optional_cols = c("enabled", "description", "measure_file", "note", "notes")
+  optional_cols = c("enabled", "description", "measure_file", "note", "notes","start_time","end_time","status")
   extra_cols = setdiff(colnames(control_file), c(req_cols, optional_cols))
   
   for(col in extra_cols){
@@ -193,10 +194,16 @@ validate_assembly_control_file = function(control_file, db_connection, master_ta
     
     ### table ----
     this_file = distinct_file_and_tables$measure_file[row]
+    this_path = file.path(sql_folder, this_file)
     this_table = distinct_file_and_tables$measure_table[row]
     
     measure_table_exists = DBI::dbExistsTable(db_connection, sql2id(this_table))
-    file_contents_exist = sql_file_exists_and_contains(file.path(sql_folder, this_file), this_table)
+    file_contents_exist = sql_file_exists_and_contains(this_path, this_table)
+    # if [db].[schema].[table] does not exist also check [schema].[table]
+    if(!measure_table_exists && !file_contents_exist && length(strsplit(this_table, "\\.")[[1]]) > 1){
+      tmp_this_table = paste(strsplit(this_table, "\\.")[[1]][-1], collapse = ".")
+      file_contents_exist = sql_file_exists_and_contains(this_path, tmp_this_table)
+    }
     
     # warnings
     if(!(measure_table_exists | file_contents_exist)){

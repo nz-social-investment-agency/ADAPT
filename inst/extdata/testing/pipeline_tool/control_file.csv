@@ -3,3 +3,4 @@ TRUE,2,path/to/file,calculate.sql
 TRUE,1,path/to/file,setup.sql
 TRUE,3,path/to/file,fizzbuzz.R
 FALSE,,path/to/file,file that does not exist.R
+TRUE,3.1,,STOP IF ANY FAILURES

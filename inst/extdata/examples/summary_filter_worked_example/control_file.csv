@@ -1,0 +1,4 @@
+ENABLED,FILE,GROUP,COUNT,WHERE,WHERE
+TRUE,path/folder/output_file.csv,month,person_uid,{ region == 'north' },{ year >= 2018 }
+TRUE,path/folder/output_file.csv,license,person_uid,{ region == 'north' },{ year >= 2018 }
+TRUE,path/folder/output_file.csv,expired,person_uid,{ region == 'north' },{ year >= 2018 }

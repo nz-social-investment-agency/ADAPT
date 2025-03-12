@@ -4,7 +4,7 @@ db_connection_string = "NA"
 can_connect = DBI::dbCanConnect(odbc::odbc(), .connection_string = db_connection_string)
 
 if(nchar(db_connection_string) > 5 & !can_connect){
-  stop("SQL Server conccetion string should not be part of package")
+  stop("SQL Server connection string should not be part of package")
 }
 
 # setup
@@ -95,6 +95,5 @@ test_that("SQL files generate no errors on parse and compile", {
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
   suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "setup_w_error"))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non_existant_column"))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "nonexistant_data_type"))
+  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "Incorrect syntax"))
 })

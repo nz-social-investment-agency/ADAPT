@@ -3,7 +3,7 @@ Documentation header
 2025-02-26
 */
 
-SELECT TOP 3 snz_uid, [non_existant_column]
+SELECT TOP 3 snz_uid
 FROM [IDI_Clean_202410].[data].[personal_detail]
 GO
 
@@ -12,7 +12,7 @@ GO
 -- DROP TABLE IF EXISTS #temp
 
 
-CREATE TABLE #temp (
+CRaeTE TABLE #temp (
 	col1 INT
 	, col2 VARCHAR(5)
 	, col3 nonexistant_data_type

@@ -15,9 +15,9 @@
 #' * If any `.sql` files, then confirm database connection works
 #' * All folders exist
 #' * All files exist in their folders
-#' * SQL files generate no errors on parse and compile (this does not guarantee
-#' files can be executed without error due to NOEXEC in SQL Server having
-#' deferred name resolution, but it helps catch the most obvious things).
+#' * SQL files generate no errors on parse (this does not guarantee
+#' files can be executed without error as scripts have not been compiled or
+#' executed, but it helps catch the most obvious things).
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * Unrecognised column names are present.
@@ -60,7 +60,7 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
   
   ## Unrecognised column names are present (no error) ----
   
-  optional_cols = c("enabled", "order", "folder", "file", "note", "notes")
+  optional_cols = c("enabled", "order", "folder", "file", "note", "notes", "start_time", "end_time", "status")
   extra_cols = setdiff(colnames(control_file), optional_cols)
   
   for(col in extra_cols){
@@ -72,6 +72,9 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
   
   control_file$folder = sapply(control_file$folder, adjust_file_path_handling, USE.NAMES = FALSE)
   control_file = dplyr::mutate(control_file, full_path = file.path(.data$folder, .data$file))
+  
+  # remove STOP IF ANY FAILURES
+  control_file = dplyr::filter(control_file, file != "STOP IF ANY FAILURES")
   
   # track passing of checks
   passes_all_critical_checks = TRUE
@@ -137,7 +140,7 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
     db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
     on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
     
-    DBI::dbExecute(db_connection, "SET NOEXEC ON")
+    DBI::dbExecute(db_connection, "SET PARSEONLY ON")
     
     # read and split files into batches
     all_batches = lapply(
