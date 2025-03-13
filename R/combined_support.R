@@ -169,7 +169,6 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
   if (extension == "xlsx") {
     
     wb = openxlsx2::wb_load(path_and_file_name)
-    wb = openxlsx2::wb_set_active_sheet(wb, sheet)
     wb = openxlsx2::wb_clean_sheet(wb, sheet)
     wb = openxlsx2::wb_add_data(wb, sheet, x = control_file, na.strings = "")
     
