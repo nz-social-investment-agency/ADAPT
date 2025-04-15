@@ -30,6 +30,7 @@ The following checks are run and generate a failure if not passed:
 \item Each row has at least one summary generated
 \item Columns to sum are numeric
 \item Grouping columns are not dynamic
+\item Grouping columns are unique in each row
 }
 
 The following checks are run and only generate a warning if not passed:

@@ -287,7 +287,7 @@ validate_summary_control_file = function(control_file, tbl){
   grp_entities = dplyr::filter(entries, grepl("^group", .data$column_name))
   grp_entities = dplyr::group_by(grp_entities, .data$row, .data$value)
   grp_entities = dplyr::summarise(grp_entities, num = dplyr::n(), .groups = "drop")
-  grp_entities = dplyr::filter(grp_entities, num > 1)
+  grp_entities = dplyr::filter(grp_entities, .data$num > 1)
   
   passes_all_critical_checks = passes_all_critical_checks & nrow(grp_entities) == 0
   
