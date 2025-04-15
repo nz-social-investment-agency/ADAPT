@@ -16,6 +16,7 @@ control_file$folder = test_folder
 ## test passing functionality --------------------------------------------- ----
 
 test_that("worked example passes", {
+  skip_if_not(can_connect)
   
   expect_true(validate_pipeline_control_file(control_file, db_connection_string))
   expect_silent(validate_pipeline_control_file(control_file, db_connection_string))
@@ -32,6 +33,8 @@ test_that("Required column names are present", {
 })
 
 test_that("Extra columns warn", {
+  skip_if_not(can_connect)
+  
   tmp = control_file
   tmp$extra_col = "hello"
   
@@ -44,6 +47,7 @@ test_that("File names are accepted extension", {
   tmp$file[2] = gsub("\\.sql$", ".zz", tmp$file[2])
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
+  skip_if_not(can_connect)
   expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "unaccepted extension")
 })
 
@@ -61,6 +65,7 @@ test_that("All folders exist", {
   tmp$folder[2] = "non existent folder"
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
+  skip_if_not(can_connect)
   expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent folder")
 })
 
@@ -69,6 +74,7 @@ test_that("All files exist in their folders", {
   tmp$file[2] = "non existent file.R"
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
+  skip_if_not(can_connect)
   expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent file.R")
   
   tmp = control_file
