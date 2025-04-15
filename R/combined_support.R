@@ -80,8 +80,9 @@ adjust_file_path_handling = function(file_name_and_path){
   file_name_and_path = gsub("^[a-zA-Z]:/IMR20", "/nas/DataLab/IMR/MAA20", file_name_and_path)
   
   # warn if paths may be out of date
-  MAA_out_of_date = !grepl("test_folder", file_name_and_path) & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
-  IMR_out_of_date = !grepl("test_folder", file_name_and_path) & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
+  in_data_lab = within_data_lab()
+  MAA_out_of_date = in_data_lab & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
+  IMR_out_of_date = in_data_lab & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
   if(any(MAA_out_of_date) | any(IMR_out_of_date)){
     warning("data lab paths in IDIr may be out of date")
   }
@@ -130,6 +131,13 @@ load_control_file = function(path_and_file_name, sheet = NULL){
   
   # drop rows that are all NA
   file_contents = file_contents[!apply(is.na(file_contents), 1, all), ]
+  
+  # order to numeric if exists
+  order_col = grepl("^order$", colnames(file_contents), ignore.case = TRUE)
+  if(any(order_col)){
+    order_col = colnames(file_contents)[order_col]
+    file_contents[[order_col]] = as.numeric(file_contents[[order_col]])
+  }
   
   return(file_contents)
 }

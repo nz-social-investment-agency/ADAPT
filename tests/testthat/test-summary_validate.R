@@ -41,6 +41,15 @@ test_that("entity suffixes passes", {
   expect_warning(validate_summary_control_file(tmp_cf, tmp_tbl), "__min")
 })
 
+test_that("optional [] passes", {
+  
+  tmp_cf = control_file
+  tmp_cf$GROUP1 = add_delimiters(control_file$GROUP1, "[]")
+  
+  expect_true(validate_summary_control_file(tmp_cf, tbl))
+  expect_silent(validate_summary_control_file(tmp_cf, tbl))
+})
+
 ## test failing functionality --------------------------------------------- ----
 
 test_that("unaccepted columns warn", {
@@ -130,4 +139,13 @@ test_that("grouping and summarising with entity suffixes warns", {
   
   expect_true(suppressWarnings(validate_summary_control_file(tmp_cf, tmp_tbl)))
   expect_warning(validate_summary_control_file(tmp_cf, tmp_tbl), "double counting")
+})
+
+test_that("repeating column in grouping fails", {
+  
+  tmp = control_file
+  tmp$GROUP2[1] = tmp$GROUP1[1]
+  
+  expect_false(suppressWarnings(validate_summary_control_file(tmp, tbl)))
+  expect_warning(validate_summary_control_file(tmp, tbl), "used more than once for grouping")
 })

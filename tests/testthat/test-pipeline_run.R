@@ -23,10 +23,13 @@ test_that("worked example passes",{
   actual = expect_output(run_pipeline(tmp_cf, sheet = NULL, db_connection_string, delay_minutes = 0.01, ignore_warnings = FALSE), "Pipeline")
   
   expected = data.frame(
-    file = c("setup.sql", "calculate.sql", "fizzbuzz.R"),
-    status = c("Successful completion", "Stopped with error", "Successful completion"),
+    enabled = TRUE,
+    order = c(2,1,3),
+    folder = test_folder,
+    file = c("calculate.sql", "setup.sql", "fizzbuzz.R"),
     start_time = Sys.time(),
     end_time = Sys.time(),
+    status = c("Successful completion", "Stopped with error", "Successful completion"),
     stringsAsFactors = FALSE
   )
   

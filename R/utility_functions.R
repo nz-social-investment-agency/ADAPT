@@ -53,13 +53,17 @@ add_delimiters = function(string, delimiter) {
   
   n_str = nchar(string)
   n_delim = nchar(delimiter)
+  na_string = is.na(string)
   
   first_char_match = substr(string, 1, 1) == substr(delimiter, 1, 1)
   first_char = ifelse(first_char_match, "", substr(delimiter, 1, 1))
   last_char_match = substr(string, n_str, n_str) == substr(delimiter, n_delim, n_delim)
   last_char = ifelse(last_char_match, "", substr(delimiter, n_delim, n_delim))
   
-  return(paste0(first_char, string, last_char))
+  out_string = paste0(first_char, string, last_char)
+  out_string[na_string] = NA_character_
+  
+  return(out_string)
 }
 
 ## Remove delimiters ------------------------------------------------------ ----
@@ -203,4 +207,13 @@ increment_file_name = function(path_and_file_name){
   }
   
   return(path_and_file_name)
+}
+
+## Check if within the data lab ------------------------------------------- ----
+#' Check if in a Stats NZ environment
+#' 
+within_data_lab = function(){
+  env = Sys.getenv()
+  any_stats = any(grepl("stats.govt.nz", env, fixed = TRUE))
+  return(any_stats)
 }

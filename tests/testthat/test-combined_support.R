@@ -37,12 +37,12 @@ test_that("simple paths updated", {
 
 test_that("MAA and IMR paths have prefixes changed", {
   
-  actual = adjust_file_path_handling("I:\\MAA\\MAA2020-20\\test_folder")
-  expected = "/nas/DataLab/MAA/MAA2020-20/test_folder"
+  actual = adjust_file_path_handling("I:\\MAA\\MAA2020-20\\folder")
+  expected = "/nas/DataLab/MAA/MAA2020-20/folder"
   expect_equal(actual, expected)
   
-  actual = adjust_file_path_handling("I:\\IMR\\IMR2020-20\\test_folder")
-  expected = "/nas/DataLab/IMR/IMR2020-20/test_folder"
+  actual = adjust_file_path_handling("I:\\IMR\\IMR2020-20\\folder")
+  expected = "/nas/DataLab/IMR/IMR2020-20/folder"
   expect_equal(actual, expected)
 })
 
@@ -63,6 +63,7 @@ test_that("summary control file loaded",{
   expect_true(is.data.frame(loaded_file))
   expect_true(nrow(loaded_file) >= 2)
   expect_true(ncol(loaded_file) >= 2)
+  expect_true(is.numeric(loaded_file$ORDER))
 })
 
 ## save_control_file_w_progress(path_and_file_name, sheet, progress_df, overwrite) ----

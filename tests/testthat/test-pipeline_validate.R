@@ -16,7 +16,6 @@ control_file$folder = test_folder
 ## test passing functionality --------------------------------------------- ----
 
 test_that("worked example passes", {
-  skip_if_not(can_connect)
   
   expect_true(validate_pipeline_control_file(control_file, db_connection_string))
   expect_silent(validate_pipeline_control_file(control_file, db_connection_string))
@@ -36,8 +35,8 @@ test_that("Extra columns warn", {
   tmp = control_file
   tmp$extra_col = "hello"
   
-  expect_true(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)) == can_connect)
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "extra_col"))
+  expect_true(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
+  expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "extra_col")
 })
 
 test_that("File names are accepted extension", {
@@ -45,7 +44,7 @@ test_that("File names are accepted extension", {
   tmp$file[2] = gsub("\\.sql$", ".zz", tmp$file[2])
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "unaccepted extension"))
+  expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "unaccepted extension")
 })
 
 test_that("If any `.sql` files, then confirm database connection works", {
@@ -62,7 +61,7 @@ test_that("All folders exist", {
   tmp$folder[2] = "non existent folder"
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent folder"))
+  expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent folder")
 })
 
 test_that("All files exist in their folders", {
@@ -70,14 +69,14 @@ test_that("All files exist in their folders", {
   tmp$file[2] = "non existent file.R"
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent file.R"))
+  expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "non existent file.R")
   
   tmp = control_file
   tmp_dir = normalizePath(tempdir())
   tmp$folder[2] = tmp_dir
   
   expect_false(suppressWarnings(validate_pipeline_control_file(tmp, db_connection_string)))
-  suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), basename(tmp_dir)))
+  expect_warning(validate_pipeline_control_file(tmp, db_connection_string), tmp_dir)
 })
 
 test_that("SQL files generate no errors on parse and compile", {

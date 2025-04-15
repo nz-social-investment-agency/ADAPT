@@ -55,6 +55,20 @@ test_that("delimiters added", {
   expect_equal(add_delimiters(" text ", "{}"), "{ text }")
 })
 
+test_that("array works", {
+  text_in = c("a","b")
+  text_out = c("[a]","[b]")
+  
+  expect_equal(add_delimiters(text_in, "[]"), text_out)
+})
+
+test_that("delimiters added to NA is NA", {
+  text_in = c("a",NA)
+  text_out = c("[a]",NA)
+  
+  expect_equal(add_delimiters(text_in, "[]"), text_out)
+})
+
 ## remove_delimiters(string, delimiter) ----------------------------------- ----
 
 test_that("delimiters removed", {

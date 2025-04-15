@@ -1,8 +1,3 @@
-################################################################################
-#' Notes
-#' 
-################################################################################
-
 # setup
 control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "IDIr")
 tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "IDIr")

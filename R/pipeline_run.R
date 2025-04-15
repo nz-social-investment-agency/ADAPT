@@ -66,19 +66,13 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
   ## load control file ----
   
   loaded_cf = load_control_file(control_file, sheet = sheet)
-  # drop progress reporting columns
-  loaded_cf = dplyr::select(loaded_cf, -dplyr::any_of(c("start_time", "end_time", "status")))
   
-  ## initialize ----
-  
+  # tidy control file column names
   ctr_cols = trimws(tolower(colnames(loaded_cf)))
   colnames(loaded_cf) = ctr_cols
   
-  stopifnot("folder" %in% ctr_cols)
-  loaded_cf$folder = sapply(loaded_cf$folder, adjust_file_path_handling, USE.NAMES = FALSE)
-  
-  valid_control_file = validate_pipeline_control_file(loaded_cf, db_connection_string)
-  stopifnot(valid_control_file)
+  # drop progress reporting columns
+  loaded_cf = dplyr::select(loaded_cf, -dplyr::any_of(c("start_time", "end_time", "status")))
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
@@ -89,6 +83,28 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     warning("All rows of control file disabled, returnig NULL")
     return(NULL)
   }
+  
+  ## storage for results ----
+  
+  result_df = dplyr::mutate(
+    loaded_cf,
+    start_time = NA_character_,
+    end_time = NA_character_,
+    status = NA_character_
+  )
+
+  on.exit(expr = {
+    result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
+    save_control_file_w_progress(control_file, sheet = sheet, result_df)
+  }, add = TRUE, after = TRUE)
+  
+  ## initialize ----
+  
+  stopifnot("folder" %in% ctr_cols)
+  loaded_cf$folder = adjust_file_path_handling(loaded_cf$folder)
+  
+  valid_control_file = validate_pipeline_control_file(loaded_cf, db_connection_string)
+  stopifnot(valid_control_file)
   
   loaded_cf = dplyr::mutate(loaded_cf, full_path = file.path(.data$folder, .data$file))
   
@@ -111,23 +127,6 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     Sys.sleep(60 * delay_minutes)
     run_time_inform_user("Resuming from sleep")
   }
-  
-  ## results ----
-  
-  
-  result_df = dplyr::mutate(
-    loaded_cf,
-    file = basename(.data$full_path),
-    start_time = NA_character_,
-    end_time = NA_character_,
-    status = NA_character_
-  )
-  result_df = dplyr::select(result_df, dplyr::all_of(c("file", "status", "start_time", "end_time")))
-  
-  on.exit(expr = {
-    result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
-    save_control_file_w_progress(control_file, sheet = sheet, result_df)
-  }, add = TRUE, after = TRUE)
   
   ## run each file ----
   

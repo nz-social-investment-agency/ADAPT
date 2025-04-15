@@ -72,6 +72,32 @@ test_that("muddled capitalisation passes",{
   unlink(tmp_results)
 })
 
+test_that("square brackets don't prevent running", {
+  
+  this_control_file$GROUP1 = add_delimiters(this_control_file$GROUP1, "[]")
+  this_control_file$COUNT1 = add_delimiters(this_control_file$COUNT1, "[]")
+  
+  write.csv(this_control_file, tmp_cf, row.names = FALSE)
+  
+  expect_output(run_summary(tmp_cf, sheet = NULL, tbl), "Summary")
+  
+  actual = read.csv(tmp_results, stringsAsFactors = FALSE)
+  actual = tibble::as_tibble(actual)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  expect_true(all.equal(actual, results))
+  
+  unlink(tmp_cf)
+  unlink(tmp_results)
+})
+
 test_that("output names respond to control file numbering",{
   
   unlink(tmp_results)

@@ -17,6 +17,7 @@
 #' * Each row has at least one summary generated
 #' * Columns to sum are numeric
 #' * Grouping columns are not dynamic
+#' * Grouping columns are unique in each row
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
@@ -35,8 +36,11 @@ validate_summary_control_file = function(control_file, tbl){
   
   ctr_cols = trimws(tolower(colnames(control_file)))
   colnames(control_file) = ctr_cols
-  tbl_cols = colnames(tbl)
   tbl = tolower_colnames(tbl)
+  tbl_cols = colnames(tbl)
+  
+  # control file cells to lower case
+  control_file = tolower_control_file_cells(control_file, colnames(tbl))
   
   # warn if probably swapped arguments
   if(!("group" %in% ctr_cols) & all(c("group", "enabled") %in% tolower(tbl_cols))){
@@ -49,6 +53,11 @@ validate_summary_control_file = function(control_file, tbl){
   }
   
   ## setup for checks ----
+  
+  # remove delimiters []
+  for(cc in ctr_cols){
+    control_file[[cc]] = remove_delimiters(control_file[[cc]], "[]")
+  }
   
   # entries of control file (exclude columns: enabled, label, notes)
   indexes = which(!is.na(control_file), arr.ind = TRUE)
@@ -69,13 +78,6 @@ validate_summary_control_file = function(control_file, tbl){
   entity_union_all_req = FALSE
   # track passing of checks
   passes_all_critical_checks = TRUE
-  
-  # remove capitalisation if SQL
-  is_sql = any(grepl("sql", class(tbl), ignore.case = TRUE))
-  if(is_sql){
-    tbl_cols = tolower(tbl_cols)
-    entries$value = tolower(entries$value)
-  }
   
   ## control file column names ----
   
@@ -192,6 +194,7 @@ validate_summary_control_file = function(control_file, tbl){
         # test code
         tmp = utils::head(tbl, 5)
         tmp = dplyr::mutate(tmp, validating_column = !!rlang::parse_expr(formula))
+        tmp = dplyr::select(tmp, "validating_column")
         tmp = dplyr::collect(tmp)
         
         # restore current pass if code all 
@@ -207,11 +210,8 @@ validate_summary_control_file = function(control_file, tbl){
           "\nOriginal error:\n {e}"
         )
         warning(msg)
-        
       },
-      warning = function(w){
-        warning(w)
-      }
+      warning = function(w){ warning(w) }
     )
     
   } # end of loop
@@ -222,17 +222,14 @@ validate_summary_control_file = function(control_file, tbl){
   cols_to_check = unique(tmp$value)
   cols_to_check = cols_to_check[cols_to_check %in% tbl_cols]
   
-  count_formula = glue::glue("sum(ifelse(!is.na({cols_to_check}), 1, 0), na.rm = TRUE)")
-  names(count_formula) = cols_to_check
-  
-  # get number of missing values
-  tmp = dplyr::ungroup(tbl)
-  tmp = dplyr::summarise(tmp, num_rows = dplyr::n(), !!!rlang::parse_exprs(count_formula))
-  tmp = dplyr::collect(tmp)
-
   # check
   for(cc in cols_to_check){
-    if(tmp[[cc]][1] == 0){
+    tmp = dplyr::filter(tbl, !is.na(.data[[cc]]))
+    tmp = dplyr::select(tmp, dplyr::all_of(cc))
+    tmp = utils::head(tmp, 1)
+    tmp = dplyr::collect(tmp)
+    
+    if(nrow(tmp) == 0){
       msg = glue::glue("Column {cc} has only missing values")
       warning(msg)
     }
@@ -281,6 +278,24 @@ validate_summary_control_file = function(control_file, tbl){
     msg = glue::glue(
       "Column '{cc}' is used for grouping and summarising in row(s) {rows_use_for_both}.",
       " Due to how entities are handled this risks double counting in your results.")
+    warning(msg)
+  }
+  
+  ## grouping columns are unique for each row ----
+  
+  # grouping entities
+  grp_entities = dplyr::filter(entries, grepl("^group", .data$column_name))
+  grp_entities = dplyr::group_by(grp_entities, .data$row, .data$value)
+  grp_entities = dplyr::summarise(grp_entities, num = dplyr::n(), .groups = "drop")
+  grp_entities = dplyr::filter(grp_entities, num > 1)
+  
+  passes_all_critical_checks = passes_all_critical_checks & nrow(grp_entities) == 0
+  
+  for(ii in seq_len(nrow(grp_entities))){
+    # warn on both
+    msg = glue::glue(
+      "Column '{grp_entities$value[ii]}' is used more than once for grouping.",
+      "See enabled row '{grp_entities$row[ii]}'.")
     warning(msg)
   }
   

@@ -83,15 +83,8 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   
   ctr_cols = trimws(tolower(colnames(loaded_cf)))
   colnames(loaded_cf) = ctr_cols
-  tbl_cols = colnames(tbl)
   is_sql = any(grepl("sql", class(tbl), ignore.case = TRUE))
   tbl = tolower_colnames(tbl)
-  
-  # control file columns to lower case
-  loaded_cf = tolower_control_file_cells(loaded_cf, colnames(tbl))
-  
-  valid_control_file = validate_summary_control_file(loaded_cf, tbl)
-  stopifnot(valid_control_file)
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
@@ -99,13 +92,11 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   }
   
   if(nrow(loaded_cf) == 0){
-    warning("All rows of control file disabled, returnig NULL")
+    warning("All rows of control file disabled, returing NULL")
     return(NULL)
   }
   
-  # file path fix
-  loaded_cf$file = adjust_file_path_handling(loaded_cf$file)
-  
+  # setup for tracking progress
   result_df = dplyr::mutate(
     loaded_cf,
     start_time = NA_character_,
@@ -115,6 +106,20 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   on.exit(expr = {
     save_control_file_w_progress(control_file, sheet = sheet, result_df)
   }, add = TRUE, after = TRUE)
+  
+  # control file cells to lower case
+  loaded_cf = tolower_control_file_cells(loaded_cf, colnames(tbl))
+  
+  # file path fix
+  loaded_cf$file = adjust_file_path_handling(loaded_cf$file)
+  
+  # remove delimiters []
+  for(cc in ctr_cols){
+    loaded_cf[[cc]] = remove_delimiters(loaded_cf[[cc]], "[]")
+  }
+  
+  valid_control_file = validate_summary_control_file(loaded_cf, tbl)
+  stopifnot(valid_control_file)
   
   ## remove existing files ----
   

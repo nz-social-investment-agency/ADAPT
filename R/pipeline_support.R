@@ -155,7 +155,7 @@ try_run_R_file = function(file, ignore_warnings = FALSE){
   # execute, capturing messages
   status = tryCatch(
     {
-      new_environment = new.env(parent = baseenv())
+      new_environment = new.env(parent = globalenv())
       if(ignore_warnings){
         suppressWarnings(source(file, local = new_environment))
       } else {
