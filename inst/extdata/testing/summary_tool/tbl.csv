@@ -1,9 +1,9 @@
 island,region,age_group,type,uid,income,ent
-north,1,young,all,1,100,a
-north,1,young,all,2,200,a
-north,1,old,all,3,300,a
-north,2,young,all,4,NA,b
-north,2,old,all,5,500,b
-north,2,old,all,6,NA,b
-south,3,young,all,7,700,b
-south,3,young,all,8,NA,NA
+north,1,young,all,111,100,a
+north,1,young,all,222,200,a
+north,1,old,all,333,300,a
+north,2,young,all,444,NA,b
+north,2,old,all,555,500,b
+north,2,old,all,666,NA,b
+south,3,young,all,777,700,b
+south,3,young,all,888,NA,NA

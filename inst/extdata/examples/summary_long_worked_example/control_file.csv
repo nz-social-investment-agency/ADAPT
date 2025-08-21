@@ -1,6 +1,6 @@
-﻿ENABLED,FILE,GROUP,COUNT
-TRUE,path/folder/output_file.csv,year,person_uid
-TRUE,path/folder/output_file.csv,month,person_uid
-TRUE,path/folder/output_file.csv,region,person_uid
-TRUE,path/folder/output_file.csv,license,person_uid
-TRUE,path/folder/output_file.csv,expired,person_uid
+﻿ENABLED,FILE,GROUP,COUNT,SEED
+TRUE,path/folder/output_file.csv,year,person_uid,person_uid
+TRUE,path/folder/output_file.csv,month,person_uid,person_uid
+TRUE,path/folder/output_file.csv,region,person_uid,person_uid
+TRUE,path/folder/output_file.csv,license,person_uid,person_uid
+TRUE,path/folder/output_file.csv,expired,person_uid,person_uid

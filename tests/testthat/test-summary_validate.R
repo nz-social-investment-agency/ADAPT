@@ -6,6 +6,15 @@ tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "ID
 control_file = load_control_file(control_file)
 tbl = read.csv(tbl)
 
+# database connection - requires SQL Server in environment
+db_connection_string = "NA"
+
+can_connect = DBI::dbCanConnect(odbc::odbc(), .connection_string = db_connection_string)
+
+if(nchar(db_connection_string) > 5 & !can_connect){
+  stop("SQL Server connection string should not be part of package")
+}
+
 ## test passing functionality --------------------------------------------- ----
 
 test_that("worked example passes", {
@@ -68,7 +77,7 @@ test_that("missing columns fail", {
   tmp$uid = NULL
   
   expect_false(suppressWarnings(validate_summary_control_file(control_file, tmp)))
-  expect_warning(validate_summary_control_file(control_file, tmp), "uid")
+  suppressWarnings(expect_warning(validate_summary_control_file(control_file, tmp), "'uid' not found"))
   
   tmp = tbl
   tmp$age_group = NULL
@@ -99,10 +108,10 @@ test_that("dynamic formula can fail", {
 test_that("empty columns warn", {
   
   tmp = tbl
-  tmp$uid = NA
+  tmp$type = NA
   
-  expect_true(suppressWarnings(validate_summary_control_file(control_file, tmp)))
-  expect_warning(validate_summary_control_file(control_file, tmp), "missing values")
+  expect_true(suppressMessages(validate_summary_control_file(control_file, tmp)))
+  expect_message(validate_summary_control_file(control_file, tmp), "missing values")
   
 })
 
@@ -113,6 +122,12 @@ test_that("non-numeric sums warn", {
   
   expect_false(suppressWarnings(validate_summary_control_file(tmp, tbl)))
   expect_warning(validate_summary_control_file(tmp, tbl), "sum non-numeric")
+  
+  tmp = tbl
+  tmp$uid = as.character(tmp$uid)
+  
+  expect_false(suppressWarnings(validate_summary_control_file(control_file, tmp)))
+  expect_warning(validate_summary_control_file(control_file, tmp), "sum non-numeric")
   
 })
 
@@ -148,4 +163,50 @@ test_that("repeating column in grouping fails", {
   
   expect_false(suppressWarnings(validate_summary_control_file(tmp, tbl)))
   expect_warning(validate_summary_control_file(tmp, tbl), "used more than once for grouping")
+})
+
+test_that("enabled and disabled files fails", {
+  
+  tmp = control_file
+  tmp$ENABLED[1] = FALSE
+  
+  expect_false(suppressWarnings(validate_summary_control_file(tmp, tbl)))
+  expect_warning(validate_summary_control_file(tmp, tbl), "both enabled and disabled")
+})
+
+test_that("partial_output skips enabled and disabled files fails", {
+  
+  tmp = control_file
+  tmp$ENABLED[1] = FALSE
+  
+  expect_true(validate_summary_control_file(tmp, tbl, partial_output = TRUE))
+  expect_silent(validate_summary_control_file(tmp, tbl, partial_output = TRUE))
+})
+
+
+## testing SQL functionality ---------------------------------------------- ----
+
+test_that("SQL checks passes",{
+  skip_if_not(can_connect)
+  db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
+  
+  # copy table to SQL
+  DBI::dbExecute(db_connection, "DROP TABLE IF EXISTS IDI_Sandpit.[DL-MAA2023-46].tmp_tmp")
+  
+  DBI::dbWriteTable(
+    db_connection,
+    DBI::Id(catalog = "IDI_Sandpit", schema = "DL-MAA2023-46", table = "tmp_tmp"),
+    tbl
+  )
+  tbl = dplyr::tbl(db_connection, from = I("IDI_Sandpit.[DL-MAA2023-46].tmp_tmp"))
+  
+  # test
+  expect_true(validate_summary_control_file(control_file, tbl))
+  
+  control_file$WHERE[1] = "{ region %in% c(1,2) }"
+  expect_true(validate_summary_control_file(control_file, tbl))
+  
+  # tidy up to conclude
+  DBI::dbExecute(db_connection, "DROP TABLE IF EXISTS IDI_Sandpit.[DL-MAA2023-46].tmp_tmp")
+  DBI::dbDisconnect(db_connection)
 })

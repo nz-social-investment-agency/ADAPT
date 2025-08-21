@@ -6,7 +6,8 @@
 \usage{
 validate_pipeline_control_file(
   control_file,
-  db_connection_string = NA_character_
+  db_connection_string = NA_character_,
+  injection_sql = list()
 )
 }
 \arguments{
@@ -15,6 +16,10 @@ likely read into memory by \code{load_control_file}.}
 
 \item{db_connection_string}{A connection string for connecting to the
 database. Only required if SQL files are included in the pipeline.}
+
+\item{injection_sql}{A list containing named values. For each SQL script in
+the pipeline, where the names are found in the SQL code, these will be
+replaced with their values.}
 }
 \value{
 T/F whether or not all validation checks are passed. Generating

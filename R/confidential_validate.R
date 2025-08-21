@@ -11,10 +11,11 @@
 #' The following checks are run and generate a failure if not passed:
 #' * First column of `control_file` contains confidentiality commands
 #' * Remaining columns listed in `control_file` match the column names of `tbl`.
-#' * At most one row of DROP, RENAME, ROUND, and MISSING_TO instructions.
+#' * At most one row of DROP, RENAME, ROUND, SEED, and MISSING_TO instructions.
 #' * Rounding instructions are of the accepted types (RR3, GRR, CONV10, CONV100,
 #' CONV1000).
 #' * Missing NA value options are numeric.
+#' * Seed choice matches existing column.
 #' * Suppression rules match the accepted pattern (column_name < number value).
 #' @md
 #' 
@@ -52,7 +53,7 @@ validate_confidential_control_file = function(control_file, tbl){
   
   first_column = control_file[,1]
   
-  accepted_commands = c("drop", "rename", "missing_to", "round", "suppress", "notes", "note")
+  accepted_commands = c("drop", "rename", "missing_to", "round", "seed", "suppress", "notes", "note")
   unaccepted_entries = first_column[tolower(first_column) %not_in% accepted_commands]
   unaccepted_entries = unique(unaccepted_entries)
   
@@ -72,7 +73,7 @@ validate_confidential_control_file = function(control_file, tbl){
   ## command limits ----
   
   first_column = tolower(control_file[,1])
-  single_row_commands = c("drop", "rename", "round", "missing_to")
+  single_row_commands = c("drop", "rename", "round", "missing_to", "seed")
   
   for(ss in single_row_commands){
     if(sum(first_column == ss, na.rm = TRUE) <= 1){ next }
@@ -103,6 +104,23 @@ validate_confidential_control_file = function(control_file, tbl){
   unaccepted_entries = unique(unaccepted_entries)
   
   msg = "Non-numeric values used to replace NA during confidentialisation: {unaccepted_entries}"
+  pass_all_checks = handle_unaccepted(unaccepted_entries, msg, pass_all_checks)
+  
+  ## valid seed choices ----
+  
+  seed_entries = control_file[conf_cmds == "seed", 2:ncols]
+  seed_entries = seed_entries[!is.na(seed_entries)]
+  seed_entries = unique(seed_entries)
+  
+  # column names
+  rename_entries = control_file[conf_cmds == "rename",2:ncols]
+  rename_entries = rename_entries[!is.na(rename_entries)]
+  
+  available_columns = c(rename_entries, colnames(tbl))
+  unaccepted_entries = seed_entries[seed_entries %not_in% available_columns]
+  unaccepted_entries = unique(unaccepted_entries)
+  
+  msg = "Seeds require column {unaccepted_entries} that do not exist"
   pass_all_checks = handle_unaccepted(unaccepted_entries, msg, pass_all_checks)
   
   ## valid suppression rules ----

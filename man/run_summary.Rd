@@ -9,6 +9,7 @@ run_summary(
   sheet = NULL,
   tbl,
   remove_na_from_groups = TRUE,
+  save_file = NA_character_,
   debug_folder = NA_character_
 )
 }
@@ -26,8 +27,11 @@ with dbplyr.}
 \item{remove_na_from_groups}{T/F whether missing values from grouping columns
 should be excluded from the results. Defaults to TRUE.}
 
+\item{save_file}{specify the file to save results to. Optional, overides the
+FILE column of the control file if provided.}
+
 \item{debug_folder}{an existing folder where debug information should be
-written to disc. If NA (the default) not debug information is written.}
+written to disc. If NA (the default) no debug information is written.}
 }
 \value{
 A data frame from executing the summary defined by each row of the
@@ -67,16 +71,21 @@ in the column.
 during validation the tool will error is this column is not numeric.
 \item STDDEV - name of columns of \code{tbl} - calculates the standard deviation of the
 column.
-\item ENTITY  - name of columns of \code{tbl} -  similar to DISTINCT, but checks for
+\item ENTITY - name of columns of \code{tbl} -  similar to DISTINCT, but checks for
 columns with \verb{*__min} and \verb{*__max} suffixes and takes a distinct over the union
 of these columns if available. Designed for counting entities.
+\item SEED - name of columns of \code{tbl} - similar to SUM, but takes remainder by
+100 first. Intended to be applied to ID columns to generate a value that
+can serve as a seed for consistent rounding.
+\item WHERE - a dynamic formula in \{curly brackets\} to filter the input table
+before summarising.
 \item NOTES - free text - column is ignored and does not effect output. Intended
 for adding notes to control file. Any other column names are also ignored,
 but generate a warning.
 }
 
 Anywhere you can give the name of a column of \code{tbl} in the control file,
-you can instead give input in \{curry brackets\}. This input is treated as R
+you can instead give input in \{curly brackets\}. This input is treated as R
 code. If \code{tbl} is a remote data frame, then this will be translated to SQL
 using dbplyr.
 

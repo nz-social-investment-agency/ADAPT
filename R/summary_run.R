@@ -9,8 +9,10 @@
 #' with dbplyr.
 #' @param remove_na_from_groups T/F whether missing values from grouping columns
 #' should be excluded from the results. Defaults to TRUE.
+#' @param save_file specify the file to save results to. Optional, overides the
+#' FILE column of the control file if provided.
 #' @param debug_folder an existing folder where debug information should be
-#' written to disc. If NA (the default) not debug information is written.
+#' written to disc. If NA (the default) no debug information is written.
 #' 
 #' @return A data frame from executing the summary defined by each row of the
 #' control file and appending all the summaries together.
@@ -45,15 +47,20 @@
 #' during validation the tool will error is this column is not numeric.
 #' * STDDEV - name of columns of `tbl` - calculates the standard deviation of the
 #' column.
-#' * ENTITY  - name of columns of `tbl` -  similar to DISTINCT, but checks for
+#' * ENTITY - name of columns of `tbl` -  similar to DISTINCT, but checks for
 #' columns with `*__min` and `*__max` suffixes and takes a distinct over the union
 #' of these columns if available. Designed for counting entities.
+#' * SEED - name of columns of `tbl` - similar to SUM, but takes remainder by
+#' 100 first. Intended to be applied to ID columns to generate a value that
+#' can serve as a seed for consistent rounding.
+#' * WHERE - a dynamic formula in \{curly brackets\} to filter the input table
+#' before summarising.
 #' * NOTES - free text - column is ignored and does not effect output. Intended
 #' for adding notes to control file. Any other column names are also ignored,
 #' but generate a warning.
 #' 
 #' Anywhere you can give the name of a column of `tbl` in the control file,
-#' you can instead give input in \{curry brackets\}. This input is treated as R
+#' you can instead give input in \{curly brackets\}. This input is treated as R
 #' code. If `tbl` is a remote data frame, then this will be translated to SQL
 #' using dbplyr.
 #' 
@@ -63,13 +70,15 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = TRUE, debug_folder = NA_character_){
+run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = TRUE, save_file = NA_character_, debug_folder = NA_character_){
   stopifnot(is.character(control_file), file.exists(control_file))
   stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
   stopifnot(is.logical(remove_na_from_groups))
   stopifnot(is.character(debug_folder))
   stopifnot(is.na(debug_folder) | dir.exists(debug_folder) )
+  stopifnot(is.character(save_file))
+  stopifnot(is.na(save_file) | dir.exists(dirname(save_file)))
   
   run_time_inform_user("Summary tool initiated.")
   
@@ -111,6 +120,9 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   loaded_cf = tolower_control_file_cells(loaded_cf, colnames(tbl))
   
   # file path fix
+  if(!is.na(save_file)){
+    loaded_cf$file = save_file
+  }
   loaded_cf$file = adjust_file_path_handling(loaded_cf$file)
   
   # remove delimiters []
@@ -118,7 +130,7 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
     loaded_cf[[cc]] = remove_delimiters(loaded_cf[[cc]], "[]")
   }
   
-  valid_control_file = validate_summary_control_file(loaded_cf, tbl)
+  valid_control_file = validate_summary_control_file(loaded_cf, tbl, save_file)
   stopifnot(valid_control_file)
   
   ## remove existing files ----
@@ -134,7 +146,7 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   col_type = gsub("[0-9\\.]", "", ctr_cols)
   
   # select commands
-  output_types = c("group", "label", "distinct", "count", "sum", "entity", "stddev")
+  output_types = c("group", "label", "distinct", "count", "sum", "entity", "stddev", "seed")
   select_command = ctr_cols[col_type %in% output_types]
   # insert 'grplabel' for each group
   select_command = lapply(
@@ -173,7 +185,6 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
     group_command = dplyr::select(this_row, dplyr::starts_with("group"))
     group_command = unlist(group_command, use.names = FALSE)
     group_command = group_command[!is.na(group_command), drop = FALSE]
-    
     
     # summary commands
     summary_command = generate_summary_commands(this_row, is_sql)

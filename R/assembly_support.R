@@ -12,6 +12,7 @@
 #'  
 #' @return A character string with an SQL Server query for dropping columns.
 #' 
+#' @export
 alter_table_drop_column = function(table_name, columns, sqlite = FALSE, if_exists = !sqlite){
   stopifnot(is.character(table_name) & length(table_name) == 1)
   stopifnot(if_exists %in% c(TRUE, FALSE))
@@ -48,7 +49,7 @@ alter_table_drop_column = function(table_name, columns, sqlite = FALSE, if_exist
 #'  
 #' @return A character string with an SQL Server query for adding columns.
 #' 
-#' 
+#' @export
 alter_table_add_column = function(table_name, columns, types, sqlite = FALSE){
   stopifnot(is.character(table_name) & length(table_name) == 1)
   if(length(columns) == 0){ return(character(0)) }
@@ -277,7 +278,7 @@ handle_summary_case = function(control_file_row, sqlite = FALSE){
     value = glue::glue("MAX({m_value}) AS {o_name}")
     
   } else if (method == "EXISTS") {
-    value = glue::glue("IIF(COUNT({m_value}) >= 1, 1, 0) AS {o_name}")
+    value = glue::glue("IIF(COUNT({m_value}) >= 1, 1, NULL) AS {o_name}")
     
   } else if (method == "COUNT") {
     value = glue::glue("COUNT({m_value}) AS {o_name}")

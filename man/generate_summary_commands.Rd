@@ -2,8 +2,7 @@
 % Please edit documentation in R/summary_support.R
 \name{generate_summary_commands}
 \alias{generate_summary_commands}
-\title{Convert control file input to text string that can be used within
-dplyr::mutate via rlang::parse_exprs.}
+\title{Convert control file input to summary commands.}
 \usage{
 generate_summary_commands(summary_row, is_sql = FALSE)
 }
@@ -19,5 +18,10 @@ argument if SQL (as this argument is not handled during SQL translation).}
 a named character array suitable for parse_exprs
 }
 \description{
-Processes columns of types: "distinct", "count", "sum", "entity", "stddev"
+These summary commands are text string that can be used within
+rlang::parse_exprs within dplyr::mutate.
+}
+\details{
+Processes columns of types: "distinct", "count", "sum", "entity", "stddev",
+and "seed".
 }

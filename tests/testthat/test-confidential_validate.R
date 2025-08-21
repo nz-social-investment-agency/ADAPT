@@ -19,10 +19,19 @@ test_that("removal of confidentiality instruction passes", {
   
   for(ii in 1:nrow(control_file)){
     tmp = control_file[-ii,]
-    expect_true(validate_confidential_control_file(control_file, tbl))
-    expect_silent(validate_confidential_control_file(control_file, tbl))
+    expect_true(validate_confidential_control_file(control_file, tmp))
+    expect_silent(validate_confidential_control_file(control_file, tmp))
   }
 
+})
+
+test_that("worked example passes without seed", {
+  
+  tmp = dplyr::filter(control_file, COMMAND != "SEED")
+  
+  expect_true(validate_confidential_control_file(control_file, tmp))
+  expect_silent(validate_confidential_control_file(control_file, tmp))
+  
 })
 
 ## test failing functionality --------------------------------------------- ----
@@ -53,9 +62,9 @@ test_that("Non-first columns match tbl", {
   
 })
 
-test_that("At most one DROP, RENAME, ROUND, and TREAT_NA_AS", {
+test_that("At most one DROP, RENAME, ROUND, SEED, and TREAT_NA_AS", {
   
-  cmd_vec = c("DROP", "RENAME", "ROUND", "TREAT_NA_AS")
+  cmd_vec = c("DROP", "RENAME", "ROUND", "TREAT_NA_AS", "SEED")
   for(cc in cmd_vec){
     
     tmp = control_file
@@ -83,6 +92,14 @@ test_that("missing NA options are numeric", {
   
   expect_false(suppressWarnings(validate_confidential_control_file(tmp, tbl)))
   expect_warning(validate_confidential_control_file(tmp, tbl), "'five', 'four', 'one'")
+})
+
+test_that("seed rules require column match", {
+  tmp = control_file
+  tmp[tmp == "seed"] = "not_present_column"
+
+  expect_false(suppressWarnings(validate_confidential_control_file(tmp, tbl)))
+  expect_warning(validate_confidential_control_file(tmp, tbl), "not_present_column")
 })
 
 test_that("suppression rules match accepted pattern", {

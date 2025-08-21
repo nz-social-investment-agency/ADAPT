@@ -155,6 +155,35 @@ test_that("multi sql string to Id", {
   expect_identical(actual, expected)
 })
 
+## readLines_utf8(file_name_and_path) ------------------------------------- ----
+
+test_that("file read equivalent to readLines", {
+  tmp_dir = tempdir()
+  tmp_file = file.path(tmp_dir, "test.txt")
+  writeLines("hello\nthere\nmy\nfriend", tmp_file)
+  on.exit(unlink(tmp_file))
+  
+  # reading
+  base = readLines(tmp_file)
+  this = readLines_utf8(tmp_file)
+  
+  # match
+  expect_equal(base, this)
+})
+
+test_that("non-UTF-8 character causes error", {
+  tmp_file = system.file("extdata", "testing", "utf8_error.txt", package = "IDIr")
+  
+  expect_silent(readLines(tmp_file))
+  expect_warning(expect_error(readLines_utf8(tmp_file), "UTF-8"), "invalid input")
+})
+
+test_that("incomplete final line causes error", {
+  tmp_file = system.file("extdata", "testing", "missing_eoline.sql", package = "IDIr")
+  
+  expect_warning(expect_error(readLines_utf8(tmp_file), "fixed by adding"), "incomplete final line")
+})
+
 ## increment_file_name(path_and_file_name) -------------------------------- ----
 
 test_that("file numbers incremented", {

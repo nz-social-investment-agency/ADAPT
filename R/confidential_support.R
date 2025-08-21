@@ -284,6 +284,7 @@ apply_small_count_suppression = function(input_array, with, threshold, treat_na_
 #' Output values will be identical where `source_values` and identical and
 #' greater than `stable_above`.
 #' 
+#' @export
 create_stable_seeds = function(source_values, stable_above = 30){
   stopifnot(is.numeric(source_values))
   stopifnot(is.numeric(stable_above))

@@ -102,3 +102,20 @@ test_that("SQL files generate no errors on parse and compile", {
   suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "setup_w_error"))
   suppressWarnings(expect_warning(validate_pipeline_control_file(tmp, db_connection_string), "Incorrect syntax"))
 })
+
+## test injection --------------------------------------------------------- ----
+
+test_that("injection performs", {
+  skip_if_not(can_connect)
+  
+  control_file = data.frame(
+    folder = test_folder,
+    file = c("errors_wout_injection.sql", "errors_wout_injection.R")
+  )
+  
+  expect_false(suppressWarnings(validate_pipeline_control_file(control_file, db_connection_string)))
+  expect_warning(validate_pipeline_control_file(control_file, db_connection_string))
+  
+  injection = list("$(value)" = 2, "$(label)" = "name")
+  expect_true(validate_pipeline_control_file(control_file, db_connection_string, injection))
+})

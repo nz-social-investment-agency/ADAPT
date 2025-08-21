@@ -1,11 +1,13 @@
-﻿COMMAND,label1,col01,val01,col02,val02,col03,val03,distinct1,count1,count2,sum1,entity1,entity2
-DROP,,TRUE,,TRUE,,,,,,,,,
-RENAME,summary_id,,age,,region,,,num_hhlds,num_people,num_w_event,total_events,industry_ent,edu_ent
-MISSING_TO,,,,,,,,,,,,9999,0
-ROUND,,,,,,,,RR3,GRR,CONV10,,,
-SUPPRESS,,,,,,,,distinct1 < 6,count1 < 6,count2 < 6,distinct1 < 20,,
-SUPPRESS,,,,,,,,,,,count1 < 20,,
-SUPPRESS,,,,,,,,,,,count2 < 20,,
-SUPPRESS,,,,,,,,entity1 < 2,entity1 < 2,entity1 < 2,entity1 < 2,,
-SUPPRESS,,,,,,,,entity2 < 2,entity2 < 2,entity2 < 2,entity2 < 2,,
-NOTES,Rename column input1,"Column col01 only contains the text ""age"", drop this column and more the label ""age"" to the column name of val01.","Column col01 only contains the text ""age"", drop this column and more the label ""age"" to the column name of val01.","Column col02 only contains the text ""region"", drop this column and more the label ""region"" to the column name of val02.","Column col02 only contains the text ""region"", drop this column and more the label ""region"" to the column name of val02.",No changes to this column,No changes to this column,"This column requires random rounding, and suppression against three different columns.","This column requires graduate random rounding, and suppression against three different columns.","This column requires conventional rounding to base 10, and suppression against three different columns.","This column does not require rounding, but does require suppressed against five columns.","This column contains industry/business entities. Missing entity counts imply no need for an entity count, hence replace missing values with 9999.","This column contains education entities. Missing entity counts no entity, hence replace missing values with 0."
+﻿COMMAND,label1,col01,val01,col02,val02,col03,val03,distinct1,count1,count2,sum1,entity1,entity2,seed_col
+DROP,,TRUE,,TRUE,,,,,,,,,,TRUE
+RENAME,summary_id,,age,,region,,,num_hhlds,num_people,num_w_event,total_events,industry_ent,edu_ent,
+MISSING_TO,,,,,,,,,,,,9999,0,
+SEED,,,,,,,,seed_col,,,,,,
+ROUND,,,,,,,,RR3,GRR,CONV10,,,,
+SUPPRESS,,,,,,,,distinct1 < 6,count1 < 6,count2 < 6,distinct1 < 20,,,
+SUPPRESS,,,,,,,,,,,count1 < 20,,,
+SUPPRESS,,,,,,,,,,,count2 < 20,,,
+SUPPRESS,,,,,,,,entity1 < 2,entity1 < 2,entity1 < 2,entity1 < 2,,,
+SUPPRESS,,,,,,,,entity2 < 2,entity2 < 2,entity2 < 2,entity2 < 2,,,
+NOTES,Rename column input1,"Column col01 only contains the text ""age"", drop this column and more the label ""age"" to the column name of val01.","Column col01 only contains the text ""age"", drop this column and more the label ""age"" to the column name of val01.","Column col02 only contains the text ""region"", drop this column and more the label ""region"" to the column name of val02.","Column col02 only contains the text ""region"", drop this column and more the label ""region"" to the column name of val02.",No changes to this column,No changes to this column,"This column requires random rounding (RR3), and suppression against three different columns. A seed column is provided to enforce consistent random rounding.","This column requires graduate random rounding, and suppression against three different columns.","This column requires conventional rounding to base 10, and suppression against three different columns.","This column does not require rounding, but does require suppressed against five columns.","This column contains industry/business entities. Missing entity counts imply no need for an entity count, hence replace missing values with 9999.","This column contains education entities. Missing entity counts no entity, hence replace missing values with 0.",This column has been generated to ensure that identical groups of people are always randomly rounded in the same way. It is dropped as it is not needed in the final output.
+NOTES,,,,,,,,The microdata output guide requires that identical groups of people are randomly rounded in identical ways.,This can be done via providing a seed column. Where the seed is identical random rounding will also be identical.,The summary tool provides a SEED option designed for making this seed column.,"If no seed column is provided, the tool will use the 'stable_above' option to enforce some consistent rounding.",,,

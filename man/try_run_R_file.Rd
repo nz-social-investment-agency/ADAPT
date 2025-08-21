@@ -4,11 +4,15 @@
 \alias{try_run_R_file}
 \title{Execute R script in separate environment}
 \usage{
-try_run_R_file(file, ignore_warnings = FALSE)
+try_run_R_file(file, injection = list(), ignore_warnings = FALSE)
 }
 \arguments{
 \item{file}{The file (and path) of the R script to execute. Errors if file
 does not exist or is not a .R file.}
+
+\item{injection}{A list containing named values. The separate environment
+will be populated with these as variables before the file is executed (see
+details).}
 
 \item{ignore_warnings}{T/F whether execution should continue even if warnings
 occur. If \code{FALSE} (the default) then will stop on the first warning and
@@ -27,9 +31,12 @@ error/warning message.
 Execute R script in separate environment
 }
 \details{
-The R script is executed in a new base environment. This means that variables
+The R script is executed in a new environment. This means that variables
 in the calling environment (e.g. within the pipeline tool) can not be used
-or changed by the \code{file}.
+or changed by the \code{file}, and that variables created by \code{file} do not persist
+once its execution ends. Note that library calls within \code{file} do persist
+once its execution ends due to how R handles packages. We do not recommend
+using \code{library} within pipeline R scripts (use \verb{package::function} instead).
 
 If you want to run multiple R scripts that interact (for example a setup
 script followed by a processing script), you can not run them all via this
@@ -37,4 +44,9 @@ function because each will be executed in an isolated environment.
 
 The best alternative is to create an overview script that runs all the
 interacting scripts, and use this function to run just this overview script.
+
+\code{injection} provides a way to insert dynamic values into the environment. For
+example \code{injection = list(ext = "csv")} would be equivalent to adding the
+code \code{ext <- "csv"} at the top of the script being sourced. Case sensitive.
+\code{injection} exists to allow parameters to be passed to scripts.
 }

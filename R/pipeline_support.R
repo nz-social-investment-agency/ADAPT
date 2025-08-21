@@ -69,6 +69,62 @@ remove_sql_comments = function(code){
   return(paste0(df$out_char, collapse = ""))
 }
 
+## Standardise around SQL command mode ------------------------------------ ----
+#' Replace SQL command mode variables with their values
+#'
+#' @description
+#' This function searches SQL code to identify instances where SQL CMD Mode
+#' variables have been set and replaces these with their values. The intention
+#' is to enable the code to be called from R which does not enable CMD Mode.
+#' Any :SETVAR statements are replaced with empty space, but new lines are
+#' preserved.
+#'
+#' @param code_string A character vector comprising sql code
+#'
+#' @return A character vector comprising sql code with any command mode ":SETVAR" 
+#' statements removed, and variables replaced with values
+#' 
+#' @export
+# Original by Dan Young, ValidateCodeR, used with permission.
+sql_cmd_mode_fix = function(code_string){
+  stopifnot(is.character(code_string))
+  stopifnot(length(code_string) == 1)
+  
+  pattern =':setvar\\s+[[:alnum:]\\-\\_\\[\\]]+\\s+"?.*"?[\r\t\f\v]*(?=\\n)'
+  found = regexpr(pattern, code_string, perl = TRUE, ignore.case = TRUE)
+  
+  limiter = 0
+  
+  # stop once :setvar not found
+  while(found != -1){
+    # found text
+    found_text = substr(code_string, found, found + attr(found, "match.length") -1)
+    triple = strsplit(found_text, "\\s")[[1]]
+    
+    # variable
+    var = glue::glue("$({triple[2]})")
+    # value
+    val = triple[3]
+    # substitution
+    code_string = gsub(var, val, code_string, fixed = TRUE)
+    
+    # remove found text
+    code_string = sub(found_text, "", code_string, fixed = TRUE)
+    
+    # re-search for a setvar
+    found = regexpr(pattern, code_string, perl = TRUE, ignore.case = TRUE)
+    
+    # limiter
+    limiter = limiter + 1
+    if(limiter > 100){
+      warning("sql_cmd_mode_fix stuck")
+      break
+    }
+  }
+  
+  return(code_string)
+}
+
 ## Read and prepare SQL code ---------------------------------------------- ----
 #' Read in an SQL file and prepare for execution via ODBC
 #' 
@@ -86,15 +142,17 @@ remove_sql_comments = function(code){
 #' Preparation for ODBC includes: (1) removing comments, and (2) splitting code
 #' into batches by breaking on `;` and by `GO`.
 #' 
+#' @export
 read_and_prepare_sql_code = function(file_name_and_path){
   stopifnot(is.character(file_name_and_path))
   stopifnot(tools::file_ext(file_name_and_path) == "sql")
   stopifnot(file.exists(file_name_and_path))
   
-  sql_code = readLines(file_name_and_path)
+  sql_code = readLines_utf8(file_name_and_path)
   sql_code = c(sql_code, "")
   sql_code = paste(sql_code, collapse = "\n")
   sql_code = remove_sql_comments(sql_code)
+  sql_code = sql_cmd_mode_fix(sql_code)
   
   # break into batches
   # break on ; or a line containing only GO and whitespace
@@ -122,6 +180,9 @@ read_and_prepare_sql_code = function(file_name_and_path){
 #'
 #' @param file The file (and path) of the R script to execute. Errors if file
 #' does not exist or is not a .R file.
+#' @param injection A list containing named values. The separate environment
+#' will be populated with these as variables before the file is executed (see
+#' details).
 #' @param ignore_warnings T/F whether execution should continue even if warnings
 #' occur. If `FALSE` (the default) then will stop on the first warning and
 #' return the warning message. If `TRUE` then will suppress all warnings.
@@ -134,9 +195,12 @@ read_and_prepare_sql_code = function(file_name_and_path){
 #' @md
 #' 
 #' @details
-#' The R script is executed in a new base environment. This means that variables
+#' The R script is executed in a new environment. This means that variables
 #' in the calling environment (e.g. within the pipeline tool) can not be used
-#' or changed by the `file`.
+#' or changed by the `file`, and that variables created by `file` do not persist
+#' once its execution ends. Note that library calls within `file` do persist
+#' once its execution ends due to how R handles packages. We do not recommend
+#' using `library` within pipeline R scripts (use `package::function` instead).
 #' 
 #' If you want to run multiple R scripts that interact (for example a setup
 #' script followed by a processing script), you can not run them all via this
@@ -145,10 +209,18 @@ read_and_prepare_sql_code = function(file_name_and_path){
 #' The best alternative is to create an overview script that runs all the
 #' interacting scripts, and use this function to run just this overview script.
 #' 
+#' `injection` provides a way to insert dynamic values into the environment. For
+#' example `injection = list(ext = "csv")` would be equivalent to adding the
+#' code `ext <- "csv"` at the top of the script being sourced. Case sensitive.
+#' `injection` exists to allow parameters to be passed to scripts.
+#' 
 #' @export
-try_run_R_file = function(file, ignore_warnings = FALSE){
+try_run_R_file = function(file, injection = list(), ignore_warnings = FALSE){
   stopifnot(is.character(file), file.exists(file))
   stopifnot(tools::file_ext(file) %in% c("R", "r"))
+  stopifnot(is.list(injection))
+  stopifnot(length(injection) == length(unique(names(injection))))
+  stopifnot(ignore_warnings %in% c(TRUE, FALSE))
   
   start_time = as.character(Sys.time())
   
@@ -156,6 +228,11 @@ try_run_R_file = function(file, ignore_warnings = FALSE){
   status = tryCatch(
     {
       new_environment = new.env(parent = globalenv())
+      # injection assignment into environment
+      for(inj in names(injection)){
+        new_environment[[inj]] = injection[[inj]]
+      }
+      
       if(ignore_warnings){
         suppressWarnings(source(file, local = new_environment))
       } else {
@@ -187,6 +264,8 @@ try_run_R_file = function(file, ignore_warnings = FALSE){
 #' does not exist or is not a .sql file.
 #' @param db_connection_string A connection string for connecting to the
 #' database.
+#' @param injection A list containing named values. Where the names are found
+#' in the SQL code, these will be replaced with their values (see details).
 #' @param ignore_warnings T/F whether execution should continue even if warnings
 #' occur. If `FALSE` (the default) then will stop on the first warning and
 #' return the warning message. If `TRUE` then will suppress all warnings.
@@ -215,10 +294,20 @@ try_run_R_file = function(file, ignore_warnings = FALSE){
 #' batch is executed with `SET NOCOUNT ON` and we use the `DBI::dbExecute`
 #' setting `immediate = TRUE`.
 #' 
+#' `injection` provides a way to insert dynamic values into an SQL script. It is
+#' the equivalent of SQL CMD mode for the pipeline tool (SQL CMD mode does not
+#' work as expected via ODBC connection). Case sensitive. For example
+#' `injection = list("$(tbl)" = "[my_table]")` would replace all instances of
+#' `$(tbl)` with `[my_table]` in the code. `injection` exists to allow
+#' parameters to be passed to scripts.
+#' 
 #' @export
-try_run_SQL_file = function(file, db_connection_string, ignore_warnings = FALSE){
+try_run_SQL_file = function(file, db_connection_string, injection = list(), ignore_warnings = FALSE){
   stopifnot(is.character(file), file.exists(file))
   stopifnot(tolower(tools::file_ext(file)) == "sql")
+  stopifnot(is.list(injection))
+  stopifnot(length(injection) == length(unique(names(injection))))
+  stopifnot(ignore_warnings %in% c(TRUE, FALSE))
   
   start_time = as.character(Sys.time())
   sql_batches = read_and_prepare_sql_code(file)
@@ -234,6 +323,12 @@ try_run_SQL_file = function(file, db_connection_string, ignore_warnings = FALSE)
         lines = glue::glue("{sql_batches$start_lines[ii]}-{sql_batches$end_lines[ii]}")
         # modify for handling temp tables
         this_code = sql_batches$code[ii]
+        
+        # injection assignment into environment
+        for(inj in names(injection)){
+          this_code = gsub(inj, injection[[inj]], this_code, fixed = TRUE)
+        }
+        
         if(ignore_warnings){
           result = suppressWarnings(DBI::dbExecute(db_connection, this_code, immediate = TRUE))
         } else {

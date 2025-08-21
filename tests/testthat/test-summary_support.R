@@ -174,6 +174,199 @@ test_that("product removes dupes across", {
   expect_setequal(out_no_dupes_both, out_no_dupes_both_manual)
 })
 
+## expand_compact_summary_groups(compact_control_file,column_names,drop.dupes.within,drop.dupes.across) ----
+
+test_that("basic | expands", {
+  input = data.frame(
+    group.1 = c("a|b","c|d"),
+    GROUP02 = c("x","y|z")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group.1 = c("a","b","c","c","d","d"),
+    GROUP02 = c("x","x","y","z","y","z")
+  )
+  
+  expect_true(all.equal(actual, expected))
+})
+
+test_that("|+ expands to NAs", {
+  input = data.frame(
+    group.1 = c("a|+","c"),
+    GROUP02 = c("x","y  |   +    ")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group.1 = c("a",NA,"c","c"),
+    GROUP02 = c("x","x","y",NA)
+  )
+  
+  expect_true(all.equal(actual, expected))
+})
+
+test_that("prefix and suffix expand", {
+  input = data.frame(
+    group.1 = c("*_x|+","y_*"),
+    GROUP02 = c("a","b")
+  )
+  
+  column_names = c("1_x", "2_x", "y_3", "y_4")
+  actual = expand_compact_summary_groups(input, column_names)
+  
+  expected = data.frame(
+    group.1 = c("1_x", "2_x", NA, "y_3", "y_4"),
+    GROUP02 = c("a","a","a","b","b")
+  )
+  
+  expect_true(all.equal(actual, expected))
+  
+  # reverse order
+  input = data.frame(
+    group.1 = c("y_*", "*_x|+"),
+    GROUP02 = c("b","a")
+  )
+  
+  column_names = c("1_x", "2_x", "y_3","y_4")
+  actual = expand_compact_summary_groups(input, column_names)
+  
+  expected = data.frame(
+    group.1 = c("y_3","y_4","1_x", "2_x", NA),
+    GROUP02 = c("b","b","a","a","a")
+  )
+  
+  expect_true(all.equal(actual, expected))
+})
+
+test_that("prefix or suffix performs", {
+  input = data.frame(group = c("*_x | y_*"))
+  
+  column_names = c("1_x", "2_x", "y_3", "y_4")
+  actual = expand_compact_summary_groups(input, column_names)
+  
+  expected = data.frame(group = c("1_x", "2_x", "y_3", "y_4"))
+  
+  expect_true(all.equal(actual, expected))
+  
+  # reverse order
+  input = data.frame(group = c("y_* | *_x"))
+  
+  column_names = c("1_x", "2_x", "y_3","y_4")
+  actual = expand_compact_summary_groups(input, column_names)
+  
+  expected = data.frame(group = c("y_3","y_4","1_x", "2_x"))
+  
+  expect_true(all.equal(actual, expected))
+})
+
+test_that("prefix and suffix without underscore does not expand", {
+  input = data.frame(
+    group.1 = c("*x","y*"),
+    GROUP02 = c("a","b")
+  )
+  
+  column_names = c("1_x", "2_x", "y_y")
+  actual = expand_compact_summary_groups(input, column_names)
+
+  expect_true(all.equal(actual, input))
+})
+
+test_that("missing prefix or suffix errors", {
+  input = data.frame(
+    group.1 = c("*_x|+","y_*"),
+    GROUP02 = c("a","b")
+  )
+  
+  column_names = c("1x", "2x", "y_y")
+  expect_error(expand_compact_summary_groups(input, column_names), "suffix")
+  column_names = c("1_x", "2_x", "yy")
+  expect_error(expand_compact_summary_groups(input, column_names), "prefix")
+})
+
+test_that("drop.within performs", {
+  input = data.frame(
+    group1 = c("a","b","c","d"),
+    group2 = c("a","c","d","e"),
+    group3 = c("a","b","d","f"),
+    group4 = c("a","b","c","f")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group1 = c("a","b","c","d"),
+    group2 = c( NA,"c","d","e"),
+    group3 = c( NA, NA, NA,"f"),
+    group4 = c( NA, NA, NA, NA_character_)
+  )
+  
+  expect_true(all.equal(actual, expected))
+  
+  actual = expand_compact_summary_groups(input, drop.dupes.within = FALSE)
+  expect_true(all.equal(actual, input))
+})
+
+test_that("drop.across performs", {
+  input = data.frame(
+    group1 = c("a","c","c","d","c","d"),
+    group2 = c("b","d","d", NA,"d", NA),
+    group3 = c("c","b", NA, NA, NA, NA),
+    group4 = c("d","a", NA,"c", NA,"c"),
+    count1 = c("z","z","z","z","y","y")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group1 = c("a","c","c"),
+    group2 = c("b","d","d"),
+    group3 = c("c", NA, NA),
+    group4 = c("d", NA, NA),
+    count1 = c("z","z","y")
+  )
+  
+  expect_true(all.equal(actual, expected))
+  
+  actual = expand_compact_summary_groups(input, drop.dupes.across = FALSE)
+  expect_true(all.equal(actual, input))
+})
+
+test_that("empty rows removed", {
+  input = data.frame(
+    group1 = c("a", NA),
+    group2 = c("b", NA),
+    count1 = c( NA,"x")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group1 = c("a"),
+    group2 = c("b"),
+    count1 = c(NA_character_)
+  )
+  
+  expect_true(all.equal(actual, expected))
+  
+  # using |+
+  input = data.frame(
+    group1 = c("a|+"),
+    group2 = c("b|+")
+  )
+  
+  actual = expand_compact_summary_groups(input)
+  
+  expected = data.frame(
+    group1 = c("a","a", NA),
+    group2 = c("b", NA,"b")
+  )
+  
+  expect_true(all.equal(actual, expected))
+})
+
 ## generate_summary_commands(summary_row) --------------------------------- ----
 
 test_that("individual summary commands run",{
@@ -201,7 +394,7 @@ test_that("individual summary commands run",{
   
   # entity
   summary_row = data.frame(ENTITY1 = "col", stringsAsFactors = FALSE)
-  expected = c(entity1 = "dplyr::n_distinct(col, na.rm = TRUE)")
+  expected = c(entity1 = "ifelse(dplyr::n_distinct(col, na.rm = TRUE) == 0, NA, dplyr::n_distinct(col, na.rm = TRUE))")
   
   actual = generate_summary_commands(summary_row)
   expect_equal(actual, expected)
@@ -209,6 +402,13 @@ test_that("individual summary commands run",{
   # stddev
   summary_row = data.frame(STDDEV3 = "col", stringsAsFactors = FALSE)
   expected = c(stddev3 = "sd(col, na.rm = TRUE)")
+  
+  actual = generate_summary_commands(summary_row)
+  expect_equal(actual, expected)
+  
+  # seed
+  summary_row = data.frame(SEED.1 = "col", stringsAsFactors = FALSE)
+  expected = c(seed.1 = "sum(col %% 100, na.rm = TRUE)")
   
   actual = generate_summary_commands(summary_row)
   expect_equal(actual, expected)
@@ -221,12 +421,14 @@ test_that("multiple summary commands run",{
     DISTINCT1 = "col1",
     DISTINCT2 = "col2",
     COUNT05 = "col3",
+    SEED = "col1",
     stringsAsFactors = FALSE
   )
   expected = c(
     distinct1 = "dplyr::n_distinct(col1, na.rm = TRUE)",
     distinct2 = "dplyr::n_distinct(col2, na.rm = TRUE)",
-    count05 = "sum(ifelse(!is.na(col3), 1, 0), na.rm = TRUE)"
+    count05 = "sum(ifelse(!is.na(col3), 1, 0), na.rm = TRUE)",
+    seed = "sum(col1 %% 100, na.rm = TRUE)"
   )
   
   actual = generate_summary_commands(summary_row)
@@ -239,6 +441,7 @@ test_that("NAs skipped",{
     DISTINCT1 = "col1",
     DISTINCT2 = NA,
     COUNT05 = "col3",
+    SEED = NA,
     stringsAsFactors = FALSE
   )
   expected = c(

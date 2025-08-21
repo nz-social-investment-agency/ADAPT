@@ -168,9 +168,10 @@ test_that("thresholds respected",{
 
 test_that("consistent rounding in RR3",{
   
-  # all single values
+  ## reading seeds from control file
   tmp = tbl
   tmp$distinct1 = 50
+  tmp$seed = 123
   
   # single value
   actual = run_confidential(control_file, sheet = NULL, tmp)
@@ -178,8 +179,26 @@ test_that("consistent rounding in RR3",{
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_hhlds[non_nas])) == 1)
   
+  ## generating seeds
+  tmp = tbl
+  tmp$distinct1 = 50
+  
+  cf = load_control_file(control_file, sheet = NULL)
+  cf[5,9:10] = NA
+  
+  tmp_cf = file.path(tempdir(), "tmp_cf.csv")
+  write.csv(cf, tmp_cf, row.names = FALSE)
+  
+  # single value
+  actual = run_confidential(tmp_cf, sheet = NULL, tmp)
+  non_nas = !is.na(actual$conf_num_hhlds)
+  expect_true(sum(non_nas) > 0)
+  expect_true(length(unique(actual$conf_num_hhlds[non_nas])) == 1)
+  
+  ## deactivating via `stable_above`
+  
   # multi-values value
-  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = Inf)
+  actual = run_confidential(tmp_cf, sheet = NULL, tmp, stable_above = Inf)
   non_nas = !is.na(actual$conf_num_hhlds)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_hhlds[non_nas])) > 1)
@@ -187,9 +206,10 @@ test_that("consistent rounding in RR3",{
 
 test_that("consistent rounding in GRR",{
   
-  # all single values
+  ## reading seeds from control file
   tmp = tbl
   tmp$count1 = 905
+  tmp$seed = 789
   
   # single value
   actual = run_confidential(control_file, sheet = NULL, tmp)
@@ -197,8 +217,26 @@ test_that("consistent rounding in GRR",{
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_people[non_nas])) == 1)
   
+  ## generating seeds
+  tmp = tbl
+  tmp$count1 = 905
+  
+  cf = load_control_file(control_file, sheet = NULL)
+  cf[5,9:10] = NA
+  
+  tmp_cf = file.path(tempdir(), "tmp_cf.csv")
+  write.csv(cf, tmp_cf, row.names = FALSE)
+  
+  # single value
+  actual = run_confidential(tmp_cf, sheet = NULL, tmp)
+  non_nas = !is.na(actual$conf_num_people)
+  expect_true(sum(non_nas) > 0)
+  expect_true(length(unique(actual$conf_num_people[non_nas])) == 1)
+  
+  ## deactivating via `stable_above`
+  
   # multi-values value
-  actual = run_confidential(control_file, sheet = NULL, tmp, stable_above = Inf)
+  actual = run_confidential(tmp_cf, sheet = NULL, tmp, stable_above = Inf)
   non_nas = !is.na(actual$conf_num_people)
   expect_true(sum(non_nas) > 0)
   expect_true(length(unique(actual$conf_num_people[non_nas])) > 1)
@@ -335,4 +373,50 @@ test_that("confidential_wide_worked_example passes", {
     # suppression
     expect_true(all(is.na(actual[[cc]]) == is.na(results[[cc]])))
   }
+})
+
+test_that("confidential_stable_worked_example passes", {
+  
+  # setup
+  control_file = system.file("extdata", "examples", "confidential_stable_worked_example", "control_file.csv", package = "IDIr")
+  tbl = system.file("extdata", "examples", "confidential_stable_worked_example", "tbl.csv", package = "IDIr")
+  results = system.file("extdata", "examples", "confidential_stable_worked_example", "results.csv", package = "IDIr")
+  
+  # load
+  tbl = read.csv(tbl)
+  results = read.csv(results)
+  
+  # sort
+  results = dplyr::tibble(results)
+  results = dplyr::arrange(results, !!!rlang::syms(colnames(results)))
+  
+  actual = run_confidential(control_file, sheet = NULL, tbl)
+  
+  expect_equal(nrow(actual), nrow(results))
+  expect_equal(ncol(actual), ncol(results))
+  
+  expect_equal(colnames(actual), colnames(results))
+  
+  actual = dplyr::select(actual, dplyr::all_of(colnames(results)))
+  actual = dplyr::arrange(actual, !!!rlang::syms(colnames(results)))
+  
+  # loop through columns
+  for(cc in colnames(results)){
+    if(substr(cc, 1, 5) != "conf_"){
+      expect_equal(actual[[cc]], results[[cc]])
+      next
+    }
+    # rounding
+    help_check_rounding(cc, control_file, actual, results)
+  }
+  
+  # consistent rounding by seed - conf_group_size
+  tmp = dplyr::group_by(actual, group_size)
+  tmp = dplyr::summarise(tmp, dist = dplyr::n_distinct(conf_group_size), .groups = "drop")
+  expect_true(all(tmp$dist == 1))
+  
+  # inconsistent rounding without seed - conf_value
+  tmp = dplyr::group_by(actual, value)
+  tmp = dplyr::summarise(tmp, dist = dplyr::n_distinct(conf_value), .groups = "drop")
+  expect_false(all(tmp$dist == 1))
 })

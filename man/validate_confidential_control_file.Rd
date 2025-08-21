@@ -24,10 +24,11 @@ The following checks are run and generate a failure if not passed:
 \itemize{
 \item First column of \code{control_file} contains confidentiality commands
 \item Remaining columns listed in \code{control_file} match the column names of \code{tbl}.
-\item At most one row of DROP, RENAME, ROUND, and MISSING_TO instructions.
+\item At most one row of DROP, RENAME, ROUND, SEED, and MISSING_TO instructions.
 \item Rounding instructions are of the accepted types (RR3, GRR, CONV10, CONV100,
 CONV1000).
 \item Missing NA value options are numeric.
+\item Seed choice matches existing column.
 \item Suppression rules match the accepted pattern (column_name < number value).
 }
 }

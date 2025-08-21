@@ -45,6 +45,7 @@ run_time_inform_user = function(msg, log = NA_character_) {
 #' 
 #' @return the string with the specified delimiters added (if necessary).
 #' 
+#' @export
 add_delimiters = function(string, delimiter) {
   stopifnot(is.character(string))
   stopifnot(is.character(delimiter))
@@ -74,6 +75,7 @@ add_delimiters = function(string, delimiter) {
 #' 
 #' @return the string with the specified delimiters removed (if necessary).
 #' 
+#' @export
 remove_delimiters = function(string, delimiter) {
   stopifnot(is.character(string))
   stopifnot(is.character(delimiter))
@@ -105,6 +107,7 @@ remove_delimiters = function(string, delimiter) {
 #' 
 #' @return T/F if the string is delimited
 #' 
+#' @export
 is_delimited = function(string, delimiter) {
   stopifnot(is.character(string))
   stopifnot(is.character(delimiter))
@@ -161,6 +164,7 @@ no_obvious_escaping_injection = function(string) {
 #' @returns A `DBI::Id` object converting from splitting `sql_string` by `.`
 #' and removing `[]` delimiters.
 #' 
+#' @export
 sql2id = function(sql_string){
   stopifnot(is.character(sql_string))
   stopifnot(length(sql_string) == 1)
@@ -168,6 +172,61 @@ sql2id = function(sql_string){
   split = strsplit(sql_string, ".", fixed = TRUE)[[1]]
   sql_id = DBI::Id(remove_delimiters(split, "[]"))
   return(sql_id)
+}
+
+## Read lines requiring UTF-8 --------------------------------------------- ----
+#' readLines with requirements of UTF-8 encoding
+#' 
+#' R assumes UTF-8 characters by default. When reading text files there may be
+#' characters that are not part of the UTF-8 encoding. The best option for these
+#' files is to notify the user as early as possible and get them to change the
+#' file.
+#' 
+#' Continuing to process with characters that are not UTF-8 tends to produce
+#' uninformative error messages.
+#' 
+#' @param file_name_and_path A character string giving the path to the file.
+#'
+#' @return The lines of the file read by readLines if the file is UTF-8 encoded.
+#' Otherwise a warning and error about the encoding.
+#' 
+#' @export
+readLines_utf8 = function(file_name_and_path){
+  stopifnot(file.exists(file_name_and_path))
+  
+  # create connection with enforced encoding
+  filecon = file(file_name_and_path, "rt", encoding = "UTF-8")
+  
+  output = tryCatch(
+    {
+      readLines(con = filecon)
+    },
+    warning = function(w){
+      # incomplete final line implies missing end of line
+      if(grepl("incomplete final line", w, fixed = TRUE)){
+        close(filecon)
+        warning(w)
+        msg = c(
+          "Final line of file incomplete.",
+          "This is often fixed by adding a blank line at the end of file."
+        )
+        stop(paste(msg, collapse = "\n"))
+      }
+      # invalid input implies not UTF-8 format
+      if(grepl("invalid input", w, fixed = TRUE)){
+        close(filecon)
+        warning(w)
+        msg = c(
+          "File not UTF-8 encoding.",
+          "This is often caused by special characters (e.g. letters with macrons)."
+        )
+        stop(paste(msg, collapse = "\n"))
+      }
+      warning(w)
+    }
+  )
+  close(filecon)
+  return(output)
 }
 
 ## increment file name ---------------------------------------------------- ----

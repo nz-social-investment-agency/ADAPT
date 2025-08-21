@@ -4,7 +4,12 @@
 #' read into memory by `load_control_file`.
 #' @param tbl a data frame to summarise. Can be in-memory or remote accessed
 #' with dbplyr.
-#'
+#' @param save_file specify the file to save results to. Optional, overrides the
+#' FILE column of the control file if provided.
+#' @param partial_output T/F whether or not to skip the check that each output 
+#' file must have either all summaries enabled or all disabled. Defaults to
+#' FALSE to avoid confusion if files are overwritten.
+#' 
 #' @return T/F whether or not all validation checks are passed. Generating
 #' warnings for all failed checks.
 #'
@@ -18,19 +23,23 @@
 #' * Columns to sum are numeric
 #' * Grouping columns are not dynamic
 #' * Grouping columns are unique in each row
+#' * For each output file, either all summaries (rows) are enable or all are
+#'   disabled (skipped if `partial_output` is `TRUE`)
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
-#'   "sum", "entity", "stddev", "notes")
+#'   "sum", "entity", "stddev", "seed", "where", "notes")
 #' * column is not empty
 #' * grouping columns not used for summarising
 #' @md
 #' 
 #' @importFrom  rlang .data
 #' @export
-validate_summary_control_file = function(control_file, tbl){
+validate_summary_control_file = function(control_file, tbl, save_file = NA_character_, partial_output = FALSE){
   stopifnot(is.data.frame(control_file))
   stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
+  stopifnot(is.character(save_file))
+  stopifnot(is.na(save_file) | dir.exists(dirname(save_file)))
   
   ## initialize ----
   
@@ -47,17 +56,22 @@ validate_summary_control_file = function(control_file, tbl){
     warning("Arguments may be out of order. Correct order is control_file, tbl")
   }
   
-  # filter to enabled summaries
-  if("enabled" %in% ctr_cols){
-    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
+  if(!is.na(save_file)){
+    control_file$file = save_file
   }
-  
-  ## setup for checks ----
   
   # remove delimiters []
   for(cc in ctr_cols){
     control_file[[cc]] = remove_delimiters(control_file[[cc]], "[]")
   }
+  
+  # filter to enabled summaries
+  unfiltered_cf = control_file
+  if("enabled" %in% ctr_cols){
+    control_file = dplyr::filter(control_file, tolower(.data$enabled) %in% c("true", "1", "t", "yes", "y"))
+  }
+  
+  ## setup for checks ----
   
   # entries of control file (exclude columns: enabled, label, notes)
   indexes = which(!is.na(control_file), arr.ind = TRUE)
@@ -71,7 +85,7 @@ validate_summary_control_file = function(control_file, tbl){
   entries$duplicate = duplicated(entries$value)
   entries$is_function = substr(entries$value, 1, 1) == "{"
   
-  calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev")
+  calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev", "seed")
   entries$is_non_calc = !grepl(paste0("^", calc_cols, collapse = "|"), entries$column_name)
   
   # union_all for handling entity__min and entity__max required
@@ -82,7 +96,7 @@ validate_summary_control_file = function(control_file, tbl){
   ## control file column names ----
   
   # acceptable column names in control file
-  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "where", "note", "notes","start_time","end_time","status")
+  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "seed", "where", "note", "notes","start_time","end_time","status")
   for(cc in ctr_cols){
     if(gsub("[0-9\\.]", "", cc) %in% expected_columns_names){ next }
     
@@ -91,14 +105,14 @@ validate_summary_control_file = function(control_file, tbl){
   }
   
   # file in column names
-  if("file" %not_in% ctr_cols){
-    warning("Control file must have a column 'File' for where to write output.")
+  if("file" %not_in% ctr_cols & is.na(save_file)){
+    warning("Either 'save_file' input must be provided or control file must have a column 'File' for where to write output.")
     passes_all_critical_checks = FALSE
   }
   
   ## at least one summary per row ----
   
-  summary_types = c("distinct", "count", "sum", "entity", "stddev")
+  summary_types = c("distinct", "count", "sum", "entity", "stddev", "seed")
   tmp = dplyr::select(control_file, dplyr::starts_with(summary_types))
   na_row = apply(is.na(tmp), 1, all)
   
@@ -193,8 +207,13 @@ validate_summary_control_file = function(control_file, tbl){
         
         # test code
         tmp = utils::head(tbl, 5)
-        tmp = dplyr::mutate(tmp, validating_column = !!rlang::parse_expr(formula))
-        tmp = dplyr::select(tmp, "validating_column")
+        # where >> filter, else >> mutate
+        if(grepl("^where", entries$column_name[ii])){
+          tmp = dplyr::filter(tmp, !!rlang::parse_expr(formula))
+        } else {
+          tmp = dplyr::mutate(tmp, validating_column = !!rlang::parse_expr(formula))
+          tmp = dplyr::select(tmp, "validating_column")
+        }
         tmp = dplyr::collect(tmp)
         
         # restore current pass if code all 
@@ -231,13 +250,17 @@ validate_summary_control_file = function(control_file, tbl){
     
     if(nrow(tmp) == 0){
       msg = glue::glue("Column {cc} has only missing values")
-      warning(msg)
+      message(msg)
     }
   }
   
   ## sum of non-numeric columns ----
   
-  cols_to_check = dplyr::filter(entries, !.data$is_function & grepl("^sum", .data$column_name))
+  cols_to_check = dplyr::filter(
+    entries,
+    !.data$is_function,
+    grepl("^sum", .data$column_name) | grepl("^seed", .data$column_name)
+  )
   cols_to_check = unique(cols_to_check$value)
   
   # get example data
@@ -297,6 +320,22 @@ validate_summary_control_file = function(control_file, tbl){
       "Column '{grp_entities$value[ii]}' is used more than once for grouping.",
       "See enabled row '{grp_entities$row[ii]}'.")
     warning(msg)
+  }
+  
+  ## each file is all enabled or all disabled ----
+  
+  if(!partial_output && all(c("enabled", "file") %in% colnames(unfiltered_cf))){
+    unfiltered_cf$enabled = tolower(unfiltered_cf$enabled) %in% c("true", "1", "t", "yes", "y")
+    unfiltered_cf = dplyr::group_by(unfiltered_cf, file)
+    unfiltered_cf = dplyr::summarise(unfiltered_cf, num_state = dplyr::n_distinct(.data$enabled))
+    unfiltered_cf = dplyr::filter(unfiltered_cf, .data$num_state > 1)
+    
+    if(nrow(unfiltered_cf) > 0){
+      problem_files = paste(unfiltered_cf$file, collapse = ", ")
+      msg = glue::glue("Detected files with both enabled and disabled summaries/rows: {problem_files}")
+      warning(msg)
+      passes_all_critical_checks = FALSE
+    }
   }
   
   ## conclude ----

@@ -4,7 +4,12 @@
 \alias{validate_summary_control_file}
 \title{Confirm that control file instructions can be executed.}
 \usage{
-validate_summary_control_file(control_file, tbl)
+validate_summary_control_file(
+  control_file,
+  tbl,
+  save_file = NA_character_,
+  partial_output = FALSE
+)
 }
 \arguments{
 \item{control_file}{a data frame containing summary instructions. Most likely
@@ -12,6 +17,13 @@ read into memory by \code{load_control_file}.}
 
 \item{tbl}{a data frame to summarise. Can be in-memory or remote accessed
 with dbplyr.}
+
+\item{save_file}{specify the file to save results to. Optional, overrides the
+FILE column of the control file if provided.}
+
+\item{partial_output}{T/F whether or not to skip the check that each output
+file must have either all summaries enabled or all disabled. Defaults to
+FALSE to avoid confusion if files are overwritten.}
 }
 \value{
 T/F whether or not all validation checks are passed. Generating
@@ -31,12 +43,14 @@ The following checks are run and generate a failure if not passed:
 \item Columns to sum are numeric
 \item Grouping columns are not dynamic
 \item Grouping columns are unique in each row
+\item For each output file, either all summaries (rows) are enable or all are
+disabled (skipped if \code{partial_output} is \code{TRUE})
 }
 
 The following checks are run and only generate a warning if not passed:
 \itemize{
 \item acceptable column names ("enabled", "group", "label", "distinct", "count",
-"sum", "entity", "stddev", "notes")
+"sum", "entity", "stddev", "seed", "where", "notes")
 \item column is not empty
 \item grouping columns not used for summarising
 }

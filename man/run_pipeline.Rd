@@ -8,8 +8,11 @@ run_pipeline(
   control_file,
   sheet = NULL,
   db_connection_string = NA_character_,
-  delay_minutes = 0,
-  ignore_warnings = FALSE
+  delay_minutes = 60,
+  injection_r = list(),
+  injection_sql = list(),
+  ignore_warnings = FALSE,
+  sink_file = NULL
 )
 }
 \arguments{
@@ -23,14 +26,24 @@ instructions to read into R. Accepted \code{.csv} and \code{.xlsx} file formats.
 \item{db_connection_string}{A connection string for connecting to the
 database. Only required if SQL files are included in the pipeline.}
 
-\item{delay_minutes}{Number of minutes to delay execution. Defaults to zero.
-Useful if wanting to run pipeline out of hours.}
+\item{delay_minutes}{Number of minutes to delay execution. Defaults to sixty.
+Designed for running pipeline out of hours.}
+
+\item{injection_r}{A list containing named values. For each R script in the
+pipeline, a separate environment will be created and populated with these
+variables before the file is executed (see details).}
+
+\item{injection_sql}{A list containing named values. For each SQL script in
+the pipeline, where the names are found in the SQL code, these will be
+replaced with their values (see details).}
 
 \item{ignore_warnings}{T/F whether execution of R or SQL scripts should
 continue even if warnings occur. If \code{FALSE} (the default) then if a warning
 occurs during the execution of any file in the pipeline, execution of that
 file will stop. If \code{TRUE} then will suppress all warnings, files in the
 pipeline will only stop running if they encounter an error.}
+
+\item{sink_file}{If provided, a file to sink console progress reports to.}
 }
 \value{
 A data frame containing all the files run in order, along with start
@@ -73,4 +86,22 @@ entered in the \code{File} column of the control file. This is a special command
 and will cause the tool to stop if any failures have occurred. This is
 useful for separating stages of the pipeline where subsequent stages should
 run only if all of the previous stage(s) complete.
+
+If the \code{delay_minutes} argument is at least 60, then a random additional
+delay of 1-60 minutes is added upon execution. This is to prevent all the
+pipelines executed at 5pm from causing strain on the system when they all
+attempt to run one hour later at 6pm.
+
+\code{injection_r} provides a way to insert dynamic values into the environment
+when R scripts run. For example \code{injection_r = list(ext = "csv")} would be
+equivalent to adding the code \code{ext <- "csv"} at the top of every R script in
+the pipeline. Case sensitive. \code{injection_r} exists to allow parameters to be
+passed to scripts.
+
+\code{injection_sql} provides a way to insert dynamic values into an SQL script.
+It is the equivalent of SQL CMD mode for the pipeline tool (as SQL CMD mode
+does not work as expected via ODBC connection). Case sensitive. For example
+\code{injection_sql = list("$(tbl)" = "[my_table]")} would replace all instances
+of \verb{$(tbl)} with \verb{[my_table]} in all SQL scripts. \code{injection_sql} exists to
+allow parameters to be passed to scripts.
 }

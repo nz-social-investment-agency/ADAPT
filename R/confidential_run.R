@@ -35,6 +35,10 @@
 #' * MISSING_TO - numeric value to replace missing values in the column with.
 #' Main use case is to set default values for entity count columns when entity
 #' counts are not applicable.
+#' * SEED - an optional command, if provided is used to set seeds for any
+#' random rounding. Can be produced using the SEED type in the summary tool.
+#' When a seed column is provided, the provided seeds are used rather than
+#' generating stable seeds- this means that `stable_above` has no effect.
 #' * ROUND - the type of rounding to apply. Accepted options are: RR3 and GRR
 #' (for random rounding and graduated random rounding), and CONV10, CONV100, and
 #' CONV1000 (for conventional rounding to base 10, 100, or 1000).
@@ -130,6 +134,9 @@ run_confidential = function(control_file, sheet = NULL, tbl, stable_above = 30){
   round_and_suppress = loaded_cf[conf_cmds %in% c("round", "suppress"), 2:ncols, drop = FALSE]
   round_and_suppress = dplyr::rename(round_and_suppress, !!!rlang::parse_exprs(rename_command))
   
+  source_seeds = loaded_cf[conf_cmds == "seed", 2:ncols, drop = FALSE]
+  source_seeds = dplyr::rename(source_seeds, !!!rlang::parse_exprs(rename_command))
+  
   # iterate through columns
   for(cc in colnames(round_and_suppress)){
     # skip if all NA = no rules
@@ -144,15 +151,32 @@ run_confidential = function(control_file, sheet = NULL, tbl, stable_above = 30){
       # skip invalid instructions
       if(is.na(instruction)){ next }
       
+      # seeds if RR3 or GRR
+      if(instruction %in% c("RR3", "GRR")){
+        
+        # were seeds provided
+        seed_col = NA
+        seed_row_in_control_file = length(source_seeds[[cc]]) != 0
+        if(seed_row_in_control_file){
+          seed_col = source_seeds[[cc]][1]
+        }
+        
+        # make seeds if not provided
+        if(is.na(seed_col)){
+          seeds = create_stable_seeds(tbl[[new_col]], stable_above = stable_above)
+        } else {
+          seeds = tbl[[seed_col]]
+        }
+        
+      }
+      
       # rounding
       if(instruction == "RR3"){
-        seeds = create_stable_seeds(tbl[[new_col]], stable_above = stable_above)
         threshold = unique(suppress_entries_df$threshold[suppress_entries_df$column == cc])
         tbl[[new_col]] = apply_random_rounding(tbl[[new_col]], seeds = seeds, threshold = threshold)
         next
       }
       if(instruction == "GRR"){
-        seeds = create_stable_seeds(tbl[[new_col]], stable_above = stable_above)
         threshold = unique(suppress_entries_df$threshold[suppress_entries_df$column == cc])
         tbl[[new_col]] = apply_graduated_random_rounding(tbl[[new_col]], seeds = seeds, threshold = threshold)
         next

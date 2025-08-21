@@ -7,13 +7,20 @@
 #' (the position of the sheet). Defaults to the first sheet otherwise.
 #' @param db_connection_string A connection string for connecting to the
 #' database. Only required if SQL files are included in the pipeline.
-#' @param delay_minutes Number of minutes to delay execution. Defaults to zero.
-#' Useful if wanting to run pipeline out of hours.
+#' @param delay_minutes Number of minutes to delay execution. Defaults to sixty.
+#' Designed for running pipeline out of hours.
+#' @param injection_r A list containing named values. For each R script in the
+#' pipeline, a separate environment will be created and populated with these
+#' variables before the file is executed (see details).
+#' @param injection_sql A list containing named values. For each SQL script in
+#' the pipeline, where the names are found in the SQL code, these will be
+#' replaced with their values (see details).
 #' @param ignore_warnings T/F whether execution of R or SQL scripts should
 #' continue even if warnings occur. If `FALSE` (the default) then if a warning
 #' occurs during the execution of any file in the pipeline, execution of that
 #' file will stop. If `TRUE` then will suppress all warnings, files in the
 #' pipeline will only stop running if they encounter an error.
+#' @param sink_file If provided, a file to sink console progress reports to.
 #'
 #' @return A data frame containing all the files run in order, along with start
 #' and end times and the status of their execution (completed, stopped with
@@ -50,16 +57,46 @@
 #' and will cause the tool to stop if any failures have occurred. This is
 #' useful for separating stages of the pipeline where subsequent stages should
 #' run only if all of the previous stage(s) complete.
+#' 
+#' If the `delay_minutes` argument is at least 60, then a random additional
+#' delay of 1-60 minutes is added upon execution. This is to prevent all the
+#' pipelines executed at 5pm from causing strain on the system when they all
+#' attempt to run one hour later at 6pm.
+#' 
+#' `injection_r` provides a way to insert dynamic values into the environment
+#' when R scripts run. For example `injection_r = list(ext = "csv")` would be
+#' equivalent to adding the code `ext <- "csv"` at the top of every R script in
+#' the pipeline. Case sensitive. `injection_r` exists to allow parameters to be
+#' passed to scripts. 
+#' 
+#' `injection_sql` provides a way to insert dynamic values into an SQL script.
+#' It is the equivalent of SQL CMD mode for the pipeline tool (as SQL CMD mode
+#' does not work as expected via ODBC connection). Case sensitive. For example
+#' `injection_sql = list("$(tbl)" = "[my_table]")` would replace all instances
+#' of `$(tbl)` with `[my_table]` in all SQL scripts. `injection_sql` exists to
+#' allow parameters to be passed to scripts.
+#' 
 #' @md
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_character_, delay_minutes = 0, ignore_warnings = FALSE){
+run_pipeline = function(
+    control_file,
+    sheet = NULL,
+    db_connection_string = NA_character_,
+    delay_minutes = 60,
+    injection_r = list(),
+    injection_sql = list(),
+    ignore_warnings = FALSE,
+    sink_file = NULL
+){
   stopifnot(is.character(control_file), file.exists(control_file))
   stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.character(db_connection_string))
   stopifnot(is.numeric(delay_minutes))
   stopifnot(ignore_warnings %in% c(TRUE, FALSE))
+  stopifnot(is.list(injection_r))
+  stopifnot(is.list(injection_sql))
   
   run_time_inform_user("Pipeline tool initiated.")
   
@@ -84,6 +121,14 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     return(NULL)
   }
   
+  ## sink for logging ----
+  
+  if(!is.null(sink_file)){
+    sink(sink_file, append = TRUE, split = TRUE)
+    on.exit({sink()}, add = TRUE, after = TRUE)
+    cat("===============================================================\n")
+  }
+  
   ## storage for results ----
   
   result_df = dplyr::mutate(
@@ -94,7 +139,6 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
   )
 
   on.exit(expr = {
-    result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
     save_control_file_w_progress(control_file, sheet = sheet, result_df)
   }, add = TRUE, after = TRUE)
   
@@ -103,7 +147,7 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
   stopifnot("folder" %in% ctr_cols)
   loaded_cf$folder = adjust_file_path_handling(loaded_cf$folder)
   
-  valid_control_file = validate_pipeline_control_file(loaded_cf, db_connection_string)
+  valid_control_file = validate_pipeline_control_file(loaded_cf, db_connection_string, injection_sql = injection_sql)
   stopifnot(valid_control_file)
   
   loaded_cf = dplyr::mutate(loaded_cf, full_path = file.path(.data$folder, .data$file))
@@ -117,6 +161,10 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
   
   ## impose delay if required ----
   
+  if(delay_minutes >= 60){
+    delay_minutes = delay_minutes + sample(1:60,1)
+  }
+  
   if(delay_minutes > 0){
     msg = as.character(Sys.time() + 60 * delay_minutes)
     msg = substr(msg, 1, 19)
@@ -128,42 +176,73 @@ run_pipeline = function(control_file, sheet = NULL, db_connection_string = NA_ch
     run_time_inform_user("Resuming from sleep")
   }
   
+  ## calling handler functions ----
+  
+  message_handler = function(m) {
+    cat("Global message: ", conditionMessage(m))
+    invokeRestart("muffleMessage")
+  }
+  
+  warning_handler = function(w) {
+    cat("Global message: ", conditionMessage(w), "\n")
+    invokeRestart("muffleWarning")
+  }
+  
+  error_handler = function(e) {
+    cat("Global error: ", conditionMessage(e), "\n")
+    # muffle does not exist for errors
+  }
+  
   ## run each file ----
   
-  for(ii in seq_len(nrow(loaded_cf))){
-    this_file = loaded_cf$full_path[ii]
-    
-    if(grepl("STOP IF ANY FAILURES", this_file, fixed = TRUE)){
-      run_time_inform_user("Pipeline verifying no failures so far")
-      all_success_so_far = all(result_df$status == "Successful completion", na.rm = TRUE)
-      if(!all_success_so_far){
-        run_time_inform_user("Pipeline stop with failures")
-        break
+  withCallingHandlers(
+    {
+      for(ii in seq_len(nrow(loaded_cf))){
+        this_file = loaded_cf$full_path[ii]
+        
+        if(grepl("STOP IF ANY FAILURES", this_file, fixed = TRUE)){
+          run_time_inform_user("Pipeline verifying no failures so far")
+          all_success_so_far = all(result_df$status == "Successful completion", na.rm = TRUE)
+          
+          if(!all_success_so_far){
+            run_time_inform_user("Pipeline stop with failures")
+            result_df$start_time[ii] = as.character(Sys.time())
+            result_df$end_time[ii] = as.character(Sys.time())
+            result_df$status[ii] = "Stopped with error: Failures detected"
+            break
+          }
+          
+          result_df$start_time[ii] = as.character(Sys.time())
+          result_df$end_time[ii] = as.character(Sys.time())
+          result_df$status[ii] = "Successful completion"
+          next
+        }
+        
+        msg = glue::glue("Pipeline file '{basename(this_file)}': Started")
+        run_time_inform_user(msg)
+        
+        if(tolower(tools::file_ext(this_file)) == "sql"){
+          result = try_run_SQL_file(file = this_file, db_connection_string, injection_sql, ignore_warnings)
+        }
+        if(tolower(tools::file_ext(this_file)) == "r"){
+          result = try_run_R_file(file = this_file, injection_r, ignore_warnings)
+        }
+        
+        # conclude
+        msg = glue::glue("Pipeline file '{basename(this_file)}': {result$status}.")
+        run_time_inform_user(msg)
+        
+        result_df$start_time[ii] = result$start_time
+        result_df$end_time[ii] = result$end_time
+        result_df$status[ii] = result$status
       }
-      next
-    }
-    
-    msg = glue::glue("Pipeline file '{basename(this_file)}': Started")
-    run_time_inform_user(msg)
-    
-    if(tolower(tools::file_ext(this_file)) == "sql"){
-      result = try_run_SQL_file(file = this_file, db_connection_string, ignore_warnings)
-    }
-    if(tolower(tools::file_ext(this_file)) == "r"){
-      result = try_run_R_file(file = this_file, ignore_warnings)
-    }
-    
-    # conclude
-    msg = glue::glue("Pipeline file '{basename(this_file)}': {result$status}.")
-    run_time_inform_user(msg)
-    
-    result_df$start_time[ii] = result$start_time
-    result_df$end_time[ii] = result$end_time
-    result_df$status[ii] = result$status
-  }
+    },
+    message = message_handler,
+    warning = warning_handler,
+    error = error_handler
+  )
   
   ## conclude ----
   run_time_inform_user("Pipeline tool complete.")
-  result_df = dplyr::filter(result_df, file != "STOP IF ANY FAILURES")
   return(invisible(result_df))
 }

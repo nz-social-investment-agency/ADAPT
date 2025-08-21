@@ -261,7 +261,7 @@ test_that("SQL Server EXISTS types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "IIF(COUNT(mv) >= 1, 1, 0) AS name")
+  expect_equal(actual, "IIF(COUNT(mv) >= 1, 1, NULL) AS name")
 })
 
 test_that("SQL Server COUNT types handle correctly", {

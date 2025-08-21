@@ -126,11 +126,160 @@ cross_product_column_names = function(
   return(output_list)
 }
 
-## Generate summary commands ---------------------------------------------- ----
-#' Convert control file input to text string that can be used within
-#' dplyr::mutate via rlang::parse_exprs.
+## Expand compact summary notation ---------------------------------------- ----
+#' Expand compact summary notation
 #' 
-#' Processes columns of types: "distinct", "count", "sum", "entity", "stddev"
+#' By requiring users to list all combinations in the summary control file, the
+#' tool maximizes transparency: a user looking at the control file can see
+#' exactly what will be run. The downside of this is that the control file can
+#' become very long.
+#' 
+#' This function provides an alternative way to generate a summary control file.
+#' It accepts compact notation and expands it to multiple rows.#' 
+#' 
+#' @param compact_control_file a data frame containing a control file that may
+#' have compact notation (see details) for expansion.
+#' @param column_names a character array containing column names of the table.
+#' Used to expand `*_suffix` and `prefix_*` notation. Not required if such
+#' notation is not used.
+#' @inheritParams generate_combinations_df
+#'
+#' @return a data frame containing a control file with any conpact notation
+#' expanded. So what was one row in the compact input is multiple output rows.
+#' 
+#' @details
+#' Three types of compact notation are accepted:
+#' 1. The or: `|`. Text in a group column separated by `|` is split to create
+#' create new rows, one for each option. So `a|b` will lead to two output rows,
+#' one grouped by `a` and the other by `b`.
+#' 2. The no-group: `|+`. Text in a group column with `|+` on the end will also
+#' create the upgrouped option. So `a|+` will lead to two output rows, one
+#' grouped by `a` and the other without a value.
+#' 3. Prefix and suffix pattern matching: `*_suffix` and `prefix_*`. Text in a
+#' group column with either of these patterns will search for all options in
+#' `column_names` that follow the same pattern. This is equivalent to listing
+#' all the columns separated by `|` when the columns all share the same prefix
+#' or suffix. Note that prefixes and suffixes must include an underscore
+#' next to the `*`.
+#' @md
+#' 
+#' @export
+expand_compact_summary_groups = function(
+    compact_control_file,
+    column_names = character(0),
+    drop.dupes.within = TRUE,
+    drop.dupes.across = TRUE
+){
+  stopifnot(is.data.frame(compact_control_file))
+  stopifnot(is.character(column_names))
+  stopifnot(drop.dupes.within %in% c(TRUE, FALSE))
+  stopifnot(drop.dupes.across %in% c(TRUE, FALSE))
+  
+  ## find group columns ----
+  original_colnames = colnames(compact_control_file)
+  colnames(compact_control_file) = trimws(tolower(colnames(compact_control_file)))
+  
+  group_cols = grep("^group", colnames(compact_control_file), value = TRUE)
+  
+  ## prefix,suffix, and unnest helper functions ----
+  prefix_handler = function(x){
+    if(!grepl("_\\*$", x)){ return(x) }
+    pattern = substring(x, 1, nchar(x) - 1)
+    prefix_matches = grep(pattern, column_names, value = TRUE, fixed = TRUE)
+    stopifnot(length(prefix_matches) >= 1)
+    return(prefix_matches)
+  }
+  vec_prefix_handler = function(x){ lapply(x, prefix_handler) }
+  
+  suffix_handler = function(x){
+    if(!grepl("^\\*_", x)){ return(x) }
+    pattern = substring(x, 2, nchar(x))
+    suffix_matches = grep(pattern, column_names, value = TRUE, fixed = TRUE)
+    stopifnot(length(suffix_matches) >= 1)
+    return(suffix_matches)
+  }
+  vec_suffix_handler = function(x){ lapply(x, suffix_handler) }
+  
+  unnest_handler = function(df){
+    for(col in group_cols){
+      df = tidyr::unnest(df, cols = dplyr::all_of(col))
+    }
+    return(df)
+  }
+  
+  ## expand ----
+  expanded_control_file = compact_control_file
+  
+  # '|+' to 'NA' (only at end of cell) and split on | (incl. white space)
+  expanded_control_file = expanded_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ gsub("\\|\\s*\\+\\s*$", "|NA", .))) |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ strsplit(., "\\s*\\|\\s*")))
+  
+  expanded_control_file = unnest_handler(expanded_control_file)
+
+  # 'NA' to NA
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), ~ ifelse(. == "NA", NA_character_, .))
+  )
+  
+  # prefix & suffix
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), vec_prefix_handler)
+  )
+  expanded_control_file = unnest_handler(expanded_control_file)
+  
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), vec_suffix_handler)
+  )
+  expanded_control_file = unnest_handler(expanded_control_file)
+  
+  # as data frame so can use matrix insertion
+  expanded_control_file = as.data.frame(expanded_control_file)
+  
+  ## drop dupes within ----
+  if(drop.dupes.within){
+    for(ii in seq_len(nrow(expanded_control_file))){
+      row = expanded_control_file[ii,group_cols]
+      row = unlist(row, use.names = FALSE)
+      dupes = duplicated(row)
+      expanded_control_file[ii,group_cols] = ifelse(!dupes, row, rep(NA_character_, length(row)))
+    }
+  }
+  
+  ## drop dupes across ----
+  if(drop.dupes.across){
+    sorted_expanded_control_file = expanded_control_file
+    
+    for(ii in seq_len(nrow(expanded_control_file))){
+      row = expanded_control_file[ii,group_cols]
+      row = sort(unlist(row, use.names = FALSE), na.last = TRUE)
+      sorted_expanded_control_file[ii,group_cols] = row
+    }
+    
+    dupes = duplicated(sorted_expanded_control_file)
+    expanded_control_file = dplyr::filter(expanded_control_file, !dupes)
+  }
+  
+  ## remove rows with no values in any group column ----
+  expanded_control_file = expanded_control_file |>
+    dplyr::filter(!dplyr::if_all(dplyr::all_of(group_cols), is.na))
+  
+  ## conclude ----
+  colnames(expanded_control_file) = original_colnames
+  return(expanded_control_file)
+}
+
+## Generate summary commands ---------------------------------------------- ----
+#' Convert control file input to summary commands.
+#' 
+#' These summary commands are text string that can be used within
+#' rlang::parse_exprs within dplyr::mutate.
+#' 
+#' Processes columns of types: "distinct", "count", "sum", "entity", "stddev",
+#' and "seed".
 #' 
 #' @param summary_row a data frame containing 1 row.
 #' @param is_sql T/F whether summary occurs in SQL context or not. Counting
@@ -145,7 +294,7 @@ generate_summary_commands = function(summary_row, is_sql = FALSE){
   
   col_type = tolower(gsub("[0-9\\.]", "", colnames(summary_row)))
   
-  command_types = c("distinct", "count", "sum", "entity", "stddev")
+  command_types = c("distinct", "count", "sum", "entity", "stddev", "seed")
   summary_cols = summary_row[,col_type %in% command_types, drop = FALSE]
   summary_cols = summary_cols[,!is.na(summary_cols), drop = FALSE]
   
@@ -171,12 +320,13 @@ generate_summary_commands = function(summary_row, is_sql = FALSE){
         distinct = distinct_code,
         count = "sum(ifelse(!is.na({this_contents}), 1, 0), na.rm = TRUE)",
         sum = "sum({this_contents}, na.rm = TRUE)",
-        entity = distinct_code,
-        stddev = "sd({this_contents}, na.rm = TRUE)"
+        entity = "ifelse({distinct_code} == 0, NA, {distinct_code})",
+        stddev = "sd({this_contents}, na.rm = TRUE)",
+        seed = "sum({this_contents} %% 100, na.rm = TRUE)"
       )
       
       # glue to insert values
-      this_command = glue::glue(this_command)
+      this_command = glue::glue(glue::glue(this_command))
       
       # assign name of column & output
       names(this_command) = tolower(colnames(summary_cols)[ii])

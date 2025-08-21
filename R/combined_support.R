@@ -158,6 +158,7 @@ load_control_file = function(path_and_file_name, sheet = NULL){
 #'
 #' @return The path of the written file.
 #' 
+#' @export
 save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progress_df, overwrite = TRUE){
   stopifnot(is.character(path_and_file_name))
   stopifnot(file.exists(path_and_file_name))
@@ -177,7 +178,7 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
   if (extension == "xlsx") {
     
     wb = openxlsx2::wb_load(path_and_file_name)
-    wb = openxlsx2::wb_clean_sheet(wb, sheet)
+    wb = openxlsx2::wb_clean_sheet(wb, sheet, styles = FALSE)
     wb = openxlsx2::wb_add_data(wb, sheet, x = control_file, na.strings = "")
     
     if(!overwrite){
@@ -187,7 +188,8 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
     path_and_file_name = tryCatch({
       msg = glue::glue("Writing progress to '{basename(path_and_file_name)}'.")
       run_time_inform_user(msg)
-      openxlsx2::wb_save(wb, path_and_file_name)
+      # suppress as openxlsx2 trows both an error and a warning, only need error
+      suppressWarnings(openxlsx2::wb_save(wb, path_and_file_name))
       path_and_file_name
     },
     error = function(e){
@@ -242,6 +244,7 @@ save_control_file_w_progress = function(path_and_file_name, sheet = NULL, progre
 #' Merging only occurs when rows are enabled. Rows that have been disabled are
 #' not updated.
 #' 
+#' @export
 merge_progress_into_control_file = function(control_file, progress_df){
   stopifnot(is.data.frame(control_file), is.data.frame(progress_df))
   req_cols = c("start_time", "end_time", "status")
@@ -262,7 +265,8 @@ merge_progress_into_control_file = function(control_file, progress_df){
     control_file,
     progress_df,
     by = setdiff(colnames(progress_df), c("start_time", "end_time", "status")),
-    suffix = c("_cf", "_p")
+    suffix = c("_cf", "_p"),
+    multiple = "any"
   )
   
   # column with 'enabled'

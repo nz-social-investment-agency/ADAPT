@@ -4,6 +4,9 @@
 #' likely read into memory by `load_control_file`.
 #' @param db_connection_string A connection string for connecting to the
 #' database. Only required if SQL files are included in the pipeline.
+#' @param injection_sql A list containing named values. For each SQL script in
+#' the pipeline, where the names are found in the SQL code, these will be
+#' replaced with their values.
 #'
 #' @return T/F whether or not all validation checks are passed. Generating
 #' warnings for all failed checks.
@@ -25,9 +28,11 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-validate_pipeline_control_file = function(control_file, db_connection_string = NA_character_){
+validate_pipeline_control_file = function(control_file, db_connection_string = NA_character_, injection_sql = list()){
   stopifnot(is.data.frame(control_file))
   stopifnot(is.character(db_connection_string))
+  stopifnot(is.list(injection_sql))
+  stopifnot(length(injection_sql) == length(unique(names(injection_sql))))
   
   ## initialize ----
   
@@ -130,13 +135,13 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
   passes_all_critical_checks = passes_all_critical_checks & all(!unaccepted)
   control_file = dplyr::filter(control_file, .data$full_path %not_in% files[unaccepted])
   
-  ## sql files pass NOEXEC check ----
+  ## sql files parse ----
   
   if(any_sql & can_connect){
     # subset to sql files
     is_sql = tolower(tools::file_ext(control_file$file)) == "sql"
     
-    # connect and set NOEXEC on
+    # connect and set parse only on
     db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
     on.exit(DBI::dbDisconnect(db_connection), add = TRUE, after = TRUE)
     
@@ -153,6 +158,11 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
     # try dbExecute each batch
     batch_error = FALSE
     for(ii in seq_len(nrow(all_batches))){
+      
+      # injection assignment into environment
+      for(inj in names(injection_sql)){
+        all_batches$code[ii] = gsub(inj, injection_sql[[inj]], all_batches$code[ii], fixed = TRUE)
+      }
       
       tryCatch({
         tmp = batch_error

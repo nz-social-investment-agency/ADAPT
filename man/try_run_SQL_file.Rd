@@ -4,7 +4,12 @@
 \alias{try_run_SQL_file}
 \title{Execute SQL script with batch handling}
 \usage{
-try_run_SQL_file(file, db_connection_string, ignore_warnings = FALSE)
+try_run_SQL_file(
+  file,
+  db_connection_string,
+  injection = list(),
+  ignore_warnings = FALSE
+)
 }
 \arguments{
 \item{file}{The file (and path) of the SQL script to execute. Errors if file
@@ -12,6 +17,9 @@ does not exist or is not a .sql file.}
 
 \item{db_connection_string}{A connection string for connecting to the
 database.}
+
+\item{injection}{A list containing named values. Where the names are found
+in the SQL code, these will be replaced with their values (see details).}
 
 \item{ignore_warnings}{T/F whether execution should continue even if warnings
 occur. If \code{FALSE} (the default) then will stop on the first warning and
@@ -45,4 +53,11 @@ As per \code{read_and_prepare_sql_code}, SQL scripts are split into batches base
 on \verb{;} and \code{GO}. To ensure temporary tables are persist across batches each
 batch is executed with \verb{SET NOCOUNT ON} and we use the \code{DBI::dbExecute}
 setting \code{immediate = TRUE}.
+
+\code{injection} provides a way to insert dynamic values into an SQL script. It is
+the equivalent of SQL CMD mode for the pipeline tool (SQL CMD mode does not
+work as expected via ODBC connection). Case sensitive. For example
+\code{injection = list("$(tbl)" = "[my_table]")} would replace all instances of
+\verb{$(tbl)} with \verb{[my_table]} in the code. \code{injection} exists to allow
+parameters to be passed to scripts.
 }

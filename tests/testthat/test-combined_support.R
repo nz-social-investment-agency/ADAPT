@@ -246,6 +246,48 @@ test_that("existing progress updated", {
   expect_equal(actual, expected)
 })
 
+test_that("absent progress overwrites", {
+  
+  t1 = as.character(Sys.time())
+  Sys.sleep(1)
+  t2 = as.character(Sys.time())
+  
+  control_file = data.frame(
+    enabled = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+    col1 = c(1,1,2,2,3,3),
+    col2 = c("a","b","a","b","a","b"),
+    col3 = 1:6,
+    start_time = rep(t1, 6),
+    end_time = rep(t1, 6),
+    status = rep("Error", 6),
+    stringsAsFactors = FALSE
+  )
+  
+  progress_df = data.frame(
+    col1 = c(1),
+    col2 = c("a"),
+    start_time = t2,
+    end_time = t2,
+    status = "Success",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = merge_progress_into_control_file(control_file, progress_df)
+  
+  expected = data.frame(
+    enabled = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+    col1 = c(1,1,2,2,3,3),
+    col2 = c("a","b","a","b","a","b"),
+    col3 = 1:6,
+    start_time = c(t2, t1, NA, t1, NA, t1),
+    end_time = c(t2, t1, NA, t1, NA, t1),
+    status = c("Success", "Error", NA, "Error", NA, "Error"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
 ## save_code_to_script(query, desc, query_path ---------------------------- ----
 
 test_that("code files written", {

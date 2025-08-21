@@ -76,6 +76,97 @@ test_that("interacting comments removed", {
   expect_equal(actual, expected)
 })
 
+## sql_cmd_mode_fix(code_string) ------------------------------------------ ----
+
+test_that("no cmd mode unchanged", {
+  input = paste0(
+    c(
+      "-- header",
+      "",
+      "SELECT *",
+      "FROM mytable",
+      "",
+      "SELECT 3",
+      ""
+    ),
+    collapse = "\n"
+  )
+  
+  expect_equal(sql_cmd_mode_fix(input), input)
+})
+
+test_that("cmd mode cleans preserved line count", {
+  input = paste0(
+    c(
+      "-- header",
+      ":setvar a 1",
+      " :SETVAR b \"2\"",
+      "",
+      "SELECT *",
+      "FROM mytable",
+      ":Setvar c 3\t",
+      "",
+      "SELECT 3",
+      ""
+    ),
+    collapse = "\n"
+  )
+  
+  output = paste0(
+    c(
+      "-- header",
+      "",
+      " ",
+      "",
+      "SELECT *",
+      "FROM mytable",
+      "",
+      "",
+      "SELECT 3",
+      ""
+    ),
+    collapse = "\n"
+  )
+  
+  expect_equal(sql_cmd_mode_fix(input), output)
+})
+
+test_that("substitutions occur", {
+  input = paste0(
+    c(
+      "-- header",
+      ":setvar a 1",
+      " :SETVAR b \"2\"",
+      "",
+      "SELECT $(b)",
+      "FROM mytable",
+      ":Setvar c 3\t",
+      "",
+      "SELECT $(c) + $(c) - $(a)",
+      ""
+    ),
+    collapse = "\n"
+  )
+  
+  output = paste0(
+    c(
+      "-- header",
+      "",
+      " ",
+      "",
+      "SELECT \"2\"",
+      "FROM mytable",
+      "",
+      "",
+      "SELECT 3 + 3 - 1",
+      ""
+    ),
+    collapse = "\n"
+  )
+  
+  expect_equal(sql_cmd_mode_fix(input), output)
+})
+
 ## read_and_prepare_sql_code(file_name_and_path) -------------------------- ----
 
 test_that("simple case works", {
@@ -141,6 +232,28 @@ test_that("multiple newlines work", {
   }
 })
 
+test_that("comments and cmd mode works", {
+  tmp_dir = tempdir()
+  sql_file = file.path(tmp_dir, "code.sql")
+  
+  code = "query1/*comment*/\nGO\n:setvar var \"val\"\n\nquery2\n $(var) \n"
+  writeLines(code, sql_file)
+  
+  actual = read_and_prepare_sql_code(sql_file)
+  
+  expected = list(
+    code = c("query1\n","\n\n\nquery2\n \"val\" \n\n"),
+    start_lines = c(1,2),
+    end_lines = c(2,8)
+  )
+  
+  expect_equal(names(actual), names(expected))
+  for(nn in names(actual)){
+    expect_equal(actual[[nn]], expected[[nn]])
+  }
+})
+
+
 ## try_run_R_file(file, ignore_warnings) ---------------------------------- ----
 
 test_that("R files run", {
@@ -186,6 +299,19 @@ test_that("errors in R handled", {
   expect_true(grepl("test R error", actual$status))
 })
 
+test_that("R injection performs", {
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_file = file.path(test_folder, "errors_wout_injection.R")
+  
+  # without injection error
+  actual = try_run_R_file(test_file)
+  expect_true(grepl("error", actual$status))
+  
+  # with injection success
+  actual = try_run_R_file(test_file, injection = list(my_value = 10))
+  expect_equal(actual$status, "Successful completion")
+})
+
 ## try_run_SQL_file(file, db_connection_string, ignore_warnings) ---------- ----
 
 test_that("SQL files run", {
@@ -211,4 +337,20 @@ test_that("errors in SQL handled", {
   expect_equal(names(actual), c("status", "start_time", "end_time"))
   expect_true(grepl("#temp", actual$status))
   expect_true(grepl("lines", actual$status))
+})
+
+test_that("SQL injection performs", {
+  skip_if_not(can_connect)
+  
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_file = file.path(test_folder, "errors_wout_injection.sql")
+  
+  # without injection error
+  actual = try_run_SQL_file(test_file, db_connection_string, ignore_warnings = FALSE)
+  expect_true(grepl("error", actual$status))
+  
+  # with injection success
+  injection = list("$(value)" = 2, "$(label)" = "name")
+  actual = try_run_SQL_file(test_file, db_connection_string, injection = injection, ignore_warnings = FALSE)
+  expect_equal(actual$status, "Successful completion")
 })

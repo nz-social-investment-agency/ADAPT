@@ -50,6 +50,10 @@ applied to ensure the text makes sensible column names.
 \item MISSING_TO - numeric value to replace missing values in the column with.
 Main use case is to set default values for entity count columns when entity
 counts are not applicable.
+\item SEED - an optional command, if provided is used to set seeds for any
+random rounding. Can be produced using the SEED type in the summary tool.
+When a seed column is provided, the provided seeds are used rather than
+generating stable seeds- this means that \code{stable_above} has no effect.
 \item ROUND - the type of rounding to apply. Accepted options are: RR3 and GRR
 (for random rounding and graduated random rounding), and CONV10, CONV100, and
 CONV1000 (for conventional rounding to base 10, 100, or 1000).

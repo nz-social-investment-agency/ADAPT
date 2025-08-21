@@ -1,13 +1,14 @@
-﻿ENABLED,FILE,LABEL,GROUP,GROUP,DISTINCT,COUNT,COUNT,SUM,STDDEV,ENTITY,NOTES
-TRUE,C:/path/temp_results.csv,area size,region,,household_uid,person_uid,,,,,"Except for ENABLED, you can have any number of columns of each type."
-TRUE,C:/path/temp_results.csv,age distribution by area,region,age,household_uid,person_uid,,,,,"If the column ENABLED is included, rows set to FALSE will be omitted."
-TRUE,C:/path/temp_results.csv,income by age,,age,,person_uid,has_income,income,income,,"FILE gives the file path and name where the summary output should be saved, output can be divided across multiple files."
-TRUE,C:/path/temp_results.csv,education status,region,enrollment,,person_uid,,"{ ifelse(edu_level > 5, 1, 0) }",,school_id,"LABEL allows you to include arbitrary text in your output, this is intended to provide a description of the summary."
-TRUE,C:/path/temp_results.csv,retired,region,,,"{ ifelse(age > 65, 1, NA) }",,,,,"When the summary for the row is produced, the output is grouped by the group columns."
-TRUE,C:/path/temp_results.csv,working age,region,,,"{ ifelse(16 < age & age < 65, 1, NA) }",,,,,DISTINCT counts the number of distinct values in the column.
-TRUE,C:/path/temp_results.csv,children,region,,,"{ ifelse(age < 16, 1, NA) }",,,,,COUNT counts the number of non-missing values in the column.
-FALSE,,,,,,,,,,,"SUM calculates the sum total of the column, during validation the tool will error is this column is not numeric."
-FALSE,,,,,,,,,,,STDDEV calculates the standard deviation of the column.
-FALSE,,,,,,,,,,,"ENTITY works like DISTINCT, but will union over _min and _max suffixes too."
-FALSE,,,,,,,,,,,"NOTES columns are ignored. Any other column names are ignored, but generate a warning."
-FALSE,,,,,,,,,,,"Input in {curry brackets} is treated as R code, this is intended for making minor adjustments to variables."
+﻿ENABLED,FILE,LABEL,GROUP,GROUP,DISTINCT,COUNT,COUNT,SUM,STDDEV,ENTITY,SEED,NOTES
+TRUE,C:/path/temp_results.csv,area size,region,,household_uid,person_uid,,,,,,"Except for ENABLED, you can have any number of columns of each type."
+TRUE,C:/path/temp_results.csv,age distribution by area,region,age,household_uid,person_uid,,,,,,"If the column ENABLED is included, rows set to FALSE will be omitted."
+TRUE,C:/path/temp_results.csv,income by age,,age,,person_uid,has_income,income,income,,person_uid,"FILE gives the file path and name where the summary output should be saved, output can be divided across multiple files."
+TRUE,C:/path/temp_results.csv,education status,region,enrollment,,person_uid,,"{ ifelse(edu_level > 5, 1, 0) }",,school_id,,"LABEL allows you to include arbitrary text in your output, this is intended to provide a description of the summary."
+TRUE,C:/path/temp_results.csv,retired,region,,,"{ ifelse(age > 65, 1, NA) }",,,,,,"When the summary for the row is produced, the output is grouped by the group columns."
+TRUE,C:/path/temp_results.csv,working age,region,,,"{ ifelse(16 < age & age < 65, 1, NA) }",,,,,,DISTINCT counts the number of distinct values in the column.
+TRUE,C:/path/temp_results.csv,children,region,,,"{ ifelse(age < 16, 1, NA) }",,,,,,COUNT counts the number of non-missing values in the column.
+FALSE,,,,,,,,,,,,"SUM calculates the sum total of the column, during validation the tool will error is this column is not numeric."
+FALSE,,,,,,,,,,,,STDDEV calculates the standard deviation of the column.
+FALSE,,,,,,,,,,,,"ENTITY works like DISTINCT, but will union over _min and _max suffixes too."
+FALSE,,,,,,,,,,,,SEED works like SUM but first takes modulo base 100. It is intended to support consistent random rounding.
+FALSE,,,,,,,,,,,,"NOTES columns are ignored. Any other column names are ignored, but generate a warning."
+FALSE,,,,,,,,,,,,"Input in {curry brackets} is treated as R code, this is intended for making minor adjustments to variables."
