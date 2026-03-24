@@ -28,7 +28,7 @@
 #' 
 #' The following checks are run and only generate a warning if not passed:
 #' * acceptable column names ("enabled", "group", "label", "distinct", "count",
-#'   "sum", "entity", "stddev", "seed", "where", "notes")
+#'   "sum", "entity", "stddev", "max", "min", "seed", "where", "notes")
 #' * column is not empty
 #' * grouping columns not used for summarising
 #' @md
@@ -83,9 +83,9 @@ validate_summary_control_file = function(control_file, tbl, save_file = NA_chara
   entries$column_name = ctr_cols[entries$column]
   entries = dplyr::filter(entries, .data$column_name %not_in% c("enabled", "file", "label", "note"))
   entries$duplicate = duplicated(entries$value)
-  entries$is_function = substr(entries$value, 1, 1) == "{"
+  entries$is_function = substr(trimws(entries$value), 1, 1) == "{"
   
-  calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev", "seed")
+  calc_cols = c("group", "distinct", "count", "sum", "entity", "stddev", "max", "min", "seed")
   entries$is_non_calc = !grepl(paste0("^", calc_cols, collapse = "|"), entries$column_name)
   
   # union_all for handling entity__min and entity__max required
@@ -96,7 +96,10 @@ validate_summary_control_file = function(control_file, tbl, save_file = NA_chara
   ## control file column names ----
   
   # acceptable column names in control file
-  expected_columns_names = c("enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev", "seed", "where", "note", "notes","start_time","end_time","status")
+  expected_columns_names = c(
+    "enabled", "file", "group", "label", "distinct", "count", "sum", "entity", "stddev",
+    "max", "min", "seed", "where", "note", "notes","start_time","end_time","status"
+  )
   for(cc in ctr_cols){
     if(gsub("[0-9\\.]", "", cc) %in% expected_columns_names){ next }
     
@@ -112,7 +115,7 @@ validate_summary_control_file = function(control_file, tbl, save_file = NA_chara
   
   ## at least one summary per row ----
   
-  summary_types = c("distinct", "count", "sum", "entity", "stddev", "seed")
+  summary_types = c("distinct", "count", "sum", "entity", "stddev", "max", "min", "seed")
   tmp = dplyr::select(control_file, dplyr::starts_with(summary_types))
   na_row = apply(is.na(tmp), 1, all)
   

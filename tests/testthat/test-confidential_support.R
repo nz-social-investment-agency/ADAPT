@@ -154,7 +154,7 @@ test_that("random rounding can be stable", {
   expect_false(all(rr3a == rr3c))
 })
 
-test_that("rounding respects thresholds", {
+test_that("random rounding respects thresholds", {
   
   input = rep(c(5,6,19,20), 100)
   actual_rr3 = apply_random_rounding(input, threshold = c(6,20))
@@ -165,6 +165,15 @@ test_that("rounding respects thresholds", {
   actual_rr10 = apply_random_rounding(input, base = 10, threshold = 15)
   expected_rr10 = rep(c(10,10,10,10,20,20,20,20,20), 100)
   expect_equal(actual_rr10, expected_rr10)
+})
+
+test_that("random rounding works with NA inputs", {
+  
+  input = rep(c(5,6,19,20,NA), 100)
+  actual_rr3 = apply_random_rounding(input, threshold = c(6,20))
+  expected_rr3 = rep(c(3,6,18,21,NA), 100)
+  expect_equal(actual_rr3, expected_rr3)
+  
 })
 
 ## apply_graduated_random_rounding(input_array, seeds, threshold) --------- ----
@@ -218,6 +227,19 @@ test_that("graduate rounding respects thresholds", {
   
   v1 = c(5,6,19,20,51,54,96, 99,101,107,313,318)
   v2 = c(3,6,18,20,50,55,95,100,100,110,310,320)
+  tt = c(6,20,52,97,106,315)
+  
+  input = rep(v1, 100)
+  actual_grr = apply_graduated_random_rounding(input, threshold = tt)
+  expected_grr = rep(v2, 100)
+  expect_equal(actual_grr, expected_grr)
+  
+})
+
+test_that("graduated rounding works with NAs", {
+  
+  v1 = c(5,6,19,20,NA,51,54,96, 99,101,107,313,318,NA)
+  v2 = c(3,6,18,20,NA,50,55,95,100,100,110,310,320,NA)
   tt = c(6,20,52,97,106,315)
   
   input = rep(v1, 100)

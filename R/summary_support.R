@@ -181,11 +181,25 @@ expand_compact_summary_groups = function(
   
   group_cols = grep("^group", colnames(compact_control_file), value = TRUE)
   
+  ## ensure contents of all group columns are character ----
+  compact_control_file = compact_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ as.character(.)))
+  
+  ## track expected number of rows ----
+  num_output_rows = nrow(compact_control_file)
+  host_env = environment()
+  
+  increment_output_rows = function(n){
+    stopifnot(is.numeric(n), length(n) == 1, !is.na(n), n >= 0)
+    host_env$num_output_rows = host_env$num_output_rows + n
+  }
+  
   ## prefix,suffix, and unnest helper functions ----
   prefix_handler = function(x){
     if(!grepl("_\\*$", x)){ return(x) }
     pattern = substring(x, 1, nchar(x) - 1)
-    prefix_matches = grep(pattern, column_names, value = TRUE, fixed = TRUE)
+    prefix_matches = pattern == substring(column_names, 1, nchar(pattern))
+    prefix_matches = column_names[prefix_matches]
     stopifnot(length(prefix_matches) >= 1)
     return(prefix_matches)
   }
@@ -194,7 +208,8 @@ expand_compact_summary_groups = function(
   suffix_handler = function(x){
     if(!grepl("^\\*_", x)){ return(x) }
     pattern = substring(x, 2, nchar(x))
-    suffix_matches = grep(pattern, column_names, value = TRUE, fixed = TRUE)
+    suffix_matches = pattern == substring(column_names, nchar(column_names) - nchar(pattern) + 1, nchar(column_names))
+    suffix_matches = column_names[suffix_matches]
     stopifnot(length(suffix_matches) >= 1)
     return(suffix_matches)
   }
@@ -202,13 +217,24 @@ expand_compact_summary_groups = function(
   
   unnest_handler = function(df){
     for(col in group_cols){
-      df = tidyr::unnest(df, cols = dplyr::all_of(col))
+      
+      lengths = sapply(df[[col]], length, USE.NAMES = FALSE)
+      if(any(lengths == 0)){
+        warning("Expanding compact summary notation produced groups of size zero. Output may differ from expectation.")
+      }
+      increment_output_rows(sum(lengths) - length(lengths))
+      
+      df = tidyr::unnest(df, cols = dplyr::all_of(col), keep_empty = TRUE, ptype = character())
     }
     return(df)
   }
   
   ## expand ----
   expanded_control_file = compact_control_file
+  
+  # trim white space off grouping inputs to begin
+  expanded_control_file = expanded_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ trimws(.)))
   
   # '|+' to 'NA' (only at end of cell) and split on | (incl. white space)
   expanded_control_file = expanded_control_file |>
@@ -218,34 +244,33 @@ expand_compact_summary_groups = function(
   expanded_control_file = unnest_handler(expanded_control_file)
 
   # 'NA' to NA
-  expanded_control_file = dplyr::mutate(
-    expanded_control_file,
-    dplyr::across(dplyr::all_of(group_cols), ~ ifelse(. == "NA", NA_character_, .))
-  )
+  expanded_control_file = expanded_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ ifelse(. == "NA", NA_character_, .)))
   
   # prefix & suffix
-  expanded_control_file = dplyr::mutate(
-    expanded_control_file,
-    dplyr::across(dplyr::all_of(group_cols), vec_prefix_handler)
-  )
+  expanded_control_file = expanded_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), vec_prefix_handler))
   expanded_control_file = unnest_handler(expanded_control_file)
   
-  expanded_control_file = dplyr::mutate(
-    expanded_control_file,
-    dplyr::across(dplyr::all_of(group_cols), vec_suffix_handler)
-  )
+  expanded_control_file = expanded_control_file |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), vec_suffix_handler))
   expanded_control_file = unnest_handler(expanded_control_file)
   
   # as data frame so can use matrix insertion
   expanded_control_file = as.data.frame(expanded_control_file)
+  
+  # confirm output is expected size
+  if(nrow(expanded_control_file) != num_output_rows){
+    warning("Expansion of compact summary notation did not produce expected size output.")
+  }
   
   ## drop dupes within ----
   if(drop.dupes.within){
     for(ii in seq_len(nrow(expanded_control_file))){
       row = expanded_control_file[ii,group_cols]
       row = unlist(row, use.names = FALSE)
-      dupes = duplicated(row)
-      expanded_control_file[ii,group_cols] = ifelse(!dupes, row, rep(NA_character_, length(row)))
+      dupes_within = duplicated(row)
+      expanded_control_file[ii,group_cols] = ifelse(!dupes_within, row, rep(NA_character_, length(row)))
     }
   }
   
@@ -259,8 +284,8 @@ expand_compact_summary_groups = function(
       sorted_expanded_control_file[ii,group_cols] = row
     }
     
-    dupes = duplicated(sorted_expanded_control_file)
-    expanded_control_file = dplyr::filter(expanded_control_file, !dupes)
+    dupes_across = duplicated(sorted_expanded_control_file)
+    expanded_control_file = dplyr::filter(expanded_control_file, !dupes_across)
   }
   
   ## remove rows with no values in any group column ----
@@ -279,7 +304,7 @@ expand_compact_summary_groups = function(
 #' rlang::parse_exprs within dplyr::mutate.
 #' 
 #' Processes columns of types: "distinct", "count", "sum", "entity", "stddev",
-#' and "seed".
+#' "max", "min", and "seed".
 #' 
 #' @param summary_row a data frame containing 1 row.
 #' @param is_sql T/F whether summary occurs in SQL context or not. Counting
@@ -294,7 +319,7 @@ generate_summary_commands = function(summary_row, is_sql = FALSE){
   
   col_type = tolower(gsub("[0-9\\.]", "", colnames(summary_row)))
   
-  command_types = c("distinct", "count", "sum", "entity", "stddev", "seed")
+  command_types = c("distinct", "count", "sum", "entity", "stddev", "max", "min", "seed")
   summary_cols = summary_row[,col_type %in% command_types, drop = FALSE]
   summary_cols = summary_cols[,!is.na(summary_cols), drop = FALSE]
   
@@ -322,6 +347,8 @@ generate_summary_commands = function(summary_row, is_sql = FALSE){
         sum = "sum({this_contents}, na.rm = TRUE)",
         entity = "ifelse({distinct_code} == 0, NA, {distinct_code})",
         stddev = "sd({this_contents}, na.rm = TRUE)",
+        max = "max({this_contents}, na.rm = TRUE)",
+        min = "min({this_contents}, na.rm = TRUE)",
         seed = "sum({this_contents} %% 100, na.rm = TRUE)"
       )
       
@@ -384,7 +411,7 @@ entity_union_all_conversion = function(summary_row, tbl){
   
   ## check for conflicts ----
   
-  summary_cols = c("distinct", "count", "sum", "entity", "stddev")
+  summary_cols = c("distinct", "count", "sum", "entity", "stddev", "max", "min")
   summary_cols = paste0("^", summary_cols, collapse = "|")
   summary_cols = grepl(summary_cols, tolower(colnames(summary_row)))
   summary_cols = unlist(summary_row[1,summary_cols], use.names = FALSE)
@@ -432,7 +459,7 @@ entity_union_all_conversion = function(summary_row, tbl){
 #' 
 #' @return The control file with cells contents set to lower case to match
 #' lower case names of `tbl_cols`. Affects columns of type group, distinct,
-#' count, sum, entity, stddev, and where.
+#' count, sum, entity, stddev, max, min, seed, and where.
 #'  
 #'  This internal function exists because R is case sentitive, but SQL is not,
 #'  and control files might not be case sentivie either.
@@ -444,7 +471,7 @@ tolower_control_file_cells = function(summary_control_file, tbl_cols){
   ## setup ----
   tbl_cols = tolower(trimws(tbl_cols))
   
-  col_types_to_process = c("group", "distinct", "count", "sum", "entity", "stddev", "where")
+  col_types_to_process = c("group", "distinct", "count", "sum", "entity", "stddev", "max", "min", "seed", "where")
   col_types_to_process = paste0("^", col_types_to_process, collapse = "|") # regex pattern
   relevant_cols = colnames(summary_control_file)
   relevant_cols = relevant_cols[grepl(col_types_to_process, relevant_cols, ignore.case = TRUE)]

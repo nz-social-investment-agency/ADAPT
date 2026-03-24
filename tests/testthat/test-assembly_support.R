@@ -389,7 +389,7 @@ test_that("SQL Server DURATION types handle correctly", {
   
   actual = handle_summary_case(row)
   
-  expected = "SUM(1+DATEDIFF(DAY, IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms), IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end))) AS name"
+  expected = "SUM(IIF(mv IS NULL, NULL, 1+DATEDIFF(DAY, IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms), IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)))) AS name"
 
   actual = as.character(gsub("[[:space:]]", "", actual))
   expected = gsub("[[:space:]]", "", expected)
@@ -437,7 +437,7 @@ test_that("SQLite DURATION types handle correctly", {
   
   actual = handle_summary_case(row, sqlite = TRUE)
   
-  expected = "SUM(1 + JULIANDAY(IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)) - JULIANDAY(IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms))) AS name"
+  expected = "SUM(IIF(mv IS NULL, NULL, 1 + JULIANDAY(IIF(me < dmt.core_query_p_end, me, dmt.core_query_p_end)) - JULIANDAY(IIF(ms < dmt.core_query_p_start, dmt.core_query_p_start, ms)))) AS name"
   
   actual = as.character(gsub("[[:space:]]", "", actual))
   expected = gsub("[[:space:]]", "", expected)

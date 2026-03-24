@@ -367,6 +367,76 @@ test_that("empty rows removed", {
   expect_true(all.equal(actual, expected))
 })
 
+test_that("white space is removed", {
+  input = data.frame(
+    group.1 = c(" *_x | +"," y_* "),
+    GROUP02 = c("a","b")
+  )
+  
+  column_names = c("1_x", "2_x", "y_3", "y_4")
+  actual = expand_compact_summary_groups(input, column_names)
+  
+  expected = data.frame(
+    group.1 = c("1_x", "2_x", NA, "y_3", "y_4"),
+    GROUP02 = c("a","a","a","b","b")
+  )
+  
+  expect_true(all.equal(actual, expected))
+})
+
+test_that("combining expansions performs by column", {
+  input = data.frame(
+    group1 = c(
+      "a", "a|b", "a|+", "a|b|+",
+      " a ", "a | b", "a | +", "a | b | +",
+      "x_*", "x_*|+", "x_*|a", "a|x_*",
+      " x_* ", " x_* | +", " x_* | a ", " a | x_* ",
+      "*_y", "*_y|+", "*_y|b", "b|*_y",
+      " *_y ", "*_y | +", " *_y | b ", " b | *_y ",
+      "x_*|*_y", "*_y|x_*", "a|*_y|x_*", "*_y|a|x_*", "x_*|*_y|b",
+      " x_* | *_y ", " *_y | x_* ", " a | *_y | x_* ", " *_y | a | x_* ", " x_* | *_y | b "
+    ),
+    group2 = c(
+      rep("n",4),
+      rep("s",4),
+      rep("n",4),
+      rep("s",4),
+      rep("n",4),
+      rep("s",4),
+      rep("n",5),
+      rep("s",5)
+    )
+  )
+  
+  column_names = c("x_1", "x_2", "3_y", "4_y")
+  actual = expand_compact_summary_groups(input, column_names, drop.dupes.across = FALSE)
+  
+  expected_num_rows = 8 + 8 + 11 + 11 + 11 + 11 + 23 + 23
+  
+  expect_equal(nrow(actual), expected_num_rows)
+})
+
+test_that("combining expansions performs by row", {
+  input = data.frame(
+    group1 = "a",
+    group2 = "b|c",
+    group3 = "x_*",
+    group4 = "*_y",
+    group5 = "d|e|+",
+    group6 = NA,
+    group7 = "x_* | +",
+    group8 = "f | *_y",
+    group9 = "x_* | *_y | g | +"
+  )
+  
+  column_names = c("x_1", "x_2", "3_y", "4_y")
+  actual = expand_compact_summary_groups(input, column_names, drop.dupes.across = FALSE, drop.dupes.within = FALSE)
+  
+  expected_num_rows = 1 * 2 * 2 * 2 * 3 * 1 * 3 * 3 * 6
+  
+  expect_equal(nrow(actual), expected_num_rows)
+})
+
 ## generate_summary_commands(summary_row) --------------------------------- ----
 
 test_that("individual summary commands run",{
@@ -402,6 +472,20 @@ test_that("individual summary commands run",{
   # stddev
   summary_row = data.frame(STDDEV3 = "col", stringsAsFactors = FALSE)
   expected = c(stddev3 = "sd(col, na.rm = TRUE)")
+  
+  actual = generate_summary_commands(summary_row)
+  expect_equal(actual, expected)
+  
+  # max
+  summary_row = data.frame(MAX.1 = "col", stringsAsFactors = FALSE)
+  expected = c(max.1 = "max(col, na.rm = TRUE)")
+  
+  actual = generate_summary_commands(summary_row)
+  expect_equal(actual, expected)
+  
+  # min
+  summary_row = data.frame(min02 = "col", stringsAsFactors = FALSE)
+  expected = c(min02 = "min(col, na.rm = TRUE)")
   
   actual = generate_summary_commands(summary_row)
   expect_equal(actual, expected)

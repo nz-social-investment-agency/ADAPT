@@ -253,6 +253,17 @@ test_that("comments and cmd mode works", {
   }
 })
 
+test_that("semi-colon in text string does not break", {
+  tmp_dir = tempdir()
+  sql_file = file.path(tmp_dir, "code.sql")
+  
+  code = "query1 = ';'\nquery2 = ';;'"
+  writeLines(code, sql_file)
+  
+  actual = read_and_prepare_sql_code(sql_file)
+  
+  expect_true(length(actual$code) == 1)
+})
 
 ## try_run_R_file(file, ignore_warnings) ---------------------------------- ----
 

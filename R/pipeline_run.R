@@ -117,7 +117,7 @@ run_pipeline = function(
   }
   
   if(nrow(loaded_cf) == 0){
-    warning("All rows of control file disabled, returnig NULL")
+    warning("All rows of control file disabled, returning NULL")
     return(NULL)
   }
   
@@ -127,6 +127,13 @@ run_pipeline = function(
     sink(sink_file, append = TRUE, split = TRUE)
     on.exit({sink()}, add = TRUE, after = TRUE)
     cat("===============================================================\n")
+  }
+  
+  ## setup for pipeline ----
+  
+  if("order" %in% ctr_cols){
+    loaded_cf$order = suppressWarnings(as.numeric(loaded_cf$order))
+    loaded_cf = dplyr::arrange(loaded_cf, .data$order)
   }
   
   ## storage for results ----
@@ -151,13 +158,6 @@ run_pipeline = function(
   stopifnot(valid_control_file)
   
   loaded_cf = dplyr::mutate(loaded_cf, full_path = file.path(.data$folder, .data$file))
-  
-  ## setup for pipeline ----
-  
-  if("order" %in% ctr_cols){
-    loaded_cf$order = suppressWarnings(as.numeric(loaded_cf$order))
-    loaded_cf = dplyr::arrange(loaded_cf, .data$order)
-  }
   
   ## impose delay if required ----
   

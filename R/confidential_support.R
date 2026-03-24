@@ -105,9 +105,11 @@ apply_random_rounding = function(input_array, base = 3, seeds = NULL, threshold 
   # enforce rounding consistency
   for(tt in threshold){
     need_round_up = input_array >= tt & output_array < tt
+    need_round_up = dplyr::coalesce(need_round_up, FALSE)
     output_array[need_round_up] = output_array[need_round_up] + base
     
     need_round_down = input_array < tt & output_array >= tt
+    need_round_down = dplyr::coalesce(need_round_down, FALSE)
     output_array[need_round_down] = output_array[need_round_down] - base
   }
 
@@ -162,31 +164,31 @@ apply_graduated_random_rounding = function(input_array, seeds = NULL, threshold 
   output = rep(NA, length(input_array))
   
   # round 0 <= value < 19 requires base 3
-  in_range = 0 <= abs_input & abs_input < 19
+  in_range = dplyr::coalesce(0 <= abs_input & abs_input < 19, FALSE)
   threshold_range = 0 <= threshold & threshold <= 21
   rounded = apply_random_rounding(abs_input[in_range], base = 3, seeds = seeds[in_range], threshold = threshold[threshold_range])
   output[in_range] = rounded * sign_input[in_range]
   
   # round 19 <= value < 20 requires base 2
-  in_range = 19 <= abs_input & abs_input < 20
+  in_range = dplyr::coalesce(19 <= abs_input & abs_input < 20, FALSE)
   threshold_range = 19 <= threshold & threshold <= 20
   rounded = apply_random_rounding(abs_input[in_range], base = 2, seeds = seeds[in_range], threshold = threshold[threshold_range])
   output[in_range] = rounded * sign_input[in_range]
   
   # round 20 <= value < 100 requires base 5
-  in_range = 20 <= abs_input & abs_input < 100
+  in_range = dplyr::coalesce(20 <= abs_input & abs_input < 100, FALSE)
   threshold_range = 20 <= threshold & threshold <= 100
   rounded = apply_random_rounding(abs_input[in_range], base = 5, seeds = seeds[in_range], threshold = threshold[threshold_range])
   output[in_range] = rounded * sign_input[in_range]
   
   # round 100 <= value < 1000 requires base 10
-  in_range = 100 <= abs_input & abs_input < 1000
+  in_range = dplyr::coalesce(100 <= abs_input & abs_input < 1000, FALSE)
   threshold_range = 100 <= threshold & threshold <= 1000
   rounded = apply_random_rounding(abs_input[in_range], base = 10, seeds = seeds[in_range], threshold = threshold[threshold_range])
   output[in_range] = rounded * sign_input[in_range]
   
   # round 1000 <= value requires base 100
-  in_range = 1000 <= abs_input
+  in_range = dplyr::coalesce(1000 <= abs_input, FALSE)
   threshold_range = 1000 <= threshold
   rounded = apply_random_rounding(abs_input[in_range], base = 100, seeds = seeds[in_range], threshold = threshold[threshold_range])
   output[in_range] = rounded * sign_input[in_range]

@@ -154,13 +154,25 @@ read_and_prepare_sql_code = function(file_name_and_path){
   sql_code = remove_sql_comments(sql_code)
   sql_code = sql_cmd_mode_fix(sql_code)
   
+  # triple all semi-colons string literals (within text strings)
+  # for example ';' becomes ';;;'
+  # allows break into batches to avoid breaking on ;;;
+  # which will prevent batching in the middle of a text string
+  sql_characters = strsplit(sql_code, "")[[1]]
+  semicolon_string_literal = cumsum(sql_characters == "'") %% 2 == 1 & sql_characters == ';'
+  sql_characters[semicolon_string_literal] = ';;;'
+  sql_code = paste0(sql_characters, collapse = "")
+  
   # break into batches
   # break on ; or a line containing only GO and whitespace
   # uses look-behind (?<=) and ahead (?=) to leave newlines in place
   # requires perl to use look-behind/ahead
-  pattern = ";|(?<=\n)[\r\t\f\v ]*[gG][oO][\r\t\f\v ]*(?=\n)"
+  pattern = "(?<!;);(?!;)|(?<=\n)[\r\t\f\v ]*[gG][oO][\r\t\f\v ]*(?=\n)"
   sql_code = strsplit(sql_code, pattern, perl = TRUE)
   sql_code = unlist(sql_code, use.names = FALSE)
+  
+  # any triple semi-colons become single semi-colons again
+  sql_code = gsub(';;;', ';', sql_code)
   
   # calculate start and end lines
   sql_code_short = gsub("\n", "", sql_code)
@@ -241,12 +253,12 @@ try_run_R_file = function(file, injection = list(), ignore_warnings = FALSE){
       "Successful completion"
     },
     error = function(e){
-      msg = paste(e$message, collapse = "\n")
+      msg = paste(c(e$message, e$body), collapse = "\n")
       msg = paste("Stopped with error: ", msg)
       return(msg)
     },
     warning = function(w){
-      msg = paste(w$message, collapse = "\n")
+      msg = paste(c(w$message, w$body), collapse = "\n")
       msg = paste("Stopped with warning: ", msg)
       return(msg)
     }
@@ -338,12 +350,12 @@ try_run_SQL_file = function(file, db_connection_string, injection = list(), igno
       "Successful completion"
     },
     error = function(e){
-      msg = paste(e$message, collapse = "\n")
+      msg = paste(c(e$message, e$body), collapse = "\n")
       msg = glue::glue("Stopped with error (see lines {lines}): ", msg)
       return(msg)
     },
     warning = function(w){
-      msg = paste(w$message, collapse = "\n")
+      msg = paste(c(w$message, w$body), collapse = "\n")
       msg = paste("Stopped with warning (see lines {lines}): ", msg)
       return(msg)
     }

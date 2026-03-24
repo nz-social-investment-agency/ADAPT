@@ -17,7 +17,7 @@ tmp_results = file.path(tmp_dir, "temp_results.csv")
 
 # control file setup
 this_control_file = load_control_file(control_file)
-this_control_file$FILE = tmp_results
+this_control_file$FILE[this_control_file$ENABLED == "TRUE"] = tmp_results
 tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
 
 ## test functionality ----------------------------------------------------- ----
@@ -147,7 +147,7 @@ test_that("can avoid filtering out NAs", {
   actual_unfiltered = read.csv(tmp_results, stringsAsFactors = FALSE)
   
   expect_true(ncol(actual_filtered) == ncol(actual_unfiltered))
-  expect_true(nrow(actual_filtered) != nrow(actual_unfiltered))
+  expect_true(nrow(actual_filtered) + 1 == nrow(actual_unfiltered))
   expect_equal(colnames(actual_filtered), colnames(actual_unfiltered))
   
   unlink(tmp_cf)
@@ -302,7 +302,7 @@ test_that("summary_simple_worked_example passes", {
   
   # control file setup
   this_control_file = load_control_file(control_file)
-  this_control_file$FILE = tmp_results
+  this_control_file$FILE[this_control_file$ENABLED == "TRUE"] = tmp_results
   tmp_cf = file.path(tmp_dir, "tmp_cf.csv")
   write.csv(this_control_file, tmp_cf, row.names = FALSE)
   

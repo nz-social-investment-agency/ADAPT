@@ -302,7 +302,7 @@ handle_summary_case = function(control_file_row, sqlite = FALSE){
     value = glue::glue("SUM(1.0 * (1 + {numerator}) / (1 + {denominator}) * {m_value}) AS {o_name}")
 
   } else if (method == "DURATION") {
-      value = glue::glue("SUM(1 + {numerator}) AS {o_name}")
+      value = glue::glue("SUM(IIF({m_value} IS NULL, NULL, 1 + {numerator})) AS {o_name}")
 
   } else {
     stop("unrecognised summary_type")

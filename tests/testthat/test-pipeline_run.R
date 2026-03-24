@@ -24,9 +24,9 @@ test_that("worked example passes",{
   
   expected = data.frame(
     enabled = TRUE,
-    order = c(2,1,3, 3.1),
+    order = c(1,2,3, 3.1),
     folder = test_folder,
-    file = c("calculate.sql", "setup.sql", "fizzbuzz.R", "STOP IF ANY FAILURES"),
+    file = c("setup.sql", "calculate.sql", "fizzbuzz.R", "STOP IF ANY FAILURES"),
     start_time = Sys.time(),
     end_time = Sys.time(),
     status = c("Successful completion", "Stopped with error", "Successful completion", "Stopped with error"),
@@ -66,12 +66,12 @@ test_that("sink captures output",{
   expect_true(grepl("setup\\.sql", actual[6]))
   expect_true(grepl("calculate\\.sql", actual[7]))
   expect_true(grepl("calculate\\.sql", actual[8]))
-  expect_true(grepl("Invalid", actual[9]))
-  expect_true(grepl("fizzbuzz.R", actual[10]))
-  expect_true(grepl("fizzbuzz.R", actual[11]))
-  expect_true(grepl("verifying", actual[12]))
-  expect_true(grepl("stop with failures", actual[13]))
-  expect_true(grepl("complete", actual[14]))
+  expect_true(grepl("error", actual[8]))
+  expect_true(grepl("fizzbuzz.R", actual[20]))
+  expect_true(grepl("fizzbuzz.R", actual[21]))
+  expect_true(grepl("verifying", actual[22]))
+  expect_true(grepl("stop with failures", actual[23]))
+  expect_true(grepl("complete", actual[24]))
   
   unlink(tmp_sink)
 })

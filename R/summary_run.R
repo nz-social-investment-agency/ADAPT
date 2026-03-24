@@ -13,7 +13,10 @@
 #' FILE column of the control file if provided.
 #' @param debug_folder an existing folder where debug information should be
 #' written to disc. If NA (the default) no debug information is written.
-#' 
+#' @param partial_output T/F whether or not to skip the check that each output 
+#' file must have either all summaries enabled or all disabled. Defaults to
+#' FALSE to avoid confusion if files are overwritten.
+#'  
 #' @return A data frame from executing the summary defined by each row of the
 #' control file and appending all the summaries together.
 #' 
@@ -47,6 +50,8 @@
 #' during validation the tool will error is this column is not numeric.
 #' * STDDEV - name of columns of `tbl` - calculates the standard deviation of the
 #' column.
+#' * MAX - name of columns of `tbl` - calculates the maximum of the column.
+#' * MIN - name of columns of `tbl` - calculates the minimum of the column.
 #' * ENTITY - name of columns of `tbl` -  similar to DISTINCT, but checks for
 #' columns with `*__min` and `*__max` suffixes and takes a distinct over the union
 #' of these columns if available. Designed for counting entities.
@@ -70,7 +75,15 @@
 #' 
 #' @importFrom  rlang .data
 #' @export
-run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = TRUE, save_file = NA_character_, debug_folder = NA_character_){
+run_summary = function(
+    control_file,
+    sheet = NULL,
+    tbl,
+    remove_na_from_groups = TRUE,
+    save_file = NA_character_,
+    debug_folder = NA_character_,
+    partial_output = FALSE
+){
   stopifnot(is.character(control_file), file.exists(control_file))
   stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
@@ -94,6 +107,12 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   colnames(loaded_cf) = ctr_cols
   is_sql = any(grepl("sql", class(tbl), ignore.case = TRUE))
   tbl = tolower_colnames(tbl)
+  
+  # validate
+  valid_control_file = validate_summary_control_file(loaded_cf, tbl, save_file, partial_output = partial_output)
+  stopifnot(valid_control_file)
+  # tidying instructions below are repeated in summary_validate
+  # order is deliberate load > validate > initialise results_df > tidy for use
   
   # filter to enabled summaries
   if("enabled" %in% ctr_cols){
@@ -130,9 +149,6 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
     loaded_cf[[cc]] = remove_delimiters(loaded_cf[[cc]], "[]")
   }
   
-  valid_control_file = validate_summary_control_file(loaded_cf, tbl, save_file)
-  stopifnot(valid_control_file)
-  
   ## remove existing files ----
   
   for(ff in unique(loaded_cf$file)){
@@ -146,7 +162,7 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
   col_type = gsub("[0-9\\.]", "", ctr_cols)
   
   # select commands
-  output_types = c("group", "label", "distinct", "count", "sum", "entity", "stddev", "seed")
+  output_types = c("group", "label", "distinct", "count", "sum", "entity", "stddev", "max", "min", "seed")
   select_command = ctr_cols[col_type %in% output_types]
   # insert 'grplabel' for each group
   select_command = lapply(
@@ -171,8 +187,22 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
 
     ## prepare commands ----
     
+    # filter out NAs if required
+    missing_handled_tbl = tbl
+    if(remove_na_from_groups){
+      na_command = dplyr::select(this_row, dplyr::starts_with("group"))
+      na_command = unlist(na_command, use.names = FALSE)
+      na_command = na_command[!is.na(na_command)]
+      na_command = na_command[!is_delimited(na_command, "{}")]
+      na_command = remove_delimiters(na_command, "[]")
+      if(is.null(na_command)){ na_command = character() }
+      
+      na_command = glue::glue("!is.na({na_command})")
+      missing_handled_tbl = dplyr::filter(tbl, !!!rlang::parse_exprs(na_command))
+    }
+    
     # union all conversion for entities
-    entity_tbl = entity_union_all_conversion(this_row, tbl)
+    entity_tbl = entity_union_all_conversion(this_row, missing_handled_tbl)
     
     # filter commands
     filter_command = dplyr::select(this_row, dplyr::starts_with("where"))
@@ -207,33 +237,6 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
     rename_inputs = rename_inputs[,!is.na(rename_inputs), drop = FALSE]
     rename_command = unlist(rename_inputs)
     
-    ## execute commands ----
-    
-    # execute, capturing messages
-    status = tryCatch(
-      {
-        tmp_results = dplyr::filter(entity_tbl, !!!rlang::parse_exprs(filter_command))
-        tmp_results = dplyr::group_by(tmp_results, !!!rlang::syms(group_command))
-        tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
-        tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
-        tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
-        tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
-        
-        if(is_sql){
-          sql_query = dbplyr::sql_render(tmp_results)
-        }
-        # fetch results
-        this_df = dplyr::collect(tmp_results)
-        
-        "Successful completion"
-      },
-      error = function(e){
-        msg = paste(e$message, collapse = "\n")
-        msg = glue::glue("Stopped with error: ", msg)
-        return(msg)
-      }
-    )
-    
     ## debug write ----
     
     # write out for debug
@@ -255,23 +258,48 @@ run_summary = function(control_file, sheet = NULL, tbl, remove_na_from_groups = 
       save_code_to_script(tmp, "summary.R", debug_folder)
     }
     # write out for debug - remote SQL table
-    if(!is.na(debug_folder) && is_sql && exists("sql_query")){
-      save_code_to_script(sql_query, "summary.sql", debug_folder)
+    if(!is.na(debug_folder) && is_sql){
+      
+      try({
+        tmp_results = dplyr::filter(entity_tbl, !!!rlang::parse_exprs(filter_command))
+        tmp_results = dplyr::group_by(tmp_results, !!!rlang::syms(group_command))
+        tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
+        tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
+        tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
+        tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
+        
+        sql_query = dbplyr::sql_render(tmp_results)
+        
+        save_code_to_script(sql_query, "summary.sql", debug_folder)
+      })
     }
     
-    ## filter out NAs if required ----
+    ## execute commands ----
     
-    if(status == "Successful completion" && remove_na_from_groups){
-      group_cols = colnames(this_df)
-      group_cols = group_cols[grepl("^group", group_cols, ignore.case = TRUE)]
-      group_suffix = gsub("^group", "", group_cols)
-      
-      # only discard rows where grplabel is not NA but group is NA
-      # so keep where grplabel is NA or group is not NA
-      filter_commands = glue::glue("(is.na(grplabel{group_suffix}) | !is.na(group{group_suffix}))")
-      
-      this_df = dplyr::filter(this_df, !!!rlang::parse_exprs(filter_commands))
-    }
+    # execute, capturing messages
+    status = tryCatch(
+      {
+        tmp_results = dplyr::filter(entity_tbl, !!!rlang::parse_exprs(filter_command))
+        tmp_results = dplyr::group_by(tmp_results, !!!rlang::syms(group_command))
+        tmp_results = dplyr::summarise(tmp_results, !!!rlang::parse_exprs(summary_command), .groups = "drop")
+        tmp_results = dplyr::mutate(tmp_results, !!!rlang::parse_exprs(mutate_command))
+        tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
+        tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
+        
+        if(is_sql){
+          sql_query = dbplyr::sql_render(tmp_results)
+        }
+        # fetch results
+        this_df = dplyr::collect(tmp_results)
+        
+        "Successful completion"
+      },
+      error = function(e){
+        msg = paste(c(e$message, e$body), collapse = "\n")
+        msg = glue::glue("Stopped with error: ", msg)
+        return(msg)
+      }
+    )
     
     ## write to disk ----
     

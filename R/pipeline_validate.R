@@ -174,7 +174,7 @@ validate_pipeline_control_file = function(control_file, db_connection_string = N
         msg = glue::glue(
           "Error in file '{basename(all_batches$file[ii])}'.\n",
           "Between lines {all_batches$start_lines[ii]} to {all_batches$end_lines[ii]}.\n",
-          "Message: {e$message}"
+          "Message: {e}"
         )
         warning(msg)
       })

@@ -38,11 +38,11 @@ test_that("simple paths updated", {
 test_that("MAA and IMR paths have prefixes changed", {
   
   actual = adjust_file_path_handling("I:\\MAA\\MAA2020-20\\folder")
-  expected = "/nas/DataLab/MAA/MAA2020-20/folder"
+  expected = "/mnt/DataLab/MAA/MAA2020-20/folder"
   expect_equal(actual, expected)
   
   actual = adjust_file_path_handling("I:\\IMR\\IMR2020-20\\folder")
-  expected = "/nas/DataLab/IMR/IMR2020-20/folder"
+  expected = "/mnt/DataLab/IMR/IMR2020-20/folder"
   expect_equal(actual, expected)
 })
 
@@ -282,6 +282,40 @@ test_that("absent progress overwrites", {
     start_time = c(t2, t1, NA, t1, NA, t1),
     end_time = c(t2, t1, NA, t1, NA, t1),
     status = c("Success", "Error", NA, "Error", NA, "Error"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("out of order control file saves in order", {
+  
+  control_file = data.frame(
+    enabled = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+    order = c(3,2,1,6,4,5),
+    col2 = c("a","b","a","b","a","b"),
+    stringsAsFactors = FALSE
+  )
+  
+  progress_df = data.frame(
+    enabled = c(TRUE, TRUE, TRUE),
+    order = c(1,3,4),
+    col2 = c("a","a","a"),
+    start_time = c(11,22,33),
+    end_time = c(12,23,34),
+    status = "Success",
+    stringsAsFactors = FALSE
+  )
+  
+  actual = merge_progress_into_control_file(control_file, progress_df)
+  
+  expected = data.frame(
+    enabled = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+    order = c(3,2,1,6,4,5),
+    col2 = c("a","b","a","b","a","b"),
+    start_time = c('22',NA,'11',NA,'33',NA),
+    end_time = c('23',NA,'12',NA,'34',NA),
+    status = c("Success", NA, "Success", NA, "Success", NA),
     stringsAsFactors = FALSE
   )
   

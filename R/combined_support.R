@@ -73,16 +73,16 @@ adjust_file_path_handling = function(file_name_and_path){
   file_name_and_path = gsub("\\\\", "/", file_name_and_path)
   file_name_and_path = gsub("//", "/", file_name_and_path)
   
-  file_name_and_path = gsub("^[a-zA-Z]:/MAA/", "/nas/DataLab/MAA/", file_name_and_path)
-  file_name_and_path = gsub("^[a-zA-Z]:/IMR/", "/nas/DataLab/IMR/", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/MAA/", "/mnt/DataLab/MAA/", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/IMR/", "/mnt/DataLab/IMR/", file_name_and_path)
   
-  file_name_and_path = gsub("^[a-zA-Z]:/MAA20", "/nas/DataLab/MAA/MAA20", file_name_and_path)
-  file_name_and_path = gsub("^[a-zA-Z]:/IMR20", "/nas/DataLab/IMR/MAA20", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/MAA20", "/mnt/DataLab/MAA/MAA20", file_name_and_path)
+  file_name_and_path = gsub("^[a-zA-Z]:/IMR20", "/mnt/DataLab/IMR/MAA20", file_name_and_path)
   
   # warn if paths may be out of date
   in_data_lab = within_data_lab()
-  MAA_out_of_date = in_data_lab & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/MAA/")
-  IMR_out_of_date = in_data_lab & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/nas/DataLab/IMR/")
+  MAA_out_of_date = in_data_lab & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/mnt/DataLab/MAA/")
+  IMR_out_of_date = in_data_lab & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/mnt/DataLab/IMR/")
   if(any(MAA_out_of_date) | any(IMR_out_of_date)){
     warning("data lab paths in IDIr may be out of date")
   }

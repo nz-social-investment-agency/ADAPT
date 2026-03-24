@@ -328,12 +328,12 @@ try_run_SQL_query = function(query, db_connection, ignore_warnings = FALSE){
       "Successful completion"
     },
     error = function(e){
-      msg = paste(e$message, collapse = "\n")
+      msg = paste(c(e$message, e$body), collapse = "\n")
       msg = glue::glue("Stopped with error: ", msg)
       return(msg)
     },
     warning = function(w){
-      msg = paste(w$message, collapse = "\n")
+      msg = paste(c(w$message, w$body), collapse = "\n")
       msg = paste("Stopped with warning: ", msg)
       return(msg)
     }
