@@ -92,7 +92,7 @@ apply_random_rounding = function(input_array, base = 3, seeds = NULL, threshold 
     stopifnot(is.numeric(seeds))
     stopifnot(length(input_array) == length(seeds))
     seeds = dplyr::coalesce(seeds, 0)
-    probs = sapply(seeds, function(s){set.seed(s); stats::runif(1)})
+    probs = vapply(seeds, function(s){set.seed(s); stats::runif(1)}, numeric(1))
   }
   
   # apply random rounding
@@ -153,7 +153,7 @@ apply_graduated_random_rounding = function(input_array, seeds = NULL, threshold 
     stopifnot(is.numeric(seeds))
     stopifnot(length(input_array) == length(seeds))
     seeds = dplyr::coalesce(seeds, 0)
-    probs = sapply(seeds, function(s){set.seed(s); stats::runif(1)})
+    probs = vapply(seeds, function(s){set.seed(s); stats::runif(1)}, numeric(1))
   }
   
   # abs * sign
@@ -298,12 +298,18 @@ create_stable_seeds = function(source_values, stable_above = 30){
   # unique high values
   high_values = unique(source_values[source_values >= stable_above])
   possible_seeds = round(1000 * stats::runif(length(high_values)))
+  names(possible_seeds) = high_values
   
-  output = sapply(
-    source_values,
-    function(x){
-      ifelse(x < stable_above, round(1000 * stats::runif(1)), possible_seeds[x == high_values])
-  })
+  output = rep(NA_integer_, length(source_values))
+  
+  # fill all values below threshold
+  is_below_thershold = source_values < stable_above
+  output[is_below_thershold] = round(1000 * stats::runif(sum(is_below_thershold)))
+  
+  # fill all values above threshold - fetching by name
+  fetch_by_name = possible_seeds[as.character(source_values[!is_below_thershold])]
+  names(fetch_by_name) = NULL
+  output[!is_below_thershold] = fetch_by_name
   
   return(output)
 }
