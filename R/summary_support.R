@@ -182,8 +182,10 @@ expand_compact_summary_groups = function(
   group_cols = grep("^group", colnames(compact_control_file), value = TRUE)
   
   ## ensure contents of all group columns are character ----
-  compact_control_file = compact_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ as.character(.)))
+  compact_control_file = dplyr::mutate(
+    compact_control_file,
+    dplyr::across(dplyr::all_of(group_cols), ~ as.character(.))
+  )
   
   ## track expected number of rows ----
   num_output_rows = nrow(compact_control_file)
@@ -233,27 +235,39 @@ expand_compact_summary_groups = function(
   expanded_control_file = compact_control_file
   
   # trim white space off grouping inputs to begin
-  expanded_control_file = expanded_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ trimws(.)))
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), ~ trimws(.))
+  )
   
   # '|+' to 'NA' (only at end of cell) and split on | (incl. white space)
-  expanded_control_file = expanded_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ gsub("\\|\\s*\\+\\s*$", "|NA", .))) |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ strsplit(., "\\s*\\|\\s*")))
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), ~ gsub("\\|\\s*\\+\\s*$", "|NA", .))
+  )
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), ~ strsplit(., "\\s*\\|\\s*"))
+  )
   
   expanded_control_file = unnest_handler(expanded_control_file)
 
   # 'NA' to NA
-  expanded_control_file = expanded_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), ~ ifelse(. == "NA", NA_character_, .)))
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file, dplyr::across(dplyr::all_of(group_cols), ~ ifelse(. == "NA", NA_character_, .))
+  )
   
   # prefix & suffix
-  expanded_control_file = expanded_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), vec_prefix_handler))
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), vec_prefix_handler)
+  )
   expanded_control_file = unnest_handler(expanded_control_file)
   
-  expanded_control_file = expanded_control_file |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(group_cols), vec_suffix_handler))
+  expanded_control_file = dplyr::mutate(
+    expanded_control_file,
+    dplyr::across(dplyr::all_of(group_cols), vec_suffix_handler)
+  )
   expanded_control_file = unnest_handler(expanded_control_file)
   
   # as data frame so can use matrix insertion
@@ -289,8 +303,10 @@ expand_compact_summary_groups = function(
   }
   
   ## remove rows with no values in any group column ----
-  expanded_control_file = expanded_control_file |>
-    dplyr::filter(!dplyr::if_all(dplyr::all_of(group_cols), is.na))
+  expanded_control_file = dplyr::filter(
+    expanded_control_file,
+    !dplyr::if_all(dplyr::all_of(group_cols), is.na)
+  )
   
   ## conclude ----
   colnames(expanded_control_file) = original_colnames
