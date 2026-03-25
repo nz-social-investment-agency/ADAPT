@@ -39,7 +39,7 @@ make_sqlite_db_for_testing = function(csv_path, db_path){
 ## setup ------------------------------------------------------------------ ----
 
 # paths
-test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+test_folder = system.file("extdata", "testing", "assembly_tool", package = "ADAPT")
 tmp_dir = tempdir()
 if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
 db_path = file.path(tmp_dir, "testing_sqlite.db")

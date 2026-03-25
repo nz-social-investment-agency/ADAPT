@@ -27,7 +27,7 @@ copy_r_to_sql = function(db_connection, sql_table, r_table) {
   suppressMessages( # mutes translation message
     DBI::dbWriteTable(
       db_connection,
-      IDIr:::sql2id(sql_table),
+      ADAPT:::sql2id(sql_table),
       r_table
     )
   )

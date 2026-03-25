@@ -16,6 +16,6 @@ conf_summary_file = "drive/folder/subfolder/output - conf.csv"
 # read
 tbl = read.csv(raw_summary_file)
 # round
-tbl = IDIr::run_confidential(control_file, sheet, tbl)
+tbl = ADAPT::run_confidential(control_file, sheet, tbl)
 # write
 write.csv(tbl, conf_summary_file, row.names = FALSE)

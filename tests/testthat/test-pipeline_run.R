@@ -12,9 +12,9 @@ if(nchar(db_connection_string) > 5 & !can_connect){
 test_that("worked example passes",{
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   control_file = file.path(test_folder, "control_file.csv")
-  control_file = IDIr:::load_control_file(control_file)
+  control_file = ADAPT:::load_control_file(control_file)
   
   control_file$folder = test_folder
   tmp_cf = file.path(tempdir(), "tmp_cf.csv")
@@ -43,9 +43,9 @@ test_that("worked example passes",{
 test_that("sink captures output",{
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   control_file = file.path(test_folder, "control_file.csv")
-  control_file = IDIr:::load_control_file(control_file)
+  control_file = ADAPT:::load_control_file(control_file)
   
   control_file$folder = test_folder
   tmp_cf = file.path(tempdir(), "tmp_cf.csv")
@@ -79,9 +79,9 @@ test_that("sink captures output",{
 test_that("sink captures stderr",{
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   control_file = file.path(test_folder, "control_file.csv")
-  control_file = IDIr:::load_control_file(control_file)
+  control_file = ADAPT:::load_control_file(control_file)
   control_file$file[3] = "fizzbuzz_w_message.R"
   
   control_file$folder = test_folder
@@ -106,7 +106,7 @@ test_that("sink captures stderr",{
 test_that("injection performs", {
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   control_file = data.frame(
     folder = test_folder,
     file = c("errors_wout_injection.sql", "errors_wout_injection.R")

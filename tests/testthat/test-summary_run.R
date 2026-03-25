@@ -1,7 +1,7 @@
 # setup
-control_file = system.file("extdata", "testing", "summary_tool", "control_file.csv", package = "IDIr")
-tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "IDIr")
-results = system.file("extdata", "testing", "summary_tool", "results.csv", package = "IDIr")
+control_file = system.file("extdata", "testing", "summary_tool", "control_file.csv", package = "ADAPT")
+tbl = system.file("extdata", "testing", "summary_tool", "tbl.csv", package = "ADAPT")
+results = system.file("extdata", "testing", "summary_tool", "results.csv", package = "ADAPT")
 
 # load
 tbl = read.csv(tbl)
@@ -218,9 +218,9 @@ test_that("errors in control file prevent execution", {
 test_that("summary_dynamic_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_dynamic_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_dynamic_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_dynamic_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_dynamic_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_dynamic_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_dynamic_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)
@@ -257,9 +257,9 @@ test_that("summary_dynamic_worked_example passes", {
 test_that("summary_long_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_long_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_long_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_long_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_long_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_long_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_long_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)
@@ -296,9 +296,9 @@ test_that("summary_long_worked_example passes", {
 test_that("summary_simple_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_simple_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_simple_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_simple_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_simple_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_simple_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_simple_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)
@@ -342,9 +342,9 @@ test_that("summary_simple_worked_example passes", {
 test_that("summary_wide_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_wide_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_wide_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_wide_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_wide_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_wide_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_wide_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)
@@ -386,9 +386,9 @@ test_that("summary_wide_worked_example passes", {
 test_that("summary_entity_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_entity_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_entity_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_entity_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_entity_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_entity_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_entity_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)
@@ -425,9 +425,9 @@ test_that("summary_entity_worked_example passes", {
 test_that("summary_filter_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "summary_filter_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "summary_filter_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "summary_filter_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "summary_filter_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "summary_filter_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "summary_filter_worked_example", "results.csv", package = "ADAPT")
   
   # control file setup
   this_control_file = load_control_file(control_file)

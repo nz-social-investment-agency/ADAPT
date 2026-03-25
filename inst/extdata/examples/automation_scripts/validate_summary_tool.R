@@ -16,16 +16,16 @@ raw_summary_file = "drive/folder/subfolder/output - raw.csv"
 db_connection_string = "TO DO"
 
 db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
-remote_master_table = dplyr::tbl(db_connection, IDIr:::sql2id(summary_table))
+remote_master_table = dplyr::tbl(db_connection, ADAPT:::sql2id(summary_table))
 
 ## Validate summary tool -------------------------------------------------- ----
 
-control_file = IDIr::load_control_file(
+control_file = ADAPT::load_control_file(
   path_and_file_name = control_file,
   sheet = sheet
 )
 
-is_valid_summary_control_file = IDIr::validate_summary_control_file(
+is_valid_summary_control_file = ADAPT::validate_summary_control_file(
   control_file = control_file,
   tbl = remote_master_table,
   save_file = raw_summary_file,

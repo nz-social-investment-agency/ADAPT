@@ -1,6 +1,6 @@
 ENABLED,ORDER,FOLDER,FILE,NOTES
-TRUE,2,IDIr/testing/pipeline_tool,calculate.sql,"ENABLED is an optional but recommended column, that allows for rows of the control file to be turned on and off."
-TRUE,1,IDIr/testing/pipeline_tool,setup.sql,"ORDER is an optional column, for setting the order of the files to be run. Files without an order are run in the order they appear in the control file after all files with an order."
-TRUE,3,IDIr/testing/pipeline_tool,fizzbuzz.R,"FOLDER should be the folder the file is found in. While Windows and R handle file paths differently, a correction occurs before execution, so you can copy-and-paste file paths from Windows."
-FALSE,,IDIr/testing/pipeline_tool,file that does not exist.R,FILE is the file to be executed. Only SQL and R scripts are accepted.
+TRUE,2,ADAPT/testing/pipeline_tool,calculate.sql,"ENABLED is an optional but recommended column, that allows for rows of the control file to be turned on and off."
+TRUE,1,ADAPT/testing/pipeline_tool,setup.sql,"ORDER is an optional column, for setting the order of the files to be run. Files without an order are run in the order they appear in the control file after all files with an order."
+TRUE,3,ADAPT/testing/pipeline_tool,fizzbuzz.R,"FOLDER should be the folder the file is found in. While Windows and R handle file paths differently, a correction occurs before execution, so you can copy-and-paste file paths from Windows."
+FALSE,,ADAPT/testing/pipeline_tool,file that does not exist.R,FILE is the file to be executed. Only SQL and R scripts are accepted.
 FALSE,,,,"NOTES is a free text column for adding notes, it does not affect the execution of the tool."

@@ -172,14 +172,14 @@ test_that("file read equivalent to readLines", {
 })
 
 test_that("non-UTF-8 character causes error", {
-  tmp_file = system.file("extdata", "testing", "utf8_error.txt", package = "IDIr")
+  tmp_file = system.file("extdata", "testing", "utf8_error.txt", package = "ADAPT")
   
   expect_silent(readLines(tmp_file))
   expect_warning(expect_error(readLines_utf8(tmp_file), "UTF-8"), "invalid input")
 })
 
 test_that("incomplete final line causes error", {
-  tmp_file = system.file("extdata", "testing", "missing_eoline.sql", package = "IDIr")
+  tmp_file = system.file("extdata", "testing", "missing_eoline.sql", package = "ADAPT")
   
   expect_warning(expect_error(readLines_utf8(tmp_file), "fixed by adding"), "incomplete final line")
 })

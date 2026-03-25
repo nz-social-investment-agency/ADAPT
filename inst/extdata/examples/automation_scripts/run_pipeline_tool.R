@@ -23,11 +23,11 @@ db_connection_string = "TO DO"
 ## Ensure required packages are available --------------------------------- ----
 
 stopifnot("openxlsx2" %in% installed.packages())
-stopifnot("IDIr" %in% installed.packages())
+stopifnot("ADAPT" %in% installed.packages())
 
 ## Run pipeline tool ------------------------------------------------------ ----
 
-IDIr::run_pipeline(
+ADAPT::run_pipeline(
   control_file = control_file,
   sheet = sheet,
   db_connection_string = db_connection_string,

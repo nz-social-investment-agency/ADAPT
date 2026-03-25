@@ -16,11 +16,11 @@ raw_summary_file = "drive/folder/subfolder/output - raw.csv"
 db_connection_string = "TO DO"
 
 db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_string)
-remote_master_table = dplyr::tbl(db_connection, IDIr:::sql2id(summary_table))
+remote_master_table = dplyr::tbl(db_connection, ADAPT:::sql2id(summary_table))
 
 ## Run summary tool ------------------------------------------------------- ----
 
-result_df = IDIr::run_summary(
+result_df = ADAPT::run_summary(
   control_file = control_file,
   sheet = summary_sheet,
   tbl = remote_master_table,

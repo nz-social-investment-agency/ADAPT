@@ -42,7 +42,7 @@ test_that("worked example passes",{
   ### Arrange ----
   
   # paths
-  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")
@@ -101,7 +101,7 @@ test_that("assembly_mother_child_worked_example passes", {
   ### Arrange ----
   
   # paths
-  test_folder = system.file("extdata", "examples", "assembly_mother_child_worked_example", package = "IDIr")
+  test_folder = system.file("extdata", "examples", "assembly_mother_child_worked_example", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")
@@ -154,7 +154,7 @@ test_that("assembly_panel_worked_example passes", {
   ### Arrange ----
   
   # paths
-  test_folder = system.file("extdata", "examples", "assembly_panel_worked_example", package = "IDIr")
+  test_folder = system.file("extdata", "examples", "assembly_panel_worked_example", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")
@@ -209,7 +209,7 @@ test_that("assembly_sequence_worked_example passes", {
   ### Arrange ----
   
   # paths
-  test_folder = system.file("extdata", "examples", "assembly_sequence_worked_example", package = "IDIr")
+  test_folder = system.file("extdata", "examples", "assembly_sequence_worked_example", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")
@@ -261,7 +261,7 @@ test_that("assembly_sequence_worked_example passes", {
 
 test_that("query executes successfully", {
   # paths
-  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")
@@ -282,7 +282,7 @@ test_that("query executes successfully", {
 
 test_that("query failure captured", {
   # paths
-  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "ADAPT")
   tmp_dir = tempdir()
   if(!dir.exists(tmp_dir)){ dir.create(tmp_dir) }
   db_path = file.path(tmp_dir, "testing_sqlite.db")

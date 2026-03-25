@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(IDIr)
+library(ADAPT)
 
-test_check("IDIr")
+test_check("ADAPT")

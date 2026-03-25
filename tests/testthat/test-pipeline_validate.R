@@ -8,7 +8,7 @@ if(nchar(db_connection_string) > 5 & !can_connect){
 }
 
 # setup
-test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
 control_file = load_control_file(file.path(test_folder, "control_file.csv"))
 
 control_file$folder = test_folder

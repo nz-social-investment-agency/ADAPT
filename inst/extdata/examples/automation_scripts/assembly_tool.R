@@ -19,7 +19,7 @@ db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_
 
 ## Run assembly tool ------------------------------------------------------ ----
 
-result_df = IDIr::run_assembly(
+result_df = ADAPT::run_assembly(
   control_file = control_file,
   sheet = sheet,
   db_connection = db_connection,

@@ -1,6 +1,6 @@
 # setup
-control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "IDIr")
-tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "IDIr")
+control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "ADAPT")
+tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "ADAPT")
 
 # load
 control_file = load_control_file(control_file)

@@ -19,12 +19,12 @@ db_connection = DBI::dbConnect(odbc::odbc(), .connection_string = db_connection_
 
 ## Validate assembly tool ------------------------------------------------- ----
 
-control_file = IDIr::load_control_file(
+control_file = ADAPT::load_control_file(
   path_and_file_name = control_file,
   sheet = sheet
 )
 
-is_valid_assembly_control_file = IDIr::validate_assembly_control_file(
+is_valid_assembly_control_file = ADAPT::validate_assembly_control_file(
   control_file = control_file,
   db_connection = db_connection,
   master_table = assembly_table

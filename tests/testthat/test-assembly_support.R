@@ -144,7 +144,7 @@ test_that("comments don't interfere with non-connets", {
 test_that("test files found", {
   
   # testing folder
-  test_folder = system.file("extdata", "testing", "assembly_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "assembly_tool", package = "ADAPT")
   
   expect_true(sql_file_exists_and_contains(file.path(test_folder, "demo_script_accidents.sql"), "tmp_accidents"))
   

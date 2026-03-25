@@ -1,7 +1,7 @@
 # setup
-control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "IDIr")
-tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "IDIr")
-results = system.file("extdata", "testing", "confidential_tool", "results.csv", package = "IDIr")
+control_file = system.file("extdata", "testing", "confidential_tool", "control_file.csv", package = "ADAPT")
+tbl = system.file("extdata", "testing", "confidential_tool", "tbl.csv", package = "ADAPT")
+results = system.file("extdata", "testing", "confidential_tool", "results.csv", package = "ADAPT")
 
 # load
 tbl = read.csv(tbl)
@@ -258,9 +258,9 @@ test_that("errors in control file prevent execution", {
 test_that("confidential_simple_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "confidential_simple_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "confidential_simple_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "confidential_simple_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "confidential_simple_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "confidential_simple_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "confidential_simple_worked_example", "results.csv", package = "ADAPT")
   
   # load
   tbl = read.csv(tbl)
@@ -298,9 +298,9 @@ test_that("confidential_simple_worked_example passes", {
 test_that("confidential_survey_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "confidential_survey_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "confidential_survey_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "confidential_survey_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "confidential_survey_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "confidential_survey_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "confidential_survey_worked_example", "results.csv", package = "ADAPT")
   
   # load
   tbl = read.csv(tbl)
@@ -338,9 +338,9 @@ test_that("confidential_survey_worked_example passes", {
 test_that("confidential_wide_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "confidential_wide_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "confidential_wide_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "confidential_wide_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "confidential_wide_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "confidential_wide_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "confidential_wide_worked_example", "results.csv", package = "ADAPT")
   
   # load
   tbl = read.csv(tbl)
@@ -378,9 +378,9 @@ test_that("confidential_wide_worked_example passes", {
 test_that("confidential_stable_worked_example passes", {
   
   # setup
-  control_file = system.file("extdata", "examples", "confidential_stable_worked_example", "control_file.csv", package = "IDIr")
-  tbl = system.file("extdata", "examples", "confidential_stable_worked_example", "tbl.csv", package = "IDIr")
-  results = system.file("extdata", "examples", "confidential_stable_worked_example", "results.csv", package = "IDIr")
+  control_file = system.file("extdata", "examples", "confidential_stable_worked_example", "control_file.csv", package = "ADAPT")
+  tbl = system.file("extdata", "examples", "confidential_stable_worked_example", "tbl.csv", package = "ADAPT")
+  results = system.file("extdata", "examples", "confidential_stable_worked_example", "results.csv", package = "ADAPT")
   
   # load
   tbl = read.csv(tbl)

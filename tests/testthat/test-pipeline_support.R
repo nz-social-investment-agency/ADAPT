@@ -268,7 +268,7 @@ test_that("semi-colon in text string does not break", {
 ## try_run_R_file(file, ignore_warnings) ---------------------------------- ----
 
 test_that("R files run", {
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "fizzbuzz.R")
   
   actual = try_run_R_file(test_file)
@@ -278,7 +278,7 @@ test_that("R files run", {
 })
 
 test_that("warnings in R handled", {
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "fizzbuzz_w_warning.R")
   
   actual = try_run_R_file(test_file, ignore_warnings = FALSE)
@@ -294,7 +294,7 @@ test_that("warnings in R handled", {
 })
 
 test_that("errors in R handled", {
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "fizzbuzz_w_error.R")
   
   actual = try_run_R_file(test_file, ignore_warnings = FALSE)
@@ -311,7 +311,7 @@ test_that("errors in R handled", {
 })
 
 test_that("R injection performs", {
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "errors_wout_injection.R")
   
   # without injection error
@@ -328,7 +328,7 @@ test_that("R injection performs", {
 test_that("SQL files run", {
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "setup.sql")
   
   actual = try_run_SQL_file(test_file, db_connection_string, ignore_warnings = FALSE)
@@ -340,7 +340,7 @@ test_that("SQL files run", {
 test_that("errors in SQL handled", {
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "calculate.sql")
   
   actual = try_run_SQL_file(test_file, db_connection_string, ignore_warnings = FALSE)
@@ -353,7 +353,7 @@ test_that("errors in SQL handled", {
 test_that("SQL injection performs", {
   skip_if_not(can_connect)
   
-  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "pipeline_tool", package = "ADAPT")
   test_file = file.path(test_folder, "errors_wout_injection.sql")
   
   # without injection error

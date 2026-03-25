@@ -22,7 +22,7 @@ provide_example = function(example = NA_character_, folder = "."){
   stopifnot(is.character(folder))
   stopifnot(is.character(example))
   
-  example_folder = system.file("extdata", "examples", package = "IDIr")
+  example_folder = system.file("extdata", "examples", package = "ADAPT")
   available_examples = list.dirs(example_folder, full.names = FALSE, recursive = FALSE)
   
   # list available examples is one is not selected
@@ -84,7 +84,7 @@ adjust_file_path_handling = function(file_name_and_path){
   MAA_out_of_date = in_data_lab & grepl("MAA[0-9]", file_name_and_path) & !dir.exists("/mnt/DataLab/MAA/")
   IMR_out_of_date = in_data_lab & grepl("IMR[0-9]", file_name_and_path) & !dir.exists("/mnt/DataLab/IMR/")
   if(any(MAA_out_of_date) | any(IMR_out_of_date)){
-    warning("data lab paths in IDIr may be out of date")
+    warning("data lab paths in ADAPT may be out of date")
   }
   
   return(file_name_and_path)

@@ -50,14 +50,14 @@ test_that("MAA and IMR paths have prefixes changed", {
 
 test_that("summary control file loaded",{
   
-  example1 = system.file("extdata", "testing", "load_control_file", "control_file_example1.xlsx", package = "IDIr")
+  example1 = system.file("extdata", "testing", "load_control_file", "control_file_example1.xlsx", package = "ADAPT")
   loaded_file = load_control_file(example1, sheet = "summary")
   
   expect_true(is.data.frame(loaded_file))
   expect_true(nrow(loaded_file) >= 2)
   expect_true(ncol(loaded_file) >= 2)
   
-  example2 = system.file("extdata", "testing", "load_control_file", "control_file_example2.csv", package = "IDIr")
+  example2 = system.file("extdata", "testing", "load_control_file", "control_file_example2.csv", package = "ADAPT")
   loaded_file = load_control_file(example2)
   
   expect_true(is.data.frame(loaded_file))
@@ -70,7 +70,7 @@ test_that("summary control file loaded",{
 
 test_that("csv worked example runs", {
   # Arrange
-  test_folder = system.file("extdata", "testing", "save_control_file", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "save_control_file", package = "ADAPT")
   tmp_dir = tempdir()
   
   if(file.exists(file.path(tmp_dir, "control_file.csv"))){
@@ -99,7 +99,7 @@ test_that("csv worked example runs", {
 
 test_that("xlsx worked example runs", {
   # Arrange
-  test_folder = system.file("extdata", "testing", "save_control_file", package = "IDIr")
+  test_folder = system.file("extdata", "testing", "save_control_file", package = "ADAPT")
   tmp_dir = tempdir()
   
   if(file.exists(file.path(tmp_dir, "control_file.xlsx"))){
@@ -327,7 +327,7 @@ test_that("out of order control file saves in order", {
 test_that("code files written", {
   
   # create location
-  path = system.file("extdata", "testing", package = "IDIr")
+  path = system.file("extdata", "testing", package = "ADAPT")
   tmp_directory = file.path(path, "SQL tmp scripts")
   folder_exists_to_start = dir.exists(tmp_directory)
   dir.create(tmp_directory)
