@@ -23,5 +23,5 @@ rlang::parse_exprs within dplyr::mutate.
 }
 \details{
 Processes columns of types: "distinct", "count", "sum", "entity", "stddev",
-and "seed".
+"max", "min", and "seed".
 }

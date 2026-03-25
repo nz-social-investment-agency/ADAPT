@@ -50,7 +50,7 @@ disabled (skipped if \code{partial_output} is \code{TRUE})
 The following checks are run and only generate a warning if not passed:
 \itemize{
 \item acceptable column names ("enabled", "group", "label", "distinct", "count",
-"sum", "entity", "stddev", "seed", "where", "notes")
+"sum", "entity", "stddev", "max", "min", "seed", "where", "notes")
 \item column is not empty
 \item grouping columns not used for summarising
 }

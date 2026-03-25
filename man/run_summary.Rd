@@ -10,7 +10,8 @@ run_summary(
   tbl,
   remove_na_from_groups = TRUE,
   save_file = NA_character_,
-  debug_folder = NA_character_
+  debug_folder = NA_character_,
+  partial_output = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,10 @@ FILE column of the control file if provided.}
 
 \item{debug_folder}{an existing folder where debug information should be
 written to disc. If NA (the default) no debug information is written.}
+
+\item{partial_output}{T/F whether or not to skip the check that each output
+file must have either all summaries enabled or all disabled. Defaults to
+FALSE to avoid confusion if files are overwritten.}
 }
 \value{
 A data frame from executing the summary defined by each row of the
@@ -71,6 +76,8 @@ in the column.
 during validation the tool will error is this column is not numeric.
 \item STDDEV - name of columns of \code{tbl} - calculates the standard deviation of the
 column.
+\item MAX - name of columns of \code{tbl} - calculates the maximum of the column.
+\item MIN - name of columns of \code{tbl} - calculates the minimum of the column.
 \item ENTITY - name of columns of \code{tbl} -  similar to DISTINCT, but checks for
 columns with \verb{*__min} and \verb{*__max} suffixes and takes a distinct over the union
 of these columns if available. Designed for counting entities.

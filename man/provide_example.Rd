@@ -24,7 +24,7 @@ data into a local folder. Includes example control files and worked examples
 of the tool in use.
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 # list all the available examples
 provide_example()
 

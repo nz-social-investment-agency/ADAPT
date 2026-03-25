@@ -26,7 +26,7 @@ disc key code components. It provides a standardized way to save SQL code
 or character strings using within dynamic dplyr code.
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 code = "SELECT * FROM mytable"
 written_file = save_code_to_script(code, "saved code", ".")
 \dontshow{\}) # examplesIf}

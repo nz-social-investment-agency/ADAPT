@@ -20,7 +20,7 @@ the file contents as a data.frame
 Used to support csv and xlsx formatted control files.
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 example_control_file = example_summary_control_file(".")
 control_file = load_control_file(example_control_file[1])
 \dontshow{\}) # examplesIf}
