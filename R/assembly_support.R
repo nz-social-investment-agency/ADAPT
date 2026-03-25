@@ -84,7 +84,7 @@ alter_table_add_column = function(table_name, columns, types, sqlite = FALSE){
 #' @return T/F whether the type is an accepted SQL Server data type.
 #' 
 #' @details
-#' The list of accepted types is as follows:
+#' The list of accepted SQL types is as follows:
 #' tinyint, smallint, int, bigint, bit, decimal, numeric, money, smallmoney,
 #' float, real, date, time, datetime2, datetimeoffset, datetime, smalldatetime,
 #' char, varchar, text, nchar, nvarchar, ntext.
@@ -325,7 +325,7 @@ handle_summary_case = function(control_file_row, sqlite = FALSE){
 #' 
 #' @details
 #' Modifies columns with the names: period_start, period_end, measure_start,
-#' measure_end, and measure_value accoridng to the following rules:
+#' measure_end, and measure_value according to the following rules:
 #' * Inputs delimited with `"` becomes delimited by `'`. This changes constants
 #' in the control file to text strings for SQL.
 #' * Inputs delimited with `{}` have their delimiters removed. This changes

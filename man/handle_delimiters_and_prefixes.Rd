@@ -31,7 +31,7 @@ Handle delimiters and SQL prefixes when preparing core assembly query
 }
 \details{
 Modifies columns with the names: period_start, period_end, measure_start,
-measure_end, and measure_value accoridng to the following rules:
+measure_end, and measure_value according to the following rules:
 \itemize{
 \item Inputs delimited with \verb{"} becomes delimited by \verb{'}. This changes constants
 in the control file to text strings for SQL.

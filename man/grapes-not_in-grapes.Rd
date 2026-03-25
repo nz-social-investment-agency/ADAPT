@@ -13,7 +13,7 @@ x \%not_in\% y
 }
 \value{
 T/F for each element in \code{x} whether the element does NOT appear in
-\code{y}. Conversion may occur implicitly between ata types.
+\code{y}. Conversion may occur implicitly between data types.
 }
 \description{
 Negative of \%in\%

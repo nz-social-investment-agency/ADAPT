@@ -5,14 +5,14 @@
 #' @param y an array of elements
 #' 
 #' @return T/F for each element in `x` whether the element does NOT appear in
-#' `y`. Conversion may occur implicitly between ata types.
+#' `y`. Conversion may occur implicitly between data types.
 #' 
 "%not_in%" = function(x, y) {
   !("%in%"(x, y))
 }
 
 ## Time-stamped info messages --------------------------------------------- ----
-#' Prints to console time of function call followed by msg.
+#' Prints to console time of function call followed by a message.
 #' 
 #' @param msg A message to display time stamped for the user.
 #' @param log Optional path to an existing log to write to.
@@ -175,7 +175,7 @@ sql2id = function(sql_string){
 }
 
 ## Read lines requiring UTF-8 --------------------------------------------- ----
-#' readLines with requirements of UTF-8 encoding
+#' Read lines with requirements of UTF-8 encoding
 #' 
 #' R assumes UTF-8 characters by default. When reading text files there may be
 #' characters that are not part of the UTF-8 encoding. The best option for these
@@ -187,8 +187,8 @@ sql2id = function(sql_string){
 #' 
 #' @param file_name_and_path A character string giving the path to the file.
 #'
-#' @return The lines of the file read by readLines if the file is UTF-8 encoded.
-#' Otherwise a warning and error about the encoding.
+#' @return The lines of the file read by `readLines` if the file is UTF-8
+#' encoded.#' Otherwise a warning and error about the encoding.
 #' 
 #' @export
 readLines_utf8 = function(file_name_and_path){

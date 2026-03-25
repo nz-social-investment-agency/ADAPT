@@ -9,7 +9,7 @@
 #' with dbplyr.
 #' @param remove_na_from_groups T/F whether missing values from grouping columns
 #' should be excluded from the results. Defaults to TRUE.
-#' @param save_file specify the file to save results to. Optional, overides the
+#' @param save_file specify the file to save results to. Optional, overrides the
 #' FILE column of the control file if provided.
 #' @param debug_folder an existing folder where debug information should be
 #' written to disc. If NA (the default) no debug information is written.

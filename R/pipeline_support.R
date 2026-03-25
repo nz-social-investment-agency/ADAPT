@@ -1,10 +1,10 @@
 ## Remove SQL comments ---------------------------------------------------- ----
 #' Locate and remove in-line and multi-line SQL comments
 #'
-#' @param code A character string contaiing the SQL code.
+#' @param code A character string containing the SQL code.
 #'
-#' @return Commentless code, a character string with all the comments removed
-#' but no changes to newline characters so the lines are identical.
+#' @return Code with all comments removed, but no changes to newline characters
+#' so the line numbering is identical.
 #' 
 #' @details
 #' SQL have two types of comments. in-line comments start with `--` and end at
@@ -76,13 +76,13 @@ remove_sql_comments = function(code){
 #' This function searches SQL code to identify instances where SQL CMD Mode
 #' variables have been set and replaces these with their values. The intention
 #' is to enable the code to be called from R which does not enable CMD Mode.
-#' Any :SETVAR statements are replaced with empty space, but new lines are
+#' Any `:SETVAR` statements are replaced with empty space, but new lines are
 #' preserved.
 #'
 #' @param code_string A character vector comprising sql code
 #'
-#' @return A character vector comprising sql code with any command mode ":SETVAR" 
-#' statements removed, and variables replaced with values
+#' @return A character vector comprising sql code with any command mode
+#' `:SETVAR` statements removed, and variables replaced with values
 #' 
 #' @export
 # Original by Dan Young, ValidateCodeR, used with permission.

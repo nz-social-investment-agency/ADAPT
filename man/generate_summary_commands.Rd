@@ -15,11 +15,11 @@ consistency \code{n_distinct} uses argument \code{na.rm = TRUE} if not SQL and n
 argument if SQL (as this argument is not handled during SQL translation).}
 }
 \value{
-a named character array suitable for parse_exprs
+a named character array suitable for \code{parse_exprs}.
 }
 \description{
 These summary commands are text string that can be used within
-rlang::parse_exprs within dplyr::mutate.
+\code{rlang::parse_exprs} within dplyr::mutate.
 }
 \details{
 Processes columns of types: "distinct", "count", "sum", "entity", "stddev",

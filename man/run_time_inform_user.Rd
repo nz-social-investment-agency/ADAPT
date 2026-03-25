@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{run_time_inform_user}
 \alias{run_time_inform_user}
-\title{Prints to console time of function call followed by msg.}
+\title{Prints to console time of function call followed by a message.}
 \usage{
 run_time_inform_user(msg, log = NA_character_)
 }
@@ -15,5 +15,5 @@ run_time_inform_user(msg, log = NA_character_)
 The time-stamped message invisibly.
 }
 \description{
-Prints to console time of function call followed by msg.
+Prints to console time of function call followed by a message.
 }

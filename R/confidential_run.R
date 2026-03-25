@@ -52,7 +52,7 @@
 #' 
 #' Columns that have had rounding or suppression applied will appear twice in
 #' the output: once with their original values and a second time with rounded / 
-#' suppressed values. This second column is named with the prefix "conf_".
+#' suppressed values. This second column is named with the prefix "conf_*".
 #'  
 #' Random rounding and Graduated random rounding via `run_confidential` include
 #' handling of stable rounding and rounding consistent with thresholds.

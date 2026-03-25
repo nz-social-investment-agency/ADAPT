@@ -17,8 +17,8 @@ The control file with cells contents set to lower case to match
 lower case names of \code{tbl_cols}. Affects columns of type group, distinct,
 count, sum, entity, stddev, max, min, seed, and where.
 
-This internal function exists because R is case sentitive, but SQL is not,
-and control files might not be case sentivie either.
+This internal function exists because R is case sensitive, but SQL is not,
+and control files might not be case sensitive either.
 }
 \description{
 Column names in control file to lower case

@@ -16,7 +16,7 @@ T/F whether the type is an accepted SQL Server data type.
 Check whether a data type is a valid SQL Server data type
 }
 \details{
-The list of accepted types is as follows:
+The list of accepted SQL types is as follows:
 tinyint, smallint, int, bigint, bit, decimal, numeric, money, smallmoney,
 float, real, date, time, datetime2, datetimeoffset, datetime, smalldatetime,
 char, varchar, text, nchar, nvarchar, ntext.

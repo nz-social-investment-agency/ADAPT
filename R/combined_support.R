@@ -356,7 +356,7 @@ save_code_to_script = function(query, desc, folder_path) {
   return(invisible())
 }
 
-## Colnames to lower ------------------------------------------------------ ----
+## Column names to lower case --------------------------------------------- ----
 #' Convert column names to lower case
 #' 
 #' R is case sensitive, but most SQL databases are case insensitive, and user

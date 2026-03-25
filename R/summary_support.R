@@ -28,7 +28,7 @@
 #' argument.
 #'
 #' `cross_product_column_names` provides equivalent output in list format for
-#' backwards compatability.
+#' backwards compatibility.
 #'
 #' @examples
 #' # basic use case
@@ -144,7 +144,7 @@ cross_product_column_names = function(
 #' notation is not used.
 #' @inheritParams generate_combinations_df
 #'
-#' @return a data frame containing a control file with any conpact notation
+#' @return a data frame containing a control file with any compact notation
 #' expanded. So what was one row in the compact input is multiple output rows.
 #' 
 #' @details
@@ -153,7 +153,7 @@ cross_product_column_names = function(
 #' create new rows, one for each option. So `a|b` will lead to two output rows,
 #' one grouped by `a` and the other by `b`.
 #' 2. The no-group: `|+`. Text in a group column with `|+` on the end will also
-#' create the upgrouped option. So `a|+` will lead to two output rows, one
+#' create the ungrouped option. So `a|+` will lead to two output rows, one
 #' grouped by `a` and the other without a value.
 #' 3. Prefix and suffix pattern matching: `*_suffix` and `prefix_*`. Text in a
 #' group column with either of these patterns will search for all options in
@@ -317,7 +317,7 @@ expand_compact_summary_groups = function(
 #' Convert control file input to summary commands.
 #' 
 #' These summary commands are text string that can be used within
-#' rlang::parse_exprs within dplyr::mutate.
+#' `rlang::parse_exprs` within dplyr::mutate.
 #' 
 #' Processes columns of types: "distinct", "count", "sum", "entity", "stddev",
 #' "max", "min", and "seed".
@@ -328,7 +328,7 @@ expand_compact_summary_groups = function(
 #' consistency `n_distinct` uses argument `na.rm = TRUE` if not SQL and no
 #' argument if SQL (as this argument is not handled during SQL translation).
 #' 
-#' @return a named character array suitable for parse_exprs
+#' @return a named character array suitable for `parse_exprs`.
 #' 
 generate_summary_commands = function(summary_row, is_sql = FALSE){
   stopifnot(nrow(summary_row) == 1)
@@ -477,8 +477,8 @@ entity_union_all_conversion = function(summary_row, tbl){
 #' lower case names of `tbl_cols`. Affects columns of type group, distinct,
 #' count, sum, entity, stddev, max, min, seed, and where.
 #'  
-#'  This internal function exists because R is case sentitive, but SQL is not,
-#'  and control files might not be case sentivie either.
+#'  This internal function exists because R is case sensitive, but SQL is not,
+#'  and control files might not be case sensitive either.
 #'  
 tolower_control_file_cells = function(summary_control_file, tbl_cols){
   stopifnot(is.data.frame(summary_control_file))

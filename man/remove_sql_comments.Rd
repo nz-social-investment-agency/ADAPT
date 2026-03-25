@@ -7,11 +7,11 @@
 remove_sql_comments(code)
 }
 \arguments{
-\item{code}{A character string contaiing the SQL code.}
+\item{code}{A character string containing the SQL code.}
 }
 \value{
-Commentless code, a character string with all the comments removed
-but no changes to newline characters so the lines are identical.
+Code with all comments removed, but no changes to newline characters
+so the line numbering is identical.
 }
 \description{
 Locate and remove in-line and multi-line SQL comments

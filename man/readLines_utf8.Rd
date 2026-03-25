@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{readLines_utf8}
 \alias{readLines_utf8}
-\title{readLines with requirements of UTF-8 encoding}
+\title{Read lines with requirements of UTF-8 encoding}
 \usage{
 readLines_utf8(file_name_and_path)
 }
@@ -10,8 +10,8 @@ readLines_utf8(file_name_and_path)
 \item{file_name_and_path}{A character string giving the path to the file.}
 }
 \value{
-The lines of the file read by readLines if the file is UTF-8 encoded.
-Otherwise a warning and error about the encoding.
+The lines of the file read by \code{readLines} if the file is UTF-8
+encoded.#' Otherwise a warning and error about the encoding.
 }
 \description{
 R assumes UTF-8 characters by default. When reading text files there may be

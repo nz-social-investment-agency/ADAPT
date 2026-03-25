@@ -24,7 +24,7 @@
 #'
 #' @return A data frame containing all the files run in order, along with start
 #' and end times and the status of their execution (completed, stopped with
-#' warning or error). If a warning or error occured, then status also includes
+#' warning or error). If a warning or error occurred, then status also includes
 #' the warning or error message.
 #'
 #' @details

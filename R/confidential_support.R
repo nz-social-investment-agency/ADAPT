@@ -73,8 +73,8 @@ suppression_format_extract = function(string){
 #' Randomly rounds a numeric vector to the given base.
 #' For example, if base is 3 (default) then:
 #' * 3 & 6 will be left as is because they are already base 3;
-#' * 4 & 7 will be rounded down with prob 2/3 and up with prob 1/3;
-#' * 5 & 8 will be rounded down with prob 1/3 and up with prob 2/3.
+#' * 4 & 7 will be rounded down with probability 2/3 and up with probability 1/3;
+#' * 5 & 8 will be rounded down with probability 1/3 and up with probability 2/3.
 #' @md
 #' 
 #' @export

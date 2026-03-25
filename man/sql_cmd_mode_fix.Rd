@@ -10,13 +10,13 @@ sql_cmd_mode_fix(code_string)
 \item{code_string}{A character vector comprising sql code}
 }
 \value{
-A character vector comprising sql code with any command mode ":SETVAR"
-statements removed, and variables replaced with values
+A character vector comprising sql code with any command mode
+\verb{:SETVAR} statements removed, and variables replaced with values
 }
 \description{
 This function searches SQL code to identify instances where SQL CMD Mode
 variables have been set and replaces these with their values. The intention
 is to enable the code to be called from R which does not enable CMD Mode.
-Any :SETVAR statements are replaced with empty space, but new lines are
+Any \verb{:SETVAR} statements are replaced with empty space, but new lines are
 preserved.
 }

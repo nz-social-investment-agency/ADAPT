@@ -56,7 +56,7 @@ need to be named. Otherwise their values will be included in the \code{...}
 argument.
 
 \code{cross_product_column_names} provides equivalent output in list format for
-backwards compatability.
+backwards compatibility.
 }
 \examples{
 # basic use case

@@ -31,7 +31,7 @@ will only output \code{c(a,b,c)}.
 Defaults to TRUE.}
 }
 \value{
-a data frame containing a control file with any conpact notation
+a data frame containing a control file with any compact notation
 expanded. So what was one row in the compact input is multiple output rows.
 }
 \description{
@@ -50,7 +50,7 @@ Three types of compact notation are accepted:
 create new rows, one for each option. So \code{a|b} will lead to two output rows,
 one grouped by \code{a} and the other by \code{b}.
 \item The no-group: \verb{|+}. Text in a group column with \verb{|+} on the end will also
-create the upgrouped option. So \verb{a|+} will lead to two output rows, one
+create the ungrouped option. So \verb{a|+} will lead to two output rows, one
 grouped by \code{a} and the other without a value.
 \item Prefix and suffix pattern matching: \verb{*_suffix} and \verb{prefix_*}. Text in a
 group column with either of these patterns will search for all options in
