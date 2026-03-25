@@ -1,8 +1,8 @@
 Package: IDIr
 Title: Tool Collection For Consistent IDI Projects
-Version: 0.8.3
+Version: 1.0.0
 Authors@R: 
-    person("Simon", "Anastasiadis", , "simon.anastasiadis@gmail.com", role = c("aut", "cre"))
+    person("Simon", "Anastasiadis", , "simon.anastasiadis@sia.govt.nz", role = c("aut", "cre"))
 Description: Collection of tools for standardised activities that are part of conducting research in the IDI (Integrated Data Infrastructure). Including assemblying a master table from many source tables, producing consistent summaries, and applying confidentialisation rules. While designed for IDI environment, this package may also be useful for analytic projects outside the IDI environment. IDIr has been built to use dbplyr so it can operate on both data stored in databases and data loaded into R memory.
 License: GPL (>= 3)
 Encoding: UTF-8
