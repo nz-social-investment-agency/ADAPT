@@ -17,9 +17,7 @@ ADAPT consists of four modular tools that share common functionality and are dis
 
 ## User guidance
 
-This repository provides the source code for ADAPT and the bundled R package, ready for installation. It should be used alongside the user guidance: ......................
-
-This contains a discussion of the design principles and detailed instructions on the use of each component tool.
+This repository provides the source code for ADAPT and the bundled R package, ready for installation. It should be used alongside the user guidance available on our website: [ADAPT User Guide | Social Investment Agency](https://www.sia.govt.nz/publications/ADAPT-User-Guide). This contains a discussion of the design principles and detailed instructions on the use of each component tool.
 
 
 ## Analytic delivery framework
