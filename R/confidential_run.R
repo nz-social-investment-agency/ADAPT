@@ -74,6 +74,8 @@ run_confidential = function(control_file, sheet = NULL, tbl, stable_above = 30){
   stopifnot(is.null(sheet) | is.character(sheet))
   stopifnot(is.data.frame(tbl))
   
+  warn_if_excel_lockfile(control_file)
+  
   ## load control file ----
   
   loaded_cf = load_control_file(control_file, sheet = sheet)

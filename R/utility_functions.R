@@ -188,7 +188,7 @@ sql2id = function(sql_string){
 #' @param file_name_and_path A character string giving the path to the file.
 #'
 #' @return The lines of the file read by `readLines` if the file is UTF-8
-#' encoded.#' Otherwise a warning and error about the encoding.
+#' encoded. Otherwise a warning and error about the encoding.
 #' 
 #' @export
 readLines_utf8 = function(file_name_and_path){

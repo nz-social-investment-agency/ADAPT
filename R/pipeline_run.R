@@ -98,6 +98,8 @@ run_pipeline = function(
   stopifnot(is.list(injection_r))
   stopifnot(is.list(injection_sql))
   
+  warn_if_excel_lockfile(control_file)
+  
   run_time_inform_user("Pipeline tool initiated.")
   
   ## load control file ----

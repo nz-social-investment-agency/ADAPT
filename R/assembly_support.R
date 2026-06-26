@@ -335,6 +335,9 @@ handle_summary_case = function(control_file_row, sqlite = FALSE){
 #' * Columns in `measure_cols` are given the prefix `measure_prefix`. This makes
 #' the source from which columns are fetched in the core query clear.
 #' 
+#' Also modifies columns with the name output_name, swapping `""` delimiters to
+#' `[]` delimiters.
+#' 
 #' The first pair of tasks are necessary because we are moving between
 #' environments with different delimiters. The second pair of tasks are
 #' necessary to avoid confusion when input tables have the same column name.
@@ -351,7 +354,9 @@ handle_delimiters_and_prefixes = function(df, mt_prefix, mt_cols, measure_prefix
   
   # remove "" delimiters from output_name
   if("output_name" %in% colnames(df)){
-    df$output_name = remove_delimiters(df$output_name, "\"")
+    has_delimiter = is_delimited(df$output_name, "\"")
+    df$output_name[has_delimiter] = remove_delimiters(df$output_name[has_delimiter], "\"")
+    df$output_name[has_delimiter] = add_delimiters(df$output_name[has_delimiter], "[]")
   }
   
   cols_to_convert = c("period_start", "period_end", "measure_start", "measure_end", "measure_value")

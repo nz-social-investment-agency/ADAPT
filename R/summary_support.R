@@ -345,38 +345,38 @@ generate_summary_commands = function(summary_row, is_sql = FALSE){
     "dplyr::n_distinct({this_contents}, na.rm = TRUE)"
   )
   
-  summary_command = sapply(
-    1:ncol(summary_cols),
-    function(ii){
-      # extract current values
-      this_name = colnames(summary_cols)[ii]
-      this_contents = summary_cols[[this_name]]
-      
-      # remove delimiter if dynamic R included
-      this_contents = remove_delimiters(this_contents, "{}")
-      
-      # produce required command
-      this_command = switch(
-        tolower(gsub("[0-9\\.]", "", this_name)),
-        distinct = distinct_code,
-        count = "sum(ifelse(!is.na({this_contents}), 1, 0), na.rm = TRUE)",
-        sum = "sum({this_contents}, na.rm = TRUE)",
-        entity = "ifelse({distinct_code} == 0, NA, {distinct_code})",
-        stddev = "sd({this_contents}, na.rm = TRUE)",
-        max = "max({this_contents}, na.rm = TRUE)",
-        min = "min({this_contents}, na.rm = TRUE)",
-        seed = "sum({this_contents} %% 100, na.rm = TRUE)"
-      )
-      
-      # glue to insert values
-      this_command = glue::glue(glue::glue(this_command))
-      
-      # assign name of column & output
-      names(this_command) = tolower(colnames(summary_cols)[ii])
-      return(this_command)
-    }
-  )
+  summary_command = rep(NA_character_, ncol(summary_cols))
   
+  for(ii in seq_along(summary_command)){
+    # extract current values
+    this_name = colnames(summary_cols)[ii]
+    this_contents = summary_cols[[this_name]]
+    
+    # remove delimiter if dynamic R included
+    this_contents = remove_delimiters(this_contents, "{}")
+    
+    # produce required command
+    this_command = switch(
+      tolower(gsub("[0-9\\.]", "", this_name)),
+      distinct = distinct_code,
+      count = "sum(ifelse(!is.na({this_contents}), 1, 0), na.rm = TRUE)",
+      sum = "sum({this_contents}, na.rm = TRUE)",
+      entity = "ifelse({distinct_code} == 0, NA, {distinct_code})",
+      stddev = "sd({this_contents}, na.rm = TRUE)",
+      max = "max({this_contents}, na.rm = TRUE)",
+      min = "min({this_contents}, na.rm = TRUE)",
+      seed = "sum({this_contents} %% 100, na.rm = TRUE)"
+    )
+    
+    # glue to insert values
+    this_command = glue::glue(glue::glue(this_command))
+    
+    # assign output
+    summary_command[ii] = this_command
+  }
+  # assign name
+  names(summary_command) = tolower(colnames(summary_cols))
+
   return(summary_command)
 }
 
@@ -477,8 +477,8 @@ entity_union_all_conversion = function(summary_row, tbl){
 #' lower case names of `tbl_cols`. Affects columns of type group, distinct,
 #' count, sum, entity, stddev, max, min, seed, and where.
 #'  
-#'  This internal function exists because R is case sensitive, but SQL is not,
-#'  and control files might not be case sensitive either.
+#' This internal function exists because R is case sensitive, but SQL is not,
+#' and control files might not be case sensitive either.
 #'  
 tolower_control_file_cells = function(summary_control_file, tbl_cols){
   stopifnot(is.data.frame(summary_control_file))
@@ -524,3 +524,91 @@ tolower_control_file_cells = function(summary_control_file, tbl_cols){
   ## conclude ----
   return(summary_control_file)
 }
+
+## Remove empty entity columns -------------------------------------------- ----
+#' Remove empty entity columns
+#'
+#' @param summary_control_file a loaded data frame containing summary
+#' instructions.
+#' @param tbl the data frame to be summarised. Can be in-memory or remote
+#' accessed with dbplyr.
+#'
+#' @returns The control file with entity cells emptied if the entity column
+#' contains no entries.
+#' 
+#' Because we handled two entity columns (`*_min` and `*_max`) summarising
+#' entities tends to be slow in SQL due to how this is implemented. Changing the
+#' implementation is not straightforward given the need to handle pairs of
+#' entity columns. But we can remove entity columns from the control file where
+#' the column in `tbl` contains no values.
+#' 
+remove_empty_entity_columns = function(summary_control_file, tbl){
+  stopifnot(is.data.frame(summary_control_file))
+  stopifnot(is.data.frame(tbl) | dplyr::is.tbl(tbl))
+  
+  ## prep ----
+  colnames(summary_control_file) = tolower(colnames(summary_control_file))
+  
+  ## locate entity columns in control file ----
+  entity_columns = grepl("^entity", colnames(summary_control_file))
+  entity_columns = colnames(summary_control_file)[entity_columns]
+  
+  if(length(entity_columns) == 0){
+    return(summary_control_file)
+  }
+  
+  required_entities = dplyr::select(summary_control_file, dplyr::all_of(entity_columns))
+  required_entities = unique(unlist(required_entities, use.names = FALSE))
+  # exclude dynamic formula
+  is_dynamic = substring(trimws(required_entities), 1, 1) == "{"
+  required_entities = required_entities[!is_dynamic]
+
+  if(length(required_entities) == 0){
+    return(summary_control_file)
+  }
+  
+  ## list all requested entity columns from control file ----
+  audit_entities = data.frame(
+    control_file_entry = rep(required_entities, each = 3),
+    suffix = rep(c("", "__min", "__max"), length(required_entities)),
+    stringsAsFactors = FALSE
+  )
+  audit_entities$to_locate = paste0(audit_entities$control_file_entry, audit_entities$suffix)
+  audit_entities$status = 0
+  
+  ## check for presence of records in tbl ----
+  for(ii in seq_len(nrow(audit_entities))){
+    this_column = audit_entities$to_locate[ii]
+    # skip if column does not exist
+    if(this_column %not_in% colnames(tbl)){
+      next
+    }
+    # check number of non-missing
+    num_nonmissing = dplyr::filter(tbl, !is.na(!!rlang::sym(this_column)))
+    num_nonmissing = dplyr::ungroup(num_nonmissing)
+    num_nonmissing = dplyr::summarise(num_nonmissing, num = dplyr::n())
+    num_nonmissing = dplyr::collect(num_nonmissing)
+    num_nonmissing = dplyr::pull(num_nonmissing)
+    # add to audit
+    audit_entities$status[ii] = num_nonmissing
+  }
+  
+  ## identity empty columns ----
+  empty_columns = dplyr::group_by(audit_entities, .data$control_file_entry)
+  empty_columns = dplyr::summarise(empty_columns, num_nonmissing = max(.data$status), .groups = "drop")
+  empty_columns = dplyr::filter(empty_columns, num_nonmissing == 0)
+  empty_columns = dplyr::pull(empty_columns, "control_file_entry")
+  
+  if(length(empty_columns) == 0){
+    return(summary_control_file)
+  }
+  
+  ## purge control file ----
+  for(col in entity_columns){
+    to_na = summary_control_file[[col]] %in% empty_columns
+    summary_control_file[[col]][to_na] = NA_character_
+  }
+  
+  return(summary_control_file)
+}
+

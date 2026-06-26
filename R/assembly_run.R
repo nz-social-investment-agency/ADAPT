@@ -80,6 +80,8 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
   stopifnot(is.character(debug_folder))
   stopifnot(is.na(debug_folder) | dir.exists(debug_folder) )
   
+  warn_if_excel_lockfile(control_file)
+  
   run_time_inform_user("Assembly tool initiated.")
   
   ## load control file ----
@@ -212,7 +214,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     
     ### columns dropped and added ----
     
-    output_col_names = remove_delimiters(summary_rows$output_name, "\"")
+    output_col_names = remove_delimiters(summary_rows$output_name, "[]")
     
     # drop columns
     query = alter_table_drop_column(master_table, intersect(colnames(remote_master_table), output_col_names), is_sqlite)
@@ -229,7 +231,7 @@ run_assembly = function(control_file, sheet = NULL, db_connection, master_table,
     sapply(query, DBI::dbExecute, conn = db_connection)
 
     ### prepare query ----
-
+    
     # summary columns list
     update_summary_list = lapply(
       seq_len(nrow(summary_rows)),

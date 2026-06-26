@@ -43,6 +43,9 @@ source from which columns are fetched in the core query clear.
 the source from which columns are fetched in the core query clear.
 }
 
+Also modifies columns with the name output_name, swapping \code{""} delimiters to
+\verb{[]} delimiters.
+
 The first pair of tasks are necessary because we are moving between
 environments with different delimiters. The second pair of tasks are
 necessary to avoid confusion when input tables have the same column name.

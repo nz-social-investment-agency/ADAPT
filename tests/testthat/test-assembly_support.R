@@ -460,7 +460,7 @@ test_that("constants handled correctly", {
   row = handle_delimiters_and_prefixes(row, "mt", c("ps", "pe", "puid"), "m", c("ms", "me", "mv", "muid"))
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "MIN('1') AS name")
+  expect_equal(actual, "MIN('1') AS [name]")
 })
 
 test_that("dynamics handled correctly", {
@@ -478,7 +478,7 @@ test_that("dynamics handled correctly", {
   row = handle_delimiters_and_prefixes(row, "mt", c("ps", "pe", "puid"), "m", c("ms", "me", "mv", "muid"))
   actual = handle_summary_case(row)
   
-  expect_equal(actual, "SUM(IIF(m.mv > 0, m.mv, NULL)) AS name")
+  expect_equal(actual, "SUM(IIF(m.mv > 0, m.mv, NULL)) AS [name]")
 })
 
 ## handle_delimiters_and_prefixes(df, mt_prefix, mt_cols, measure_prefix, measure_cols) ----
@@ -503,7 +503,7 @@ test_that("delimiters changed as expected", {
     measure_start = "'ms'",
     measure_end = "me",
     measure_value = "[mv]",
-    output_name = "name",
+    output_name = "[name]",
     output_method = "SUM",
     stringsAsFactors = FALSE
   )
@@ -531,7 +531,7 @@ test_that("master table prefixes added as expected", {
     measure_start = "[ms]",
     measure_end = "me",
     measure_value = "[mv]",
-    output_name = "name",
+    output_name = "[name]",
     output_method = "SUM",
     stringsAsFactors = FALSE
   )
@@ -559,7 +559,7 @@ test_that("measure table prefixes added as expected", {
     measure_start = "z.\"ms\"",
     measure_end = "z.me",
     measure_value = "DATEDIFF(DAY, z.me, z.[ms])",
-    output_name = "name",
+    output_name = "[name]",
     output_method = "SUM",
     stringsAsFactors = FALSE
   )

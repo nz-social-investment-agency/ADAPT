@@ -383,3 +383,39 @@ tolower_colnames = function(tbl){
   tbl = dplyr::rename(tbl, !!!rlang::parse_exprs(rename_command))
   return(tbl)
 }
+
+## Check for Excel lock file ---------------------------------------------- ----
+#' Warn if Excel lock file detected
+#' 
+#' To reduce the likelihood of control files being edited but not saved, this
+#' function warns if an Excel lock file is detected. It then waits 10 seconds
+#' before continuing. This allows users to save and close the control file if
+#' it was left open by mistake, or to ignore (and wait 10 seconds) if the file
+#' is open deliberately.
+#' 
+#' @param path_and_file_name location and name of the control file.
+#' @param delay_seconds number of seconds to wait after warning.
+#' 
+#' @returns Logical whether the control file exists (invisibly).
+#'  
+warn_if_excel_lockfile = function(path_and_file_name, delay_seconds = 10){
+  stopifnot(is.character(path_and_file_name))
+  stopifnot(file.exists(path_and_file_name))
+  extension = tolower(tools::file_ext(path_and_file_name))
+  stopifnot(extension %in% c("xlsx", "csv"))
+  
+  # derive lockfile path
+  folder = dirname(path_and_file_name)
+  name = basename(path_and_file_name)
+  lock = file.path(folder, paste0("~$", name))
+  
+  # check existence
+  exists = file.exists(lock)
+  
+  if(exists){
+    warning("Excel lock file detected, did you forget to save and close the control file?")
+    Sys.sleep(delay_seconds)
+  }
+  
+  return(invisible(exists))
+}

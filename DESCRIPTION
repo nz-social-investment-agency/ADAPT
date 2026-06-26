@@ -1,6 +1,6 @@
 Package: ADAPT
 Title: Tool Collection For Consistent IDI Projects
-Version: 1.0.2
+Version: 1.1.2
 Authors@R: 
     person("Simon", "Anastasiadis", , "simon.anastasiadis@sia.govt.nz", role = c("aut", "cre"))
 Description: Accelerated Data Analysis & Pipeline Toolkit (ADAPT) is a

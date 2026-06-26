@@ -772,3 +772,122 @@ test_that("out of scope cols unchanged", {
   
   expect_equal(actual, cf)
 })
+
+## remove_empty_entity_columns(summary_control_file, tbl) ----------------- ----
+
+test_that("no entities passes unchanged", {
+  cf = data.frame(
+    group1 = c("col1", "col2"),
+    count1 = c("col3", NA),
+    sum1 = c(NA, "col3"),
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    col1 = c(1:5,1:5),
+    col2 = rep(c("a","b"), 5),
+    col3 = c(11:20),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = remove_empty_entity_columns(cf, tbl)
+  
+  expect_equal(actual, cf)
+})
+
+test_that("populated entities passes unchanged", {
+  cf = data.frame(
+    group1 = c("col1", "col2"),
+    entity1 = c("ent1", "ent2"),
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    col1 = c(1:5,1:5),
+    col2 = rep(c("a","b"), 5),
+    ent1 = c(NA, 1:3, NA, 1:3, NA, NA),
+    ent2__min = c(rep(NA, 9), 111),
+    ent2__max = c(rep(NA, 9), 222),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = remove_empty_entity_columns(cf, tbl)
+  
+  expect_equal(actual, cf)
+})
+
+test_that("zero entities removed", {
+  cf = data.frame(
+    group1 = c("col1", "col2"),
+    entity1 = c("ent1", "ent2"),
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    col1 = c(1:5,1:5),
+    col2 = rep(c("a","b"), 5),
+    ent1 = NA_character_,
+    ent2__min = NA_character_,
+    ent2__max = NA_character_,
+    stringsAsFactors = FALSE
+  )
+  
+  actual = remove_empty_entity_columns(cf, tbl)
+  
+  expected = data.frame(
+    group1 = c("col1", "col2"),
+    entity1 = c(NA_character_, NA_character_),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("mixed entities handled as expected", {
+  cf = data.frame(
+    group1 = c("col1", "col2"),
+    entity1 = c("ent1", "ent2"),
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    col1 = c(1:5,1:5),
+    col2 = rep(c("a","b"), 5),
+    ent1 = NA_character_,
+    ent2__min = c(rep(NA, 9), 111),
+    ent2__max = c(rep(NA, 9), 222),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = remove_empty_entity_columns(cf, tbl)
+  
+  expected = data.frame(
+    group1 = c("col1", "col2"),
+    entity1 = c(NA_character_, "ent2"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})
+
+test_that("dynamic entities left unchanged", {
+  cf = data.frame(
+    group1 = c("col1", "col2", "col1", "col2"),
+    entity1 = c("{ent1}", "{ent2}", "ent1", "ent2"),
+    stringsAsFactors = FALSE
+  )
+  tbl = data.frame(
+    col1 = c(1:5,1:5),
+    col2 = rep(c("a","b"), 5),
+    ent1 = NA_character_,
+    ent2__min = c(rep(NA, 9), 111),
+    ent2__max = c(rep(NA, 9), 222),
+    stringsAsFactors = FALSE
+  )
+  
+  actual = remove_empty_entity_columns(cf, tbl)
+  
+  expected = data.frame(
+    group1 = c("col1", "col2", "col1", "col2"),
+    entity1 = c("{ent1}", "{ent2}", NA, "ent2"),
+    stringsAsFactors = FALSE
+  )
+  
+  expect_equal(actual, expected)
+})

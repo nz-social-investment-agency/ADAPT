@@ -1,6 +1,6 @@
 ## provide_example(example, folder) --------------------------------------- ----
 
-test_that("available exampels listed", {
+test_that("available examples listed", {
   
   expect_message(provide_example())
   
@@ -405,3 +405,28 @@ test_that("non-unique columns error", {
   
   expect_error(tolower_colnames(tbl), "capital")
 })
+
+## warn_if_excel_lockfile(path_and_file_name) ----------------------------- ----
+
+test_that("file and lock file located", {
+  
+  tmp = file.path(tempdir(),"examples")
+  tmp_file = file.path(tmp, "test.csv")
+  tmp_lock = file.path(tmp, "~$test.csv")
+  
+  on.exit(unlink(tmp_file), add = TRUE)
+  on.exit(unlink(tmp_lock), add = TRUE)
+  
+  expect_error(warn_if_excel_lockfile(tmp_file, delay_seconds = 0.1))
+  
+  writeLines("text", tmp_file)
+  expect_false(warn_if_excel_lockfile(tmp_file, delay_seconds = 0.1))
+  expect_silent(warn_if_excel_lockfile(tmp_file, delay_seconds = 0.1))
+  
+  writeLines("text", tmp_lock)
+  expect_warning(warn_if_excel_lockfile(tmp_file, delay_seconds = 0.1))
+  expect_true(suppressWarnings(warn_if_excel_lockfile(tmp_file, delay_seconds = 0.1)))
+
+})
+
+

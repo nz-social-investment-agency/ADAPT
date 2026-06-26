@@ -93,6 +93,8 @@ run_summary = function(
   stopifnot(is.character(save_file))
   stopifnot(is.na(save_file) | dir.exists(dirname(save_file)))
   
+  warn_if_excel_lockfile(control_file)
+  
   run_time_inform_user("Summary tool initiated.")
   
   ## load control file ----
@@ -149,6 +151,10 @@ run_summary = function(
     loaded_cf[[cc]] = remove_delimiters(loaded_cf[[cc]], "[]")
   }
   
+  ## remove unneeded entities ----
+  
+  loaded_cf = remove_empty_entity_columns(loaded_cf, tbl)
+    
   ## remove existing files ----
   
   for(ff in unique(loaded_cf$file)){
@@ -286,9 +292,6 @@ run_summary = function(
         tmp_results = dplyr::rename(tmp_results, !!!rlang::parse_exprs(rename_command))
         tmp_results = dplyr::select(tmp_results, dplyr::all_of(select_command))
         
-        if(is_sql){
-          sql_query = dbplyr::sql_render(tmp_results)
-        }
         # fetch results
         this_df = dplyr::collect(tmp_results)
         
