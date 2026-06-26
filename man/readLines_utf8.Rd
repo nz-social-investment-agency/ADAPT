@@ -11,7 +11,7 @@ readLines_utf8(file_name_and_path)
 }
 \value{
 The lines of the file read by \code{readLines} if the file is UTF-8
-encoded.#' Otherwise a warning and error about the encoding.
+encoded. Otherwise a warning and error about the encoding.
 }
 \description{
 R assumes UTF-8 characters by default. When reading text files there may be

@@ -14,7 +14,6 @@ Description: Accelerated Data Analysis & Pipeline Toolkit (ADAPT) is a
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Suggests: 
     RSQLite,
     spelling,
@@ -37,3 +36,4 @@ Packaged: 2025-02-24 20:03:53 UTC; sanas001
 Author: Simon Anastasiadis [aut, cre]
 Maintainer: Simon Anastasiadis <simon.anastasiadis@sia.govt.nz>
 Language: en-GB
+Config/roxygen2/version: 8.0.0
