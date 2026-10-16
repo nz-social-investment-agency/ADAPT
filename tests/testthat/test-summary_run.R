@@ -213,6 +213,29 @@ test_that("errors in control file prevent execution", {
   )
 })
 
+test_that("scientific notation avoided", {
+  
+  this_control_file = data.frame(
+    GROUP = c("all", "all"),
+    LABEL = c("no engineer", "engineer"),
+    SUM = c("total_e", "total_n")
+  )
+  tbl = data.frame(
+    all = rep("all", 100),
+    total_e = rep(1000, 100),
+    total_n = rep(1001, 100)
+  )
+  
+  write.csv(this_control_file, tmp_cf, row.names = FALSE)
+  expect_output(run_summary(tmp_cf, sheet = NULL, tbl, save_file = tmp_results), "Summary")
+  
+  actual = readLines(tmp_results)
+  expect_false(any(grepl("1e+05", actual, fixed = TRUE)))
+  
+  unlink(tmp_cf)
+  unlink(tmp_results)
+})
+
 ## test examples ---------------------------------------------------------- ----
 
 test_that("summary_dynamic_worked_example passes", {

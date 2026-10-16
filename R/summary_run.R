@@ -320,7 +320,9 @@ run_summary = function(
         dir.create(dirname(out_file), recursive = TRUE)
       }
       
-      # write
+      # write - changing scipen prevent writing values in scientific notation
+      current_scipen = getOption("scipen")
+      options(scipen = 999)
       utils::write.table(
         this_df,
         out_file,
@@ -331,6 +333,7 @@ run_summary = function(
         row.names = FALSE,
         qmethod = "double"
       )
+      options(scipen = current_scipen)
     }
 
     ## conclude ----
